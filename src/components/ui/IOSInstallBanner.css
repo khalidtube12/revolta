@@ -1,0 +1,61 @@
+.ios-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--card2);
+  border: 1px solid var(--border2);
+  border-right: 3px solid var(--gold);
+  padding: 14px 16px;
+  margin-bottom: 24px;
+  position: relative;
+  animation: fadeUp 0.3s ease;
+}
+
+.ios-banner-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.ios-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.ios-banner-text strong {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.ios-banner-text span {
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.6;
+}
+
+.ios-banner-text span strong {
+  color: var(--gold);
+  font-size: 13px;
+}
+
+.ios-banner-close {
+  background: none;
+  border: 1px solid var(--border2);
+  color: var(--muted);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 11px;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.ios-banner-close:hover {
+  border-color: var(--red);
+  color: var(--red);
+}

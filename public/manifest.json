@@ -1,0 +1,30 @@
+{
+  "name": "TEAM REVOLTA",
+  "short_name": "REVOLTA",
+  "description": "منصة إدارة فريق ريفولتا",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#060608",
+  "theme_color": "#81050f",
+  "orientation": "portrait",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "assets/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/apple-touch-icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/apple-touch-icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,120 @@
+@font-face {
+  font-family: 'DoublePorter';
+  src: url('/assets/Double-Porter-6.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.navbar {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 32px;
+  padding-top: env(safe-area-inset-top);
+  height: calc(64px + env(safe-area-inset-top));
+  background: rgba(8,8,8,0.95);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.nav-left { display: flex; align-items: center; gap: 14px; }
+.nav-logo-img { height: 48px; width: 48px; object-fit: contain; mix-blend-mode: lighten; }
+.nav-brand {
+  font-family: 'DoublePorter', 'Cairo', sans-serif;
+  font-size: 32px; font-weight: normal;
+  letter-spacing: 4px; color: var(--gold);
+}
+
+.nav-right { display: flex; align-items: center; gap: 12px; }
+.nav-divider { width: 1px; height: 24px; background: var(--border2); }
+
+.nav-user {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; color: var(--text2); cursor: pointer;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+.nav-user:hover { border-color: var(--border2); color: var(--text); }
+.nav-user strong { color: var(--text); }
+
+.nav-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--red), var(--red2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; color: white;
+  border: 1px solid var(--border2);
+  overflow: hidden; flex-shrink: 0;
+}
+.nav-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.notif-btn {
+  position: relative;
+  width: 36px; height: 36px;
+  background: none; border: 1px solid var(--border2);
+  color: var(--text2); cursor: pointer; font-size: 15px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.notif-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+.notif-dot {
+  position: absolute; top: 7px; right: 7px;
+  width: 7px; height: 7px; background: var(--red);
+  border-radius: 50%; animation: blink 2s infinite;
+}
+
+.notif-panel {
+  position: fixed; top: 64px; left: 0; width: 340px;
+  max-height: 480px; background: var(--card);
+  border: 1px solid var(--border2); border-top: 2px solid var(--gold);
+  z-index: 200; overflow-y: auto; display: none;
+}
+.notif-panel.open { display: block; }
+
+.notif-hdr {
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 13px; font-weight: 700;
+}
+
+.notif-item { padding: 14px 20px; border-bottom: 1px solid var(--border); }
+.notif-item.unread { border-right: 2px solid var(--gold); }
+.notif-t { font-size: 13px; font-weight: 600; }
+.notif-b { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.notif-time { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+.mobile-menu-btn {
+  display: none; background: none; border: 1px solid var(--border);
+  color: var(--text); width: 42px; height: 42px;
+  align-items: center; justify-content: center;
+  cursor: pointer; font-size: 20px; transition: all 0.2s;
+}
+.mobile-menu-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+@media (max-width: 768px) {
+  .navbar {
+    padding: 0 12px;
+    padding-top: env(safe-area-inset-top);
+    height: calc(56px + env(safe-area-inset-top));
+  }
+  .nav-logo-img { height: 40px; width: 40px; }
+  .nav-brand { font-size: 18px; letter-spacing: 3px; }
+  .nav-right { gap: 6px; margin-right: auto; }
+  .nav-user span:not(.nav-avatar):last-child { display: none; }
+  .nav-user { min-width: 36px; padding: 4px 6px; }
+  .notif-btn { width: 34px; height: 34px; font-size: 15px; }
+  .mobile-menu-btn { display: flex; }
+  .notif-panel {
+    width: 100%; max-width: 100%; right: 0; left: 0;
+    top: calc(56px + env(safe-area-inset-top));
+    max-height: 60vh; -webkit-overflow-scrolling: touch;
+  }
+}
+
+@supports (padding: max(0px)) {
+  .navbar {
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+}

@@ -1,0 +1,15 @@
+rules_version = '2';
+// قواعد Firebase Storage لصور الملف الشخصي (Revolta)
+// انسخ المحتوى إلى: Firebase Console > Storage > Rules
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /avatars/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null
+        && request.resource.size < 2 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*')
+        && fileName.matches(request.auth.uid + '_.*');
+    }
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "meta": {
+      ".read": "auth != null",
+      ".write": "auth != null && (!data.exists() || root.child('users').child(auth.uid).child('isAdmin').val() === true)"
+    },
+
+    "users": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "$uid === auth.uid || root.child('users').child(auth.uid).child('isAdmin').val() === true"
+      }
+    },
+
+    "publicProfiles": {
+      ".read": true,
+      "$uid": {
+        ".write": "auth != null && root.child('users').child(auth.uid).child('isAdmin').val() === true"
+      }
+    },
+
+    "tasks": {
+      ".read": "auth != null",
+      "$taskId": {
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('isAdmin').val() === true || root.child('users').child(auth.uid).child('permissions').child('addTaskOthers').val() === true || (data.exists() && data.child('memberId').val() === auth.uid) || (!data.exists() && newData.child('memberId').val() === auth.uid))"
+      }
+    },
+
+    "notifs": {
+      "$notifId": {
+        ".read": "auth != null && data.exists() && data.child('userId').val() === auth.uid",
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('isAdmin').val() === true || (data.exists() && data.child('userId').val() === auth.uid) || (!data.exists() && newData.child('userId').val() === auth.uid))"
+      }
+    },
+
+    "polls": {
+      ".read": true,
+      "$pollId": {
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('isAdmin').val() === true || (!data.exists()))"
+      }
+    },
+
+    "poll_votes": {
+      "$pollId": {
+        ".read": true,
+        "counts": {
+          ".write": "auth != null"
+        },
+        "voters": {
+          "$voterId": {
+            ".read": "$voterId === auth.uid",
+            ".write": "auth != null && !data.exists()"
+          }
+        }
+      }
+    },
+
+    "ideas": {
+      ".read": "auth != null",
+      "$ideaId": {
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('isAdmin').val() === true || (!data.exists()) || (data.exists() && data.child('createdBy').val() === auth.uid) || (data.exists() && newData.child('ownerId').val() === auth.uid) || (data.exists() && data.child('ownerId').val() === auth.uid))"
+      }
+    },
+
+    "publicWorks": {
+      ".read": true,
+      "$workId": {
+        ".write": "auth != null && root.child('users').child(auth.uid).child('isAdmin').val() === true"
+      }
+    }
+  }
+}

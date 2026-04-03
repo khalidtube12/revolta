@@ -1,0 +1,105 @@
+.ls-wrap {
+  position: fixed;
+  inset: 0;
+  background: #050505;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  overflow: hidden;
+}
+
+/* background lines */
+.ls-line {
+  position: absolute;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(to bottom, transparent, rgba(201,168,76,0.06), transparent);
+  animation: ls-line 3s ease-in-out infinite;
+}
+.ls-line:nth-child(1) { left: 25%; animation-delay: 0s; }
+.ls-line:nth-child(2) { left: 50%; animation-delay: 0.5s; }
+.ls-line:nth-child(3) { left: 75%; animation-delay: 1s; }
+
+@keyframes ls-line {
+  0%, 100% { opacity: 0; }
+  50%       { opacity: 1; }
+}
+
+/* content */
+.ls-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.ls-logo {
+  width: 130px;
+  animation: ls-logo-glow 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 20px rgba(201,168,76,0.2));
+}
+
+@keyframes ls-logo-glow {
+  0%, 100% { filter: drop-shadow(0 0 20px rgba(201,168,76,0.2)); }
+  50%       { filter: drop-shadow(0 0 44px rgba(201,168,76,0.55)); }
+}
+
+.ls-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  animation: ls-divider 2s ease-in-out infinite;
+}
+
+@keyframes ls-divider {
+  0%, 100% { width: 40px; opacity: 0.5; }
+  50%       { width: 120px; opacity: 1; }
+}
+
+.ls-name {
+  font-family: 'DoublePorter', 'Cairo', sans-serif;
+  font-size: 36px;
+  font-weight: normal;
+  letter-spacing: 10px;
+  color: var(--gold);
+  animation: ls-name 3s ease-in-out infinite;
+}
+
+@keyframes ls-name {
+  0%, 100% { opacity: 0.75; letter-spacing: 10px; }
+  50%       { opacity: 1;    letter-spacing: 13px; }
+}
+
+.ls-sub {
+  font-family: 'Oswald', sans-serif;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+}
+
+.ls-bar {
+  width: 160px;
+  height: 1px;
+  background: #1a1a1a;
+  margin-top: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.ls-bar-inner {
+  position: absolute;
+  top: 0;
+  left: -40%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  animation: ls-bar 1.8s ease-in-out infinite;
+}
+
+@keyframes ls-bar {
+  0%   { left: -40%; }
+  100% { left: 140%; }
+}

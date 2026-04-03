@@ -1,0 +1,21 @@
+:root {
+  --black: #080808;
+  --dark: #0f0f0f;
+  --card: #141414;
+  --card2: #1a1a1a;
+  --border: #222222;
+  --border2: #2a2a2a;
+  --red: #8b0000;
+  --red2: #a50000;
+  --dark-red: #6a0000;
+  --red-glow: rgba(139,0,0,0.4);
+  --gold: #c9a84c;
+  --gold2: #e2c06a;
+  --gold-glow: rgba(201,168,76,0.3);
+  --text: #f0ede6;
+  --text2: #a09880;
+  --muted: #5a5040;
+  --green: #2d7a4f;
+  --green2: #3a9e65;
+  --orange: #c45c00;
+}

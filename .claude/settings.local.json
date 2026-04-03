@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3:*)",
+      "Bash(node:*)",
+      "Bash(xargs sed:*)",
+      "Bash(npm run:*)",
+      "Bash(xargs ls:*)",
+      "Bash(npm init:*)",
+      "Bash(npm install:*)",
+      "Bash(unzip -l WrestleManiaStages.zip)",
+      "Bash(unzip -o WrestleManiaStages.zip -d public/)",
+      "Bash(npx tsc:*)",
+      "Bash(find C:UsersUserDesktopRevoltaAppBacupRevoltaAppDev_v2RevoltaAppDev -type f -name *.ts -o -name *.tsx -o -name *.json -o -name *.rules -o -name .env*)",
+      "Bash(find C:UsersUserDesktopRevoltaAppBacupRevoltaAppDev_v2RevoltaAppDev -name database.rules.json -o -name *rules.json)",
+      "Bash(for file:*)",
+      "Bash(do echo:*)",
+      "Read(//c/Users/User/Desktop/RevoltaAppBacup/RevoltaAppDev_v2/RevoltaAppDev/**)",
+      "Bash(done)",
+      "Bash(grep -E \"className=.*page-hdr-text|className=.*hdr-line\" src/pages/**/*.tsx)",
+      "Bash(npm uninstall:*)",
+      "Bash(find C:UsersUserDesktopRevoltaAppBacupRevoltaAppDev_v2RevoltaAppDev -type f -name .env*)",
+      "Bash(npx firebase-tools:*)",
+      "Bash(find C:UsersUserDesktopRevoltaAppBacupRevoltaAppDev_v2RevoltaAppDev/src -iname *profile* -o -iname *settings* -o -iname *account* -o -iname *edit*)",
+      "Bash(find /c/Users/User/Desktop/RevoltaAppBacup/RevoltaAppDev_v2/RevoltaAppDev/src/stores -type f -name *.ts -o -name *.tsx)",
+      "Bash(find /c/Users/User/Desktop/RevoltaAppBacup/RevoltaAppDev_v2/RevoltaAppDev/src/services -type f -name *.ts -o -name *.tsx)",
+      "Bash(find /c/Users/User/Desktop/RevoltaAppBacup/RevoltaAppDev_v2/RevoltaAppDev/src/components -type f -name *.css)",
+      "Bash(find /c/Users/User/Desktop/RevoltaAppBacup/RevoltaAppDev_v2/RevoltaAppDev/src/pages -type f -name *.css)",
+      "Bash(find /c/Users/User/Desktop/RevoltaAppBacup/RevoltaAppDev_v2/RevoltaAppDev/src/hooks -type f -name *.ts -o -name *.tsx)"
+    ]
+  }
+}
