@@ -66,14 +66,15 @@ export function calculateMemberMonthlyPoints(
       breakdown.total += base + bonusAmt;
     }
 
-    // عضو تيم في مقطع (teamMemberIds) — يأخذ نفس نقاط المقطع كاملة
-    if (t.type === 'video' && t.teamMemberIds?.includes(userId)) {
-      breakdown.video += base;
+    // عضو تيم في مقطع/بودكاست (teamMemberIds) — يأخذ نفس النقاط كاملة
+    if ((t.type === 'video' || t.type === 'podcast') && t.teamMemberIds?.includes(userId)) {
+      const typeKey = t.type as keyof MemberMonthlyBreakdown;
+      (breakdown[typeKey] as number) += base;
       breakdown.total += base;
     }
 
-    // منتج المقطع — +200 نقطة إضافية
-    if (t.type === 'video' && t.producerId === userId) {
+    // منتج المقطع أو البودكاست — +200 نقطة إضافية
+    if ((t.type === 'video' || t.type === 'podcast') && t.producerId === userId) {
       breakdown.bonus += 200;
       breakdown.total += 200;
     }

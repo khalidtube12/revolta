@@ -29,7 +29,7 @@ export function MyTasksPage() {
   const [editingTitleId, setEditingTitleId] = useState<string | null>(null);
   const [editingTitleVal, setEditingTitleVal] = useState('');
   const [twitterModal, setTwitterModal] = useState<string | null>(null);
-  const [videoModal, setVideoModal] = useState<string | null>(null);
+  const [videoModal, setVideoModal] = useState<{ id: string; type: 'video' | 'podcast' } | null>(null);
   const [activeTab, setActiveTab] = useState<'core' | 'bonus'>('core');
   const [meetings, setMeetings] = useState<Meeting[]>([]);
 
@@ -65,8 +65,8 @@ export function MyTasksPage() {
       updateTask(taskId, { status: 'done', done: true }).then(load);
     } else if (t?.type === 'x_content') {
       setTwitterModal(taskId);
-    } else if (t?.type === 'video') {
-      setVideoModal(taskId);
+    } else if (t?.type === 'video' || t?.type === 'podcast') {
+      setVideoModal({ id: taskId, type: t.type });
     } else {
       setDriveModal({ taskId, status: 'done', taskTitle: t?.title || '' });
     }
@@ -74,7 +74,7 @@ export function MyTasksPage() {
 
   const handleVideoSubmit = async (driveLink: string, producerId: string) => {
     if (!videoModal) return;
-    await updateTask(videoModal, { status: 'done', done: true, producerId, ...(driveLink ? { driveLink } : {}) });
+    await updateTask(videoModal.id, { status: 'done', done: true, producerId, ...(driveLink ? { driveLink } : {}) });
     setVideoModal(null);
     load();
   };
@@ -363,8 +363,9 @@ export function MyTasksPage() {
         open={!!videoModal}
         onClose={() => setVideoModal(null)}
         onSubmit={handleVideoSubmit}
+        taskType={videoModal?.type}
         participants={(() => {
-          const t = tasks.find(t => t.id === videoModal);
+          const t = tasks.find(t => t.id === videoModal?.id);
           if (!t) return [];
           const primary = members.find(m => m.id === t.memberId);
           const team = (t.teamMemberIds ?? []).map(id => members.find(m => m.id === id)).filter(Boolean);

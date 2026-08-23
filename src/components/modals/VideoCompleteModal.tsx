@@ -6,9 +6,10 @@ interface VideoCompleteModalProps {
   onClose: () => void;
   onSubmit: (driveLink: string, producerId: string) => void;
   participants: User[];
+  taskType?: 'video' | 'podcast';
 }
 
-export function VideoCompleteModal({ open, onClose, onSubmit, participants }: VideoCompleteModalProps) {
+export function VideoCompleteModal({ open, onClose, onSubmit, participants, taskType = 'video' }: VideoCompleteModalProps) {
   const [driveLink, setDriveLink] = useState('');
   const [producerId, setProducerId] = useState('');
 
@@ -24,7 +25,7 @@ export function VideoCompleteModal({ open, onClose, onSubmit, participants }: Vi
   return (
     <div className="overlay open" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="modal" style={{ maxWidth: 420 }}>
-        <div className="modal-title">🎬 إكمال المقطع</div>
+        <div className="modal-title">{taskType === 'podcast' ? '🎙 إكمال البودكاست' : '🎬 إكمال المقطع'}</div>
 
         <div className="form-group">
           <label>رابط Drive (اختياري)</label>
