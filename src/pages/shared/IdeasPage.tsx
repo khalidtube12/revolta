@@ -34,7 +34,7 @@ export function IdeasPage() {
 
   if (loading) return <Spinner />;
 
-  const tryLinkIdea = async (ideaId: string, userId: string) => {
+  const tryLinkIdea = async (ideaId: string, userId: string, isSelf = false) => {
     const idea = ideas.find(i => i.id === ideaId);
     const allTasks = await fetchAllTasks();
     const pendingTasks = allTasks.filter(t => {
@@ -46,7 +46,11 @@ export function IdeasPage() {
       return true;
     });
 
-    await assignIdea(ideaId, userId);
+    if (isSelf) {
+      await claimIdea(ideaId, userId);
+    } else {
+      await assignIdea(ideaId, userId);
+    }
 
     if (pendingTasks.length === 0) {
       load();
@@ -67,7 +71,7 @@ export function IdeasPage() {
   };
 
   const handleClaim = (ideaId: string) => {
-    if (firebaseUser) tryLinkIdea(ideaId, firebaseUser.uid);
+    if (firebaseUser) tryLinkIdea(ideaId, firebaseUser.uid, true);
   };
 
   const handleUnclaim = async (ideaId: string) => {

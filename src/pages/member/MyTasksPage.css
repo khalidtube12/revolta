@@ -1,3 +1,11 @@
+/* tabs — shared with AllTasksPage.css */
+.tab-bar { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+.tab-btn { padding: 10px 22px; background: none; border: none; border-bottom: 2px solid transparent; color: var(--muted); cursor: pointer; font-family: 'Cairo', sans-serif; font-size: 14px; transition: color 0.15s; margin-bottom: -1px; }
+.tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+.tab-btn:hover:not(.active) { color: var(--text); }
+.tab-badge { background: rgba(255,255,255,0.08); color: var(--muted); border-radius: 10px; font-size: 11px; padding: 1px 7px; margin-right: 6px; }
+.tab-btn.active .tab-badge { background: rgba(201,168,76,0.15); color: var(--gold); }
+
 /* ===== MAGAZINE CARD LIST ===== */
 
 .mag-list {

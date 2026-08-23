@@ -1,3 +1,9 @@
+# Claude Code
+.claude/
+
+# Large assets
+*.zip
+
 # Logs
 logs
 *.log

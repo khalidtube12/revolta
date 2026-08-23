@@ -3,6 +3,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { Card } from '../../components/ui/Card';
 import { getAllPolls, createPollWithId, deletePoll, newPollId, uploadPollImage, subscribeToPollResults } from '../../services/polls.service';
 import type { Poll, PollResults } from '../../services/polls.service';
+import { dbGet, dbUpdate } from '../../services/db.service';
 import './PollsPage.css';
 
 interface OptionDraft {
@@ -13,12 +14,17 @@ interface OptionDraft {
 }
 
 const WM_PRESETS: OptionDraft[] = [
+  { name: 'WrestleMania 24', imageUrl: '/WrestleManiaStages/WrestleMania24.jpg' },
   { name: 'WrestleMania 26', imageUrl: '/WrestleManiaStages/WrestleMania26.jpg' },
   { name: 'WrestleMania 27', imageUrl: '/WrestleManiaStages/WrestleMania27.jpg' },
+  { name: 'WrestleMania 28', imageUrl: '/WrestleManiaStages/WrestleMania28.jpg' },
+  { name: 'WrestleMania 29', imageUrl: '/WrestleManiaStages/WrestleMania29.jpg' },
   { name: 'WrestleMania 30', imageUrl: '/WrestleManiaStages/WrestleMania30.jpg' },
   { name: 'WrestleMania 31', imageUrl: '/WrestleManiaStages/WrestleMania31.jpg' },
   { name: 'WrestleMania 33', imageUrl: '/WrestleManiaStages/WrestleMania33.jpg' },
   { name: 'WrestleMania 34', imageUrl: '/WrestleManiaStages/WrestleMania34.jpg' },
+  { name: 'WrestleMania 35', imageUrl: '/WrestleManiaStages/WrestleMania35.jpg' },
+  { name: 'WrestleMania 36', imageUrl: '/WrestleManiaStages/WrestleMania36.jpg' },
   { name: 'WrestleMania 37', imageUrl: '/WrestleManiaStages/WrestleMania37.jpg' },
   { name: 'WrestleMania 38', imageUrl: '/WrestleManiaStages/WrestleMania38.jpg' },
   { name: 'WrestleMania 39', imageUrl: '/WrestleManiaStages/WrestleMania39.jpg' },
@@ -41,6 +47,8 @@ export function PollsPage() {
   const [showModal, setShowModal] = useState(false);
   const [toast, setToast] = useState(false);
   const [resultsModal, setResultsModal] = useState<{ poll: Poll; results: PollResults } | null>(null);
+  const [editExpiry, setEditExpiry] = useState<{ poll: Poll; date: string } | null>(null);
+  const [savingExpiry, setSavingExpiry] = useState(false);
 
   // Form state
   const [title, setTitle] = useState('');
@@ -55,6 +63,8 @@ export function PollsPage() {
   const [saveProgress, setSaveProgress] = useState('');
   const [saveError, setSaveError] = useState('');
   const [usePreset, setUsePreset] = useState(false);
+  const [pollsOpen, setPollsOpen] = useState<boolean | null>(null);
+  const [togglingPolls, setTogglingPolls] = useState(false);
 
   // One ref per option for the hidden file input
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -62,10 +72,22 @@ export function PollsPage() {
 
   const load = async () => {
     setLoading(true);
-    const all = await getAllPolls();
+    const [all, open] = await Promise.all([
+      getAllPolls(),
+      dbGet<boolean>('meta/pollsOpen'),
+    ]);
     all.sort((a, b) => b.createdAt - a.createdAt);
     setPolls(all);
+    setPollsOpen(open ?? true);
     setLoading(false);
+  };
+
+  const handleTogglePolls = async () => {
+    const next = !pollsOpen;
+    setTogglingPolls(true);
+    await dbUpdate('meta', { pollsOpen: next });
+    setPollsOpen(next);
+    setTogglingPolls(false);
   };
 
   useEffect(() => { load(); }, []);
@@ -215,6 +237,17 @@ export function PollsPage() {
     setResultsModal(null);
   };
 
+  const handleSaveExpiry = async () => {
+    if (!editExpiry) return;
+    const ts = new Date(editExpiry.date).getTime();
+    if (isNaN(ts)) return;
+    setSavingExpiry(true);
+    await dbUpdate('polls/' + editExpiry.poll.id, { expiresAt: ts });
+    setPolls(prev => prev.map(p => p.id === editExpiry.poll.id ? { ...p, expiresAt: ts } : p));
+    setEditExpiry(null);
+    setSavingExpiry(false);
+  };
+
   return (
     <>
       <div className="page-hdr">
@@ -222,7 +255,25 @@ export function PollsPage() {
           <h1>التصويتات</h1>
           <p>{polls.filter(p => !isExpired(p)).length} نشط</p>
         </div>
-        <button className="btn" onClick={openModal}>+ تصويت جديد</button>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {pollsOpen !== null && (
+            <button
+              onClick={handleTogglePolls}
+              disabled={togglingPolls}
+              style={{
+                fontSize: 12, padding: '8px 16px',
+                background: pollsOpen ? 'rgba(58,158,101,0.1)' : 'rgba(139,0,0,0.1)',
+                border: `1px solid ${pollsOpen ? 'rgba(58,158,101,0.4)' : 'rgba(139,0,0,0.4)'}`,
+                color: pollsOpen ? 'var(--green2)' : 'var(--red)',
+                fontFamily: 'Cairo, sans-serif', cursor: 'pointer',
+                transition: 'all 0.15s', opacity: togglingPolls ? 0.5 : 1,
+              }}
+            >
+              {pollsOpen ? '● ظاهرة في الرئيسية — إخفاء' : '○ مخفية من الرئيسية — إظهار'}
+            </button>
+          )}
+          <button className="btn" onClick={openModal}>+ تصويت جديد</button>
+        </div>
       </div>
 
       <Card>
@@ -259,6 +310,13 @@ export function PollsPage() {
                   </button>
                   <button className="btn btn-xs btn-ghost" onClick={() => window.open(`/vote/${poll.id}`, '_blank')}>
                     عرض
+                  </button>
+                  <button className="btn btn-xs btn-ghost" onClick={() => {
+                    const d = new Date(poll.expiresAt);
+                    const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+                    setEditExpiry({ poll, date: local });
+                  }}>
+                    تعديل التاريخ
                   </button>
                   <button className="btn btn-xs btn-danger" onClick={() => handleDelete(poll.id)}>
                     حذف
@@ -460,6 +518,38 @@ export function PollsPage() {
           </div>
         );
       })()}
+
+      {/* Edit expiry modal */}
+      {editExpiry && (
+        <div className="modal-overlay" onClick={() => setEditExpiry(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 360 }}>
+            <div className="poll-modal-header">
+              <span>تعديل تاريخ الانتهاء</span>
+              <button className="poll-modal-close" onClick={() => setEditExpiry(null)}>✕</button>
+            </div>
+            <div style={{ padding: '20px 24px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ fontSize: 13, color: 'var(--muted)', fontFamily: 'Cairo, sans-serif' }}>
+                {editExpiry.poll.title}
+              </div>
+              <input
+                type="datetime-local"
+                value={editExpiry.date}
+                onChange={e => setEditExpiry(prev => prev ? { ...prev, date: e.target.value } : null)}
+                style={{
+                  background: '#0c0c0c', border: '1px solid #2a2a2a', color: 'var(--text)',
+                  padding: '10px 12px', fontSize: 14, fontFamily: 'Cairo, sans-serif', width: '100%',
+                }}
+              />
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                <button className="btn btn-ghost" onClick={() => setEditExpiry(null)}>إلغاء</button>
+                <button className="btn" onClick={handleSaveExpiry} disabled={savingExpiry}>
+                  {savingExpiry ? '...' : 'حفظ'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

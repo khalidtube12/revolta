@@ -1,0 +1,61 @@
+.sm-section { margin-bottom: 24px; }
+.sm-section-title { font-family: 'Oswald', sans-serif; font-size: 13px; letter-spacing: 1px; color: var(--gold); text-transform: uppercase; margin-bottom: 12px; }
+
+.sm-form { display: flex; flex-direction: column; gap: 14px; padding: 20px; background: var(--dark); border: 1px solid var(--border); border-top: 2px solid var(--gold); margin-bottom: 16px; }
+.sm-match-form { background: #111; border-color: #222; border-top-color: var(--border); }
+
+.sm-field { display: flex; flex-direction: column; gap: 6px; }
+.sm-field label { font-size: 12px; color: var(--muted); font-family: 'Cairo', sans-serif; }
+.sm-field input, .sm-field select { background: #111; border: 1px solid var(--border); color: var(--text); padding: 8px 12px; font-family: 'Cairo', sans-serif; font-size: 14px; outline: none; }
+.sm-field input:focus { border-color: var(--gold); }
+
+.sm-upload { position: relative; cursor: pointer; border: 1px dashed var(--border); min-height: 80px; display: flex; align-items: center; justify-content: center; background: #0d0d0d; transition: border-color 0.2s; }
+.sm-upload:hover { border-color: var(--gold); }
+.sm-upload input[type="file"] { display: none; }
+.sm-upload-preview { width: 100%; max-height: 160px; object-fit: cover; display: block; }
+.sm-upload-placeholder { font-size: 13px; color: var(--muted); font-family: 'Cairo', sans-serif; }
+
+.sm-check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text); font-family: 'Cairo', sans-serif; cursor: pointer; }
+.sm-check input[type="checkbox"] { accent-color: var(--gold); width: 16px; height: 16px; }
+
+.sm-err { font-size: 12px; color: var(--red); font-family: 'Cairo', sans-serif; }
+
+.sm-form-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+.sm-shows-list { display: flex; flex-direction: column; gap: 12px; }
+
+.sm-show-card { background: var(--dark); border: 1px solid var(--border); overflow: hidden; }
+
+.sm-show-header { display: flex; align-items: center; gap: 14px; padding: 14px 16px; cursor: pointer; transition: background 0.15s; }
+.sm-show-header:hover { background: rgba(255,255,255,0.02); }
+
+.sm-show-poster { width: 56px; height: 56px; flex-shrink: 0; overflow: hidden; background: #111; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+.sm-show-poster img { width: 100%; height: 100%; object-fit: cover; }
+
+.sm-show-info { flex: 1; min-width: 0; }
+.sm-show-name { font-family: 'Oswald', sans-serif; font-size: 16px; color: var(--text); text-transform: uppercase; }
+.sm-show-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.sm-show-meta { display: flex; align-items: center; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
+.sm-show-meta span { font-size: 11px; color: var(--muted); }
+
+.sm-badge { padding: 2px 8px; font-size: 10px; font-family: 'Cairo', sans-serif; }
+.sm-badge-green { background: rgba(58,158,101,0.12); color: #3a9e65; }
+.sm-badge-gray { background: rgba(255,255,255,0.05); color: var(--muted); }
+
+.sm-show-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.sm-chevron { font-size: 10px; color: var(--muted); flex-shrink: 0; }
+
+.sm-matches { border-top: 1px solid var(--border); padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; background: #080808; }
+
+.sm-match-row { display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: #0d0d0d; border: 1px solid #1a1a1a; }
+
+.sm-match-img { width: 48px; height: 48px; flex-shrink: 0; overflow: hidden; background: #111; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.sm-match-img img { width: 100%; height: 100%; object-fit: cover; }
+
+.sm-match-info { flex: 1; display: flex; align-items: center; gap: 8px; min-width: 0; }
+.sm-match-order { font-family: 'Oswald', sans-serif; font-size: 12px; color: var(--gold); flex-shrink: 0; }
+.sm-match-title { font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.sm-match-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+.sm-add-match { width: 100%; justify-content: center; border-style: dashed; font-size: 13px; padding: 10px; }

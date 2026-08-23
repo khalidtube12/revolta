@@ -10,13 +10,18 @@ export interface UserPermissions {
   setTaskIncomplete: boolean;
   changeTaskStatus: boolean;
   managePolls: boolean;
+  postReviews: boolean;
   viewMembers: boolean;
   exportTasks: boolean;
   importTasks: boolean;
+  manageShows: boolean;
+  deleteReview: boolean;
+  deleteShow: boolean;
+  viewIdeas: boolean;
 }
 
 export const DEFAULT_PERMISSIONS: UserPermissions = {
-  viewAllTasks: false,
+  viewAllTasks: true,
   addTaskSelf: true,
   addTaskOthers: false,
   deleteTask: false,
@@ -27,10 +32,69 @@ export const DEFAULT_PERMISSIONS: UserPermissions = {
   setTaskIncomplete: false,
   changeTaskStatus: false,
   managePolls: false,
+  postReviews: false,
   viewMembers: true,
   exportTasks: false,
   importTasks: false,
+  manageShows: false,
+  deleteReview: false,
+  deleteShow: false,
+  viewIdeas: true,
 };
+
+export interface Show {
+  id: string;
+  name: string;
+  subtitle: string;
+  posterUrl: string;
+  date: string;
+  published: boolean;
+  createdAt: number;
+  createdBy: string;
+}
+
+export interface Match {
+  id: string;
+  showId: string;
+  title: string;
+  imageUrl: string;
+  order: number;
+  createdAt: number;
+}
+
+export interface ShowReviewPoint {
+  text: string;
+  positive: boolean;
+}
+
+export interface ShowOverallReview {
+  id: string;
+  showId: string;
+  points: ShowReviewPoint[];
+  description?: string | null;
+  verdict: string;
+  rating: number;
+  createdAt: number;
+  authorId: string;
+  authorName: string;
+  authorPhotoURL?: string | null;
+  authorTwitter?: string | null;
+}
+
+export interface ShowReview {
+  id: string;
+  matchId: string;
+  showId: string;
+  points: ShowReviewPoint[];
+  description?: string | null;
+  verdict: string;
+  rating: number;
+  createdAt: number;
+  authorId: string;
+  authorName: string;
+  authorPhotoURL?: string | null;
+  authorTwitter?: string | null;
+}
 
 export interface User {
   id: string;
@@ -53,13 +117,22 @@ export interface Task {
   desc?: string;
   deadline?: string;
   priority?: 'low' | 'medium' | 'high';
-  type?: 'short' | 'video' | 'writing' | 'x_content' | 'podcast';
+  type?: 'short' | 'video' | 'writing' | 'x_content' | 'podcast' | 'design';
   status?: TaskStatus;
   done: boolean;
   driveLink?: string;
   linkedIdeaId?: string;
   teamMemberIds?: string[];
   createdAt: number;
+  titleSetAt?: number;
+  points?: number;
+  bonusPoints?: number;
+  bonusNote?: string;
+  twitterUrl?: string;
+  isBonus?: boolean;
+  pointsApproved?: boolean;
+  pointsApprovedBy?: string;
+  pointsApprovedAt?: number;
 }
 
 export interface Notification {
@@ -69,6 +142,15 @@ export interface Notification {
   body: string;
   read: boolean;
   createdAt: number;
+}
+
+export interface Meeting {
+  id: string;
+  title: string;
+  date: string;
+  createdAt: number;
+  createdBy: string;
+  attendees?: Record<string, boolean>;
 }
 
 export interface Idea {
@@ -88,7 +170,7 @@ export interface ImportRow {
   desc: string;
   deadline: string;
   priority: 'low' | 'medium' | 'high';
-  type?: 'short' | 'video' | 'writing' | 'x_content' | 'podcast';
+  type?: 'short' | 'video' | 'writing' | 'x_content' | 'podcast' | 'design';
   error?: string;
 }
 

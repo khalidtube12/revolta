@@ -3,6 +3,7 @@ import { Modal } from './Modal';
 import { useAuthStore } from '../../stores/authStore';
 import { useTasksStore } from '../../stores/tasksStore';
 import { useMembersStore } from '../../stores/membersStore';
+import { getDefaultPoints } from '../../services/points.service';
 
 
 interface TaskModalProps {
@@ -10,11 +11,12 @@ interface TaskModalProps {
   onClose: () => void;
   preMemberId?: string | null;
   onSuccess?: () => void;
+  forceBonus?: boolean;
 }
 
-export function TaskModal({ open, onClose, preMemberId, onSuccess }: TaskModalProps) {
+export function TaskModal({ open, onClose, preMemberId, onSuccess, forceBonus }: TaskModalProps) {
   const { profile, firebaseUser, can } = useAuthStore();
-  const canAddOthers = !!profile?.isAdmin || can('addTaskOthers');
+  const canAddOthers = !forceBonus && (!!profile?.isAdmin || can('addTaskOthers'));
   const { addTask } = useTasksStore();
   const { members, loadMembers } = useMembersStore();
   const [memberId, setMemberId] = useState('');
@@ -66,11 +68,12 @@ export function TaskModal({ open, onClose, preMemberId, onSuccess }: TaskModalPr
   const isPodcast = type === 'podcast';
   const isTeamType = isVideo || isPodcast;
   const TASK_TYPES: { value: string; label: string }[] = [
-    { value: 'short', label: 'شورت' },
-    { value: 'video', label: 'مقطع' },
-    { value: 'writing', label: 'كتابة' },
+    { value: 'short',     label: 'شورت' },
+    { value: 'video',     label: 'مقطع' },
+    { value: 'writing',   label: 'كتابة' },
     { value: 'x_content', label: 'محتوى X' },
-    { value: 'podcast', label: 'بودكاست' },
+    { value: 'podcast',   label: 'بودكاست' },
+    { value: 'design',    label: 'تصميم' },
   ];
 
   const canSubmit = isTeamType ? teamMemberIds.length > 0 : true;
@@ -81,6 +84,9 @@ export function TaskModal({ open, onClose, preMemberId, onSuccess }: TaskModalPr
       const deadlineFormatted = deadline ? new Date(deadline).toLocaleDateString('ar') : '';
       const notifyBody = 'تم إسناد مهمة جديدة إليك' + (deadline ? ' — تاريخ النشر: ' + deadlineFormatted : '');
       const notifyTitle = '📋 مهمة جديدة: ' + (title.trim() || '—');
+
+      const taskType = type as 'short' | 'video' | 'writing' | 'x_content' | 'podcast' | 'design';
+      const autoPoints = getDefaultPoints(taskType);
 
       if (isTeamType && canAddOthers) {
         if (teamMemberIds.length === 0) { alert('يرجى اختيار عضو واحد على الأقل'); setLoading(false); return; }
@@ -93,9 +99,10 @@ export function TaskModal({ open, onClose, preMemberId, onSuccess }: TaskModalPr
             desc: desc.trim(),
             deadline,
             priority: priority as 'low' | 'medium' | 'high',
-            type: type as 'short' | 'video' | 'writing' | 'x_content' | 'podcast',
+            type: taskType,
             done: false,
             createdAt: Date.now(),
+            points: autoPoints,
             ...(rest.length > 0 ? { teamMemberIds: rest } : {}),
           },
           notifyTitle,
@@ -105,6 +112,7 @@ export function TaskModal({ open, onClose, preMemberId, onSuccess }: TaskModalPr
       } else {
         const targetMember = canAddOthers ? memberId : (firebaseUser?.uid ?? '');
         if (!targetMember) { setLoading(false); return; }
+        const isBonusTask = !canAddOthers;
         await addTask(
           {
             memberId: targetMember,
@@ -112,9 +120,11 @@ export function TaskModal({ open, onClose, preMemberId, onSuccess }: TaskModalPr
             desc: desc.trim(),
             deadline,
             priority: priority as 'low' | 'medium' | 'high',
-            type: type as 'short' | 'video' | 'writing' | 'x_content' | 'podcast',
+            type: taskType,
             done: false,
             createdAt: Date.now(),
+            points: autoPoints,
+            ...(isBonusTask ? { isBonus: true, pointsApproved: false } : { isBonus: false }),
           },
           notifyTitle,
           notifyBody,
@@ -133,7 +143,7 @@ export function TaskModal({ open, onClose, preMemberId, onSuccess }: TaskModalPr
     <Modal
       open={open}
       onClose={onClose}
-      title="مهمة جديدة"
+      title={forceBonus ? 'مهمة بونص' : 'مهمة جديدة'}
       footer={
         <>
           <button className="btn" disabled={loading || !canSubmit} onClick={handleSave}>

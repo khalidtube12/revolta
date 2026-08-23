@@ -191,6 +191,11 @@ export function MemberDetailPage() {
               exportTasks: 'تصدير Excel',
               importTasks: 'استيراد Excel',
               managePolls: 'إدارة التصويتات',
+              manageShows: 'إدارة العروض',
+              postReviews: 'نشر تقييم العروض',
+              deleteReview: 'حذف تقييم',
+              deleteShow: 'حذف عرض / نزال',
+              viewIdeas: 'عرض أفكار المقاطع',
             }) as [keyof UserPermissions, string][]).map(([key, label]) => {
               const perms = member.permissions ?? DEFAULT_PERMISSIONS;
               const active = perms[key] ?? DEFAULT_PERMISSIONS[key];

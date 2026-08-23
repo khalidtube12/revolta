@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>REVOLTA — Team Landing Page</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+
+    /* ============================================================
+       DESIGN TOKENS
+       ─────────────────────────────────────────────────────────────
+       Full dark theme. Two accent colors drive everything:
+         • Gold  #c9a84c → active states, highlights, labels, borders
+         • Red   #8b0000 → brand energy, glows, hover accents
+       Backgrounds are near-black layered surfaces:
+         • Page bg:  #050505
+         • Card bg:  rgba(255,255,255,0.018) — barely-visible white tint
+         • Elevated: rgba(255,255,255,0.04)
+       Text:
+         • Primary:  #ffffff
+         • Secondary: rgba(255,255,255,0.5–0.6)
+         • Muted:    rgba(255,255,255,0.25–0.35)
+         • Gold:     rgba(201,168,76,0.55–0.9)
+    ============================================================ */
+    :root {
+      --gold:      #c9a84c;
+      --gold-dim:  rgba(201,168,76,0.4);
+      --red:       #8b0000;
+      --red-dim:   rgba(139,0,0,0.3);
+      --bg:        #050505;
+      --card:      rgba(255,255,255,0.018);
+      --border:    rgba(255,255,255,0.05);
+      --text:      #ffffff;
+      --muted:     rgba(255,255,255,0.4);
+    }
+
+    /* ============================================================
+       GLOBAL RESET
+       ─────────────────────────────────────────────────────────────
+       Body: Cairo (Arabic) font, near-black bg, RTL, no horizontal scroll.
+       A noise SVG texture at 4.5% opacity is layered across the whole page
+       using a fixed pseudo-element — adds subtle grain depth.
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    /* Shared noise texture overlay (reused per-section via .wp-noise) */
+    .wp-noise {
+      position: absolute; inset: 0; opacity: 0.045; pointer-events: none; z-index: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    /* Scroll-reveal animation — elements start hidden, JS adds .visible */
+    .wp-reveal { opacity: 0; transform: translateY(28px); transition: opacity .7s ease, transform .7s ease; }
+    .wp-reveal.visible { opacity: 1; transform: translateY(0); }
+    .wp-d1 { transition-delay: .1s; }
+    .wp-d2 { transition-delay: .2s; }
+    .wp-d3 { transition-delay: .3s; }
+    .wp-d4 { transition-delay: .4s; }
+
+    /* Shared section header pattern used in every section */
+    .wp-sec-head { margin-bottom: 72px; text-align: center; }
+
+    /* Small overline label: "WHO WE ARE", "THE TEAM", etc. */
+    /* Oswald font, 10px, 8px letter-spacing, gold color, with decorative lines on each side */
+    .wp-eyebrow {
+      font-family: 'Oswald', sans-serif; font-size: 10px; letter-spacing: 8px;
+      color: rgba(201,168,76,0.55); text-transform: uppercase; margin-bottom: 12px;
+      display: flex; align-items: center; justify-content: center; gap: 14px;
+    }
+    .wp-eyebrow::before, .wp-eyebrow::after {
+      content: ''; width: 28px; height: 1px; background: rgba(201,168,76,0.4);
+    }
+
+    /* Main section title: Cairo 52px bold, .hl span uses red color */
+    .wp-sec-title {
+      font-family: 'Cairo', sans-serif; font-size: 52px; font-weight: 700;
+      letter-spacing: 2px; color: #fff; line-height: 1.1; margin-bottom: 16px;
+    }
+    .wp-sec-title .hl { color: #c0392b; }
+
+    /* Subtitle below title: small, muted, centered, max 500px wide */
+    .wp-sec-sub { font-size: 15px; color: rgba(255,255,255,0.45); line-height: 2; max-width: 500px; margin: 0 auto; }
+
+
+    /* ============================================================
+       SECTION 1 — NAVBAR
+       ─────────────────────────────────────────────────────────────
+       Fixed top bar, height 62px, transparent by default.
+       Gets "scrolled" class via JS on scroll > 40px →
+         background: rgba(4,4,4,0.94) + backdrop-filter blur(20px)
+         border-bottom: 1px solid rgba(255,255,255,0.06)
+
+       Layout (RTL):
+         LEFT  side: logo image (100px × 100px, overflows navbar for visual effect)
+         CENTER: nav links list (position: absolute, left: 50%, translateX(-50%))
+         RIGHT : nav CTA button (red gradient "انضم إلينا") + hamburger (mobile only)
+
+       Nav links: Cairo 18px, rgba(255,255,255,0.4), hover → white
+         Underline animation on hover (scaleX from right)
+       CTA button: gradient red bg, gold border, glowing pulse animation
+
+       Mobile (≤768px):
+         Hamburger appears, nav links drop down as full-width panel below navbar
+         3 animated bars → X icon when open
+    ============================================================ */
+    .wp-navbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: 62px; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 64px;
+      background: transparent;
+      transition: all .4s; border-bottom: 1px solid transparent;
+    }
+    .wp-navbar.scrolled {
+      background: rgba(4,4,4,0.94); backdrop-filter: blur(20px);
+      border-bottom-color: rgba(255,255,255,0.06);
+    }
+    .wp-nav-logo-img {
+      width: 100px; height: 100px; object-fit: contain;
+      filter: drop-shadow(0 0 6px rgba(201,168,76,0.3));
+      margin-top: 40px; /* intentionally overflows below navbar */
+    }
+    .wp-nav-links {
+      display: flex; align-items: center; gap: 28px; list-style: none;
+      position: absolute; left: 50%; transform: translateX(-50%);
+    }
+    .wp-nav-links button {
+      font-family: 'Cairo', sans-serif; font-size: 18px;
+      color: rgba(255,255,255,0.4); background: none; border: none; cursor: pointer;
+      transition: color .2s; position: relative; padding: 0;
+    }
+    .wp-nav-links button:hover { color: #fff; }
+    /* Animated underline */
+    .wp-nav-links button::after {
+      content: ''; position: absolute; bottom: -4px; right: 0; left: 0;
+      height: 1px; background: #c9a84c; transform: scaleX(0);
+      transform-origin: right; transition: transform .25s;
+    }
+    .wp-nav-links button:hover::after { transform: scaleX(1); }
+    /* Red gradient CTA button with gold border + pulse animation */
+    .wp-nav-cta {
+      padding: 9px 26px;
+      background: linear-gradient(135deg, #8b0000, #5a0000);
+      border: 1px solid rgba(201,168,76,0.2);
+      color: #fff; font-family: 'Cairo', sans-serif; font-size: 13px; font-weight: 700;
+      cursor: pointer; transition: all .25s; letter-spacing: 1px;
+    }
+    .wp-nav-right { display: flex; align-items: center; gap: 14px; }
+    /* Hamburger — hidden on desktop */
+    .wp-hamburger {
+      display: none; flex-direction: column; justify-content: center; gap: 5px;
+      width: 36px; height: 36px; padding: 6px; background: none; border: none; cursor: pointer;
+    }
+    .wp-hamburger span { display: block; width: 22px; height: 2px; background: rgba(255,255,255,0.6); transition: all .25s; }
+
+
+    /* ============================================================
+       SECTION 2 — HERO
+       ─────────────────────────────────────────────────────────────
+       Full-viewport-height (100vh). Multiple layered visual elements:
+
+       Background layers (back to front):
+         1. Dark radial gradient: #120000 center → #040404 edges (deep red warmth)
+         2. .wp-noise texture
+         3. .wp-hero-particles: 10 tiny gold/red floating dots, infinite float-up animation
+         4. .wp-hero-scan: horizontal 1px line scanning top→bottom every 8s (subtle)
+         5. .wp-hero-glow: large red radial circle glow at center
+         6. .wp-hero-bg-text: "REVOLTA" in giant 280px Oswald, rgba(100,0,0,0.08) — watermark
+         7. .wp-hero-top-line: 2px gradient line along the very top edge (red→gold→red)
+         8. .wp-hero-edge.left/.right: vertical 1px lines at 64px from edges (red→gold gradient)
+
+       Content (centered column):
+         • Logo image 150px × 150px with gold/red drop-shadow glow
+         • Eyebrow: "WRESTLING TEAM" with horizontal lines on each side
+         • Main title "REVOLTA" — Oswald 180px, shimmer gradient animation (white→gold→white)
+           The "O" letter uses a gold gradient color separately
+         • Gold divider line (80px wide)
+         • Tagline: "صناعة محتوى المصارعة الحرة بأفضل جودة" (bold word highlighted)
+         • Red gradient CTA button "اكتشف الفريق ↓" — scrolls to About section
+
+       Bottom: animated scroll indicator — vertical line + "SCROLL" text, pulsing
+    ============================================================ */
+    @keyframes wpShimmer {
+      0%   { background-position: 200% center; }
+      100% { background-position: -200% center; }
+    }
+    @keyframes wpFloatUp {
+      0%   { opacity: 0; transform: translateY(0); }
+      20%  { opacity: 0.6; }
+      100% { opacity: 0; transform: translateY(-80px); }
+    }
+    @keyframes wpScanLine {
+      0%   { top: -2px; }
+      100% { top: 100%; }
+    }
+    @keyframes wpArrowPulse {
+      0%,100% { opacity: .4; transform: scaleY(1); }
+      50%      { opacity: 1; transform: scaleY(1.2); transform-origin: top; }
+    }
+
+    #wp-hero {
+      height: 100vh; min-height: 640px;
+      display: flex; align-items: center; justify-content: center; flex-direction: column;
+      background: radial-gradient(ellipse 80% 80% at 50% 50%, #120000 0%, #070000 40%, #040404 100%);
+      position: relative; overflow: hidden;
+    }
+    .wp-hero-particles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+    .wp-hero-particles span {
+      position: absolute; width: 2px; height: 2px; border-radius: 50%;
+      background: rgba(201,168,76,0.5); animation: wpFloatUp 6s ease-in-out infinite;
+    }
+    .wp-hero-particles span:nth-child(1)  { left: 10%;  bottom: 20%; animation-delay: 0s;   animation-duration: 7s; }
+    .wp-hero-particles span:nth-child(2)  { left: 25%;  bottom: 10%; animation-delay: 1s;   animation-duration: 5s; }
+    .wp-hero-particles span:nth-child(3)  { left: 40%;  bottom: 30%; animation-delay: 2s;   animation-duration: 8s; }
+    .wp-hero-particles span:nth-child(4)  { left: 60%;  bottom: 15%; animation-delay: .5s;  animation-duration: 6s; }
+    .wp-hero-particles span:nth-child(5)  { left: 75%;  bottom: 25%; animation-delay: 1.5s; animation-duration: 7s; }
+    .wp-hero-particles span:nth-child(6)  { left: 88%;  bottom: 5%;  animation-delay: 3s;   animation-duration: 5s; }
+    .wp-hero-particles span:nth-child(7)  { left: 15%;  bottom: 50%; animation-delay: 2.5s; animation-duration: 9s; background: rgba(139,0,0,0.6); }
+    .wp-hero-particles span:nth-child(8)  { left: 50%;  bottom: 40%; animation-delay: 4s;   animation-duration: 6s; }
+    .wp-hero-particles span:nth-child(9)  { left: 70%;  bottom: 60%; animation-delay: .8s;  animation-duration: 8s; background: rgba(139,0,0,0.5); }
+    .wp-hero-particles span:nth-child(10) { left: 35%;  bottom: 70%; animation-delay: 3.5s; animation-duration: 7s; }
+    .wp-hero-scan {
+      position: absolute; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent 0%, rgba(201,168,76,0.12) 50%, transparent 100%);
+      animation: wpScanLine 8s linear infinite; pointer-events: none;
+    }
+    .wp-hero-glow {
+      position: absolute; width: 1000px; height: 1000px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(120,0,0,0.38) 0%, rgba(60,0,0,0.12) 40%, transparent 70%);
+      top: 50%; left: 50%; transform: translate(-50%,-50%); pointer-events: none;
+    }
+    /* Giant background watermark text */
+    .wp-hero-bg-text {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+      font-family: 'Oswald', sans-serif; font-size: 280px; font-weight: 700;
+      color: rgba(100,0,0,0.08); letter-spacing: 24px; white-space: nowrap;
+      pointer-events: none; user-select: none; line-height: 1;
+    }
+    /* Top edge decorative line */
+    .wp-hero-top-line {
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(139,0,0,0.7) 30%, rgba(201,168,76,0.8) 50%, rgba(139,0,0,0.7) 70%, transparent);
+    }
+    /* Side vertical lines */
+    .wp-hero-edge {
+      position: absolute; top: 0; bottom: 0; width: 1px;
+      background: linear-gradient(to bottom, transparent, rgba(139,0,0,0.4) 30%, rgba(201,168,76,0.3) 70%, transparent);
+    }
+    .wp-hero-edge.left  { left: 64px; }
+    .wp-hero-edge.right { right: 64px; }
+
+    /* Content column */
+    .wp-hero-content {
+      position: relative; z-index: 1;
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+    }
+    .wp-hero-img {
+      width: 150px; height: 150px; object-fit: contain;
+      filter: drop-shadow(0 0 24px rgba(201,168,76,0.25)) drop-shadow(0 0 8px rgba(139,0,0,0.4));
+      margin-bottom: 20px;
+    }
+    /* "WRESTLING TEAM" overline with side lines */
+    .wp-hero-eyebrow {
+      font-family: 'Oswald', sans-serif; font-size: 10px; letter-spacing: 9px;
+      color: rgba(201,168,76,0.6); text-transform: uppercase;
+      display: flex; align-items: center; gap: 14px; margin-bottom: 24px;
+    }
+    .wp-hero-eyebrow-line { width: 32px; height: 1px; background: rgba(201,168,76,0.5); }
+    /* Main shimmer logo text */
+    .wp-hero-logo {
+      font-family: 'Oswald', sans-serif; font-size: 180px; font-weight: 700;
+      letter-spacing: 18px; line-height: 1;
+      background: linear-gradient(90deg, #fff 0%, #fff 30%, #e8c96a 45%, #fff 55%, #fff 100%);
+      background-size: 300%;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      animation: wpShimmer 4s linear infinite;
+      filter: drop-shadow(0 0 60px rgba(139,0,0,0.7));
+    }
+    /* The "O" in REVOLTA — separate gold shimmer */
+    .wp-hero-logo .r-accent {
+      background: linear-gradient(90deg, #dbbc7f, #f0d898, #dbbc7f);
+      background-size: 200%;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      animation: wpShimmer 3s linear infinite;
+    }
+    .wp-hero-divider {
+      width: 80px; height: 2px; margin: 24px auto;
+      background: linear-gradient(90deg, transparent, rgba(201,168,76,0.7), transparent);
+    }
+    .wp-hero-tagline { font-size: 17px; color: rgba(255,255,255,0.6); letter-spacing: 1px; line-height: 1.9; }
+    .wp-hero-tagline strong { color: rgba(201,168,76,0.9); }
+    /* Main CTA button — red gradient, gold border, glows on hover */
+    .wp-hero-cta {
+      margin-top: 48px; padding: 17px 68px;
+      background: linear-gradient(135deg, #a00000 0%, #6a0000 100%);
+      color: #fff; font-family: 'Cairo', sans-serif; font-size: 17px; font-weight: 900;
+      border: 1px solid rgba(201,168,76,0.25); cursor: pointer; transition: all .3s;
+      letter-spacing: 4px; position: relative; overflow: hidden;
+    }
+    .wp-hero-cta:hover { background: linear-gradient(135deg, #c00000, #800000); transform: translateY(-3px); }
+    /* Scroll indicator at bottom */
+    .wp-hero-scroll {
+      position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      background: none; border: none; cursor: pointer;
+    }
+    .wp-hero-scroll-text { font-family: 'Oswald', sans-serif; font-size: 8px; letter-spacing: 5px; color: rgba(255,255,255,0.25); }
+    .wp-hero-scroll-line {
+      width: 1px; height: 40px;
+      background: linear-gradient(to bottom, rgba(201,168,76,0.5), transparent);
+      animation: wpArrowPulse 2s ease-in-out infinite;
+    }
+
+
+    /* ============================================================
+       SECTION 3 — ABOUT (WHO WE ARE)
+       ─────────────────────────────────────────────────────────────
+       Background: dark-red vertical gradient (#060000 → #0e0000 → #070000)
+       Two ambient glows: large red top-right, small gold bottom-left
+
+       Layout: centered max-width 720px column
+         • Section header (eyebrow "WHO WE ARE" + title + subtitle)
+         • Text block with right-side red border line (3px)
+           Text uses <strong> for gold color, <em> for white bold
+         • Below text: value cards (optional — list of team values)
+
+       The text block has border-right: 3px solid rgba(139,0,0,0.6) for a left-side accent line (RTL)
+    ============================================================ */
+    #wp-about {
+      padding: 128px 80px;
+      background: linear-gradient(180deg, #060000 0%, #0e0000 50%, #070000 100%);
+      position: relative; overflow: hidden;
+    }
+    .wp-about-glow1 {
+      position: absolute; width: 700px; height: 500px; border-radius: 50%;
+      background: radial-gradient(ellipse, rgba(120,0,0,0.2) 0%, transparent 70%);
+      top: -50px; right: -100px; pointer-events: none;
+    }
+    .wp-about-glow2 {
+      position: absolute; width: 400px; height: 400px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 65%);
+      bottom: -80px; left: 10%; pointer-events: none;
+    }
+    .wp-about-inner { position: relative; z-index: 1; max-width: 1120px; margin: 0 auto; }
+    .wp-about-content { max-width: 720px; margin: 0 auto; }
+    /* Text with left red border line accent */
+    .wp-about-text {
+      font-size: 15px; color: rgba(255,255,255,0.5); line-height: 2.7;
+      border-right: 3px solid rgba(139,0,0,0.6); padding-right: 24px; margin-bottom: 32px;
+    }
+    .wp-about-text strong { color: rgba(201,168,76,0.9); }
+    .wp-about-text em     { color: rgba(255,255,255,0.8); font-style: normal; font-weight: 600; }
+
+
+    /* ============================================================
+       SECTION 4 — MEMBERS (THE TEAM)
+       ─────────────────────────────────────────────────────────────
+       Background: dark gradient (#070000 → #050505)
+       One large ambient red glow bottom-left
+
+       Grid: 4 columns (desktop), responsive to 3 → 2 → 2
+       Cards have 3px gap between them (tight grid)
+
+       Each member card:
+         • Barely-visible card bg + 1px white border
+         • TOP BAR: 2px gradient line (red→gold→red), scaleX(0) → scaleX(1) on hover
+         • Avatar circle: 76px, red-tinted bg, gold text for initials
+           OR real photo via <img>
+           Leader card: 90px avatar, pulse-ring gold animation
+         • Member name: Cairo 15px bold white
+         • Role badge: small, gold color, gold border, gold bg tint
+         • X handle link: 11px, gray, gold icon, hover turns gold
+         • Leader badge: "LEADER" label top-left corner (Oswald, tiny, gold)
+       Card hover: translateY(-6px) + red border
+       Click: navigates to /m/:uid (public profile page)
+    ============================================================ */
+    @keyframes wpPulseRingGold {
+      0%,100% { box-shadow: 0 0 0 0 rgba(201,168,76,0.4), 0 0 20px rgba(201,168,76,0.15); }
+      50%      { box-shadow: 0 0 0 12px rgba(201,168,76,0), 0 0 40px rgba(201,168,76,0.3); }
+    }
+    #wp-members {
+      padding: 128px 80px;
+      background: linear-gradient(180deg, #070000 0%, #050505 100%);
+      position: relative; overflow: hidden;
+    }
+    .wp-members-glow {
+      position: absolute; width: 900px; height: 600px; border-radius: 50%;
+      background: radial-gradient(ellipse, rgba(100,0,0,0.14) 0%, transparent 70%);
+      bottom: -150px; left: -200px; pointer-events: none;
+    }
+    .wp-members-inner { position: relative; z-index: 1; max-width: 1120px; margin: 0 auto; }
+    .wp-members-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 3px; }
+    .wp-member-card {
+      background: rgba(255,255,255,0.018); border: 1px solid rgba(255,255,255,0.05);
+      padding: 36px 20px 28px; text-align: center;
+      position: relative; overflow: hidden; transition: all .3s;
+    }
+    .wp-member-card:hover { transform: translateY(-6px); border-color: rgba(139,0,0,0.3); }
+    /* Top accent bar — animates on hover */
+    .wp-member-card-bar {
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(139,0,0,0.8), rgba(201,168,76,0.6), rgba(139,0,0,0.8), transparent);
+      transform: scaleX(0); transform-origin: right; transition: transform .4s;
+    }
+    .wp-member-card:hover .wp-member-card-bar { transform: scaleX(1); }
+    /* Avatar circle */
+    .wp-member-avatar {
+      width: 76px; height: 76px; border-radius: 50%;
+      background: rgba(139,0,0,0.15); border: 1px solid rgba(139,0,0,0.3);
+      margin: 0 auto 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Cairo', sans-serif; font-size: 26px; font-weight: 700;
+      color: rgba(201,168,76,0.7); overflow: hidden; transition: all .3s;
+    }
+    .wp-member-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .wp-member-name { font-family: 'Cairo', sans-serif; font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    /* Role badge */
+    .wp-member-role {
+      font-family: 'Cairo', sans-serif; font-size: 11px; color: rgba(201,168,76,0.65);
+      padding: 4px 12px; border: 1px solid rgba(201,168,76,0.18);
+      background: rgba(201,168,76,0.05); display: inline-block; margin-bottom: 14px;
+    }
+    /* X handle link */
+    .wp-member-twitter {
+      display: flex; justify-content: center; align-items: center; gap: 5px;
+      color: rgba(255,255,255,0.35); font-size: 11px; text-decoration: none; transition: color .2s;
+    }
+    .wp-member-twitter:hover { color: #dbbc7f; }
+    /* Leader card variant */
+    .wp-member-card.leader { background: rgba(120,0,0,0.1); border-color: rgba(139,0,0,0.25); }
+    .wp-member-card.leader .wp-member-avatar {
+      width: 90px; height: 90px; font-size: 30px;
+      animation: wpPulseRingGold 2.5s ease-in-out infinite;
+      border-color: rgba(201,168,76,0.4); background: rgba(201,168,76,0.07);
+    }
+    /* "LEADER" badge label */
+    .wp-member-badge {
+      position: absolute; top: 12px; left: 12px;
+      font-family: 'Oswald', sans-serif; font-size: 8px; letter-spacing: 3px;
+      color: rgba(201,168,76,0.7); padding: 3px 8px;
+      border: 1px solid rgba(201,168,76,0.25); background: rgba(201,168,76,0.06);
+    }
+
+
+    /* ============================================================
+       SECTION 5 — SOCIAL (FOLLOW US)
+       ─────────────────────────────────────────────────────────────
+       Background: very dark (#060606 → #0a0000 → #070000) with red right glow
+
+       Grid: 4 equal columns (YouTube, Instagram, X, TikTok)
+
+       Each platform card (links to actual social accounts):
+         • Same barely-visible card bg + border
+         • TOP BAR: platform-color gradient line appears on hover
+           Each card has a CSS variable --sc for its brand color
+         • Platform icon: 64px circle with svg icon, scales on hover
+         • Platform name: Oswald 18px white, letter-spacing 3px
+         • Handle badge: small pill, white/35%, border
+         • "تابعنا" / "اشترك الآن" button: ghost style, border darkens to red on hover
+
+       Social accounts:
+         YouTube:  @team_revolta   → youtube.com/@team_revolta
+         Instagram: @team.revolta  → instagram.com/team.revolta
+         X:         @Revolta_1     → x.com/Revolta_1
+         TikTok:    @revolta_1     → tiktok.com/@revolta_1
+    ============================================================ */
+    #wp-social {
+      padding: 128px 80px;
+      background: linear-gradient(180deg, #060606 0%, #0a0000 60%, #070000 100%);
+      position: relative; overflow: hidden;
+    }
+    .wp-social-glow {
+      position: absolute; width: 700px; height: 500px; border-radius: 50%;
+      background: radial-gradient(ellipse, rgba(100,0,0,0.16) 0%, transparent 70%);
+      top: 50%; right: -100px; transform: translateY(-50%); pointer-events: none;
+    }
+    .wp-social-inner { position: relative; z-index: 1; max-width: 1120px; margin: 0 auto; }
+    .wp-social-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 3px; }
+    .wp-social-card {
+      padding: 44px 28px 36px; text-align: center;
+      background: rgba(255,255,255,0.018); border: 1px solid rgba(255,255,255,0.05);
+      position: relative; overflow: hidden; transition: all .3s;
+      display: flex; flex-direction: column; align-items: center; gap: 16px;
+      text-decoration: none; color: inherit;
+    }
+    /* Platform-color top bar */
+    .wp-social-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      opacity: 0; transition: opacity .3s;
+    }
+    .wp-social-card.yt  { --sc: #ff0000; }
+    .wp-social-card.ig  { --sc: #e1306c; }
+    .wp-social-card.tw  { --sc: #1da1f2; }
+    .wp-social-card.tt  { --sc: #69c9d0; }
+    .wp-social-card::before {
+      background: linear-gradient(90deg, transparent, var(--sc, #8b0000) 40%, rgba(201,168,76,0.4) 60%, transparent);
+    }
+    .wp-social-card:hover { transform: translateY(-6px); border-color: rgba(255,255,255,0.1); }
+    .wp-social-card:hover::before { opacity: 1; }
+    .wp-social-icon {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; transition: all .3s;
+    }
+    .wp-social-card:hover .wp-social-icon { background: rgba(255,255,255,0.08); transform: scale(1.1); }
+    .wp-social-platform { font-family: 'Oswald', sans-serif; font-size: 18px; font-weight: 600; letter-spacing: 3px; color: #fff; }
+    .wp-social-handle { font-size: 13px; color: rgba(255,255,255,0.4); padding: 4px 14px; border: 1px solid rgba(255,255,255,0.07); }
+    .wp-social-btn {
+      padding: 9px 28px; background: transparent; border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.5); font-family: 'Cairo', sans-serif; font-size: 12px;
+      font-weight: 700; cursor: pointer; transition: all .25s;
+    }
+    .wp-social-card:hover .wp-social-btn { border-color: rgba(139,0,0,0.6); color: #fff; }
+
+
+    /* ============================================================
+       SECTION 6 — LATEST WORKS
+       ─────────────────────────────────────────────────────────────
+       Background: #070000 → #050505
+
+       Grid: 3 columns
+       Each work card:
+         • Video thumbnail area: 16:9 aspect ratio, YouTube iframe embed
+         • If no works yet: placeholder with ▶ icon + "قريباً..."
+         • Card hover: translateY(-5px) + red border + top bar appears
+         • Below video: small "▶ YouTube" label + video title (14px, white/70%)
+
+       Works data fetched from Firebase "publicWorks" collection
+       (admin adds works from the backend panel)
+    ============================================================ */
+    #wp-works {
+      padding: 128px 80px 108px;
+      background: linear-gradient(180deg, #070000 0%, #050505 100%);
+      position: relative; overflow: hidden;
+    }
+    .wp-works-glow {
+      position: absolute; width: 700px; height: 600px; border-radius: 50%;
+      background: radial-gradient(ellipse, rgba(100,0,0,0.15) 0%, transparent 70%);
+      top: 50%; left: 50%; transform: translate(-50%,-50%); pointer-events: none;
+    }
+    .wp-works-inner { position: relative; z-index: 1; max-width: 1120px; margin: 0 auto; }
+    .wp-works-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 3px; }
+    .wp-work-card {
+      background: rgba(255,255,255,0.018); border: 1px solid rgba(255,255,255,0.05);
+      overflow: hidden; transition: all .3s; position: relative;
+    }
+    .wp-work-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(139,0,0,0.8), rgba(201,168,76,0.5), rgba(139,0,0,0.8), transparent);
+      opacity: 0; transition: opacity .3s; z-index: 1;
+    }
+    .wp-work-card:hover { transform: translateY(-5px); border-color: rgba(139,0,0,0.3); }
+    .wp-work-card:hover::before { opacity: 1; }
+    .wp-work-thumb { width: 100%; aspect-ratio: 16/9; overflow: hidden; background: #0a0000; }
+    .wp-work-thumb iframe { width: 100%; height: 100%; display: block; }
+    .wp-work-thumb-placeholder {
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(139,0,0,0.06); border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .wp-work-placeholder-icon { font-size: 40px; color: rgba(139,0,0,0.3); }
+    .wp-work-info { padding: 18px 20px; }
+    .wp-work-platform { font-family: 'Oswald', sans-serif; font-size: 10px; letter-spacing: 3px; color: rgba(201,168,76,0.5); margin-bottom: 6px; }
+    .wp-work-title { font-size: 14px; color: rgba(255,255,255,0.7); font-weight: 600; line-height: 1.6; }
+
+
+    /* ============================================================
+       SECTION 7 — SHOWS & MATCH REVIEWS
+       ─────────────────────────────────────────────────────────────
+       Conditional — only shown when published shows exist.
+       Background: #060606, centered glow
+
+       Layout: vertical list of collapsible show cards (max-width 860px centered)
+
+       Each show card (wp-show-card):
+         • Gold top border (2px)
+         • HEADER ROW (clickable — toggles expand/collapse):
+           - Show poster image (64×64) OR trophy emoji
+           - Show name (Oswald), subtitle, date + match count + review count
+           - Chevron ▼/▲
+         • EXPANDED STATE — matches list:
+           Each match row:
+             - Match image/emoji
+             - Match order number (gold) + title
+             - Review count
+             - Review cards list below:
+               Each review card:
+                 • Author avatar (photo or initial) + name + X handle
+                 • Star rating (5 stars, half-star support, gold color)
+                 • Verdict label (in gold)
+                 • Bullet points (positive = green dot, negative = red dot)
+                 • Full text description in a quoted block (right red border)
+    ============================================================ */
+    #wp-shows { position: relative; padding: 80px 0; overflow: hidden; background: #060606; }
+    .wp-shows-glow {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 600px; height: 600px; border-radius: 50%;
+      background: radial-gradient(ellipse, rgba(139,0,0,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .wp-shows-inner { max-width: 860px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+    .wp-shows-list { display: flex; flex-direction: column; gap: 16px; }
+    .wp-show-card { background: #0c0c0c; border: 1px solid rgba(255,255,255,0.07); border-top: 2px solid rgba(201,168,76,0.3); overflow: hidden; }
+    .wp-show-header { display: flex; align-items: center; gap: 14px; padding: 14px 16px; cursor: pointer; transition: background 0.15s; }
+    .wp-show-header:hover { background: rgba(255,255,255,0.02); }
+    .wp-show-poster { width: 64px; height: 64px; flex-shrink: 0; overflow: hidden; background: #111; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+    .wp-show-poster img { width: 100%; height: 100%; object-fit: cover; }
+    .wp-show-info { flex: 1; min-width: 0; }
+    .wp-show-name { font-family: 'Oswald', sans-serif; font-size: 17px; color: #e0e0e0; text-transform: uppercase; letter-spacing: 0.5px; }
+    .wp-show-sub { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 3px; }
+    .wp-show-meta { display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
+    .wp-show-meta span { font-size: 11px; color: rgba(255,255,255,0.3); }
+    .wp-show-chevron { font-size: 10px; color: rgba(255,255,255,0.3); flex-shrink: 0; }
+    /* Match rows inside expanded show */
+    .wp-matches-list { border-top: 1px solid rgba(255,255,255,0.06); }
+    .wp-match { border-bottom: 1px solid #111; }
+    .wp-match-header { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: rgba(0,0,0,0.3); }
+    .wp-match-img { width: 52px; height: 52px; flex-shrink: 0; overflow: hidden; background: #111; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .wp-match-img img { width: 100%; height: 100%; object-fit: cover; }
+    .wp-match-info { flex: 1; display: flex; align-items: center; gap: 8px; }
+    .wp-match-order { font-family: 'Oswald', sans-serif; font-size: 12px; color: #c9a84c; }
+    .wp-match-title { font-size: 13px; color: #ccc; font-family: 'Cairo', sans-serif; }
+    .wp-match-count { font-size: 11px; color: rgba(255,255,255,0.3); }
+    /* Review cards */
+    .wp-reviews-list { display: flex; flex-direction: column; gap: 10px; padding: 12px 16px; background: #080808; }
+    .wp-review-card { background: #0f0f0f; border: 1px solid #1a1a1a; padding: 14px; }
+    .wp-review-author { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .wp-av { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; overflow: hidden; background: linear-gradient(135deg, #8b0000, #c9a84c); display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; color: #fff; border: 1px solid rgba(201,168,76,0.4); }
+    .wp-av img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .wp-author-name { font-size: 13px; font-weight: 700; color: #e0e0e0; }
+    .wp-author-handle { font-size: 10px; color: #c9a84c; }
+    .wp-review-rating { margin-right: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+    .wp-stars { display: flex; gap: 2px; }
+    .wp-verdict { font-size: 11px; color: #c9a84c; }
+    .wp-points { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+    .wp-point { display: flex; gap: 8px; align-items: flex-start; font-size: 12.5px; color: #aaa; line-height: 1.6; }
+    .wp-point-dot { color: #3a9e65; flex-shrink: 0; font-size: 9px; margin-top: 5px; }
+    .wp-point.neg .wp-point-dot { color: #8b0000; }
+    .wp-review-desc { font-size: 12.5px; color: #999; line-height: 1.7; padding: 10px 12px; background: #090909; border-right: 2px solid #2a2a2a; white-space: pre-wrap; }
+
+
+    /* ============================================================
+       SECTION 8 — POLLS (VOTE NOW)
+       ─────────────────────────────────────────────────────────────
+       Conditional — only shown when polls exist and polls are enabled.
+       Background: #060608, gold center glow
+
+       Grid: auto-fill, min 280px per card
+
+       Each poll card (links to /vote/:pollId):
+         • Gold border + barely-visible bg
+         • TOP BAR: gold gradient, scaleX on hover
+         • "منتهي" expired badge (top-left, red)
+         • Poll title (Cairo 18px bold)
+         • Poll description (optional, 12px muted)
+         • Options preview: up to 4 option thumbnails in a row
+           - Real image OR placeholder div with first letter
+           - Option name below (10px, truncated)
+           - "+N more" pill if more than 4 options
+         • CTA text at bottom: "صوّت الآن ←" or "عرض النتائج" if expired
+       Expired polls have reduced opacity and different border color
+    ============================================================ */
+    #wp-polls { position: relative; padding: 100px 24px; background: #060608; overflow: hidden; }
+    .wp-polls-glow {
+      position: absolute; top: 20%; left: 50%; transform: translateX(-50%);
+      width: 500px; height: 500px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(201,168,76,0.05) 0%, transparent 70%); pointer-events: none;
+    }
+    .wp-polls-inner { position: relative; z-index: 1; max-width: 1120px; margin: 0 auto; }
+    .wp-polls-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+    .wp-poll-card {
+      position: relative; background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(201,168,76,0.15); padding: 28px 22px 22px;
+      text-decoration: none; color: #fff; display: flex; flex-direction: column; gap: 12px;
+      transition: all .3s; overflow: hidden;
+    }
+    .wp-poll-card:hover { transform: translateY(-4px); border-color: rgba(201,168,76,0.4); }
+    .wp-poll-card.expired { border-color: rgba(255,255,255,0.07); opacity: 0.7; }
+    .wp-poll-card-bar {
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(201,168,76,0.8), transparent);
+      transform: scaleX(0); transform-origin: right; transition: transform .4s;
+    }
+    .wp-poll-card:hover .wp-poll-card-bar { transform: scaleX(1); }
+    .wp-poll-expired-badge { position: absolute; top: 12px; left: 12px; font-size: 10px; padding: 2px 8px; background: rgba(139,0,0,0.2); border: 1px solid rgba(139,0,0,0.4); color: rgba(255,100,100,0.8); }
+    .wp-poll-title { font-family: 'Cairo', sans-serif; font-size: 18px; font-weight: 700; color: #fff; line-height: 1.4; }
+    .wp-poll-desc { font-size: 12px; color: rgba(255,255,255,0.4); line-height: 1.7; }
+    .wp-poll-options-preview { display: flex; gap: 8px; flex-wrap: wrap; }
+    .wp-poll-opt-img { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 60px; }
+    .wp-poll-opt-img img { width: 54px; height: 54px; object-fit: cover; border-radius: 4px; border: 1px solid rgba(255,255,255,0.08); }
+    .wp-poll-opt-placeholder { width: 54px; height: 54px; border-radius: 4px; background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.2); display: flex; align-items: center; justify-content: center; font-family: 'Oswald', sans-serif; font-size: 20px; color: rgba(201,168,76,0.6); }
+    .wp-poll-opt-name { font-size: 10px; color: rgba(255,255,255,0.45); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60px; }
+    .wp-poll-opt-more { width: 54px; height: 54px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; font-size: 14px; color: rgba(255,255,255,0.3); }
+    .wp-poll-cta { margin-top: auto; font-family: 'Oswald', sans-serif; font-size: 13px; letter-spacing: 2px; color: rgba(201,168,76,0.7); padding-top: 10px; border-top: 1px solid rgba(201,168,76,0.1); }
+    .wp-poll-cta.expired { color: rgba(255,255,255,0.25); }
+
+
+    /* ============================================================
+       SECTION 9 — APPLY (JOIN US)
+       ─────────────────────────────────────────────────────────────
+       Conditional — only shown when applyOpen = true in Firebase meta.
+       Background: #050505 → #0a0000 → #060606, centered red glow
+
+       Section header: eyebrow "JOIN US" + title + subtitle
+
+       Form card (.wp-apply-form):
+         • Barely-visible bg, gold top border (2px)
+         • GRID ROW (.wp-apply-row): 2 columns
+           Fields: الاسم | حسابك في X | العمر | تصنيفك في صناعة المحتوى
+         • Full-width textarea: "ليش تبي تنضم لريفولتا؟"
+         • Error message (.wp-apply-err): red bg, red border
+         • Submit button (.wp-apply-submit): red gradient, gold border, align-self: flex-end
+           hover: brighter red
+           disabled (while sending): opacity 0.5
+
+       Success state (.wp-apply-success) replaces form after submit:
+         • Green-tinted card with green top border
+         • ✓ checkmark circle
+         • "تم إرسال بياناتك" title
+         • "بنتواصل معك في حال القبول" subtitle
+
+       Hidden honeypot input (anti-spam): position absolute, left: -9999px
+
+       Content type options:
+         صانع محتوى | مونتج | كاتب | مصمم | مسؤول حسابات تواصل اجتماعي
+
+       STANDALONE PAGE: same form is also available at /apply
+       (dedicated shareable URL for external sharing)
+    ============================================================ */
+    #wp-apply {
+      position: relative; padding: 120px 80px;
+      background: linear-gradient(180deg, #050505 0%, #0a0000 60%, #060606 100%);
+      overflow: hidden;
+    }
+    .wp-apply-glow {
+      position: absolute; top: 10%; left: 50%; transform: translateX(-50%);
+      width: 700px; height: 500px; border-radius: 50%;
+      background: radial-gradient(ellipse, rgba(139,0,0,0.08) 0%, transparent 70%); pointer-events: none;
+    }
+    .wp-apply-inner { position: relative; z-index: 1; max-width: 780px; margin: 0 auto; }
+    .wp-apply-form {
+      background: rgba(255,255,255,0.018); border: 1px solid rgba(201,168,76,0.12);
+      border-top: 2px solid rgba(201,168,76,0.4); padding: 36px 40px;
+      display: flex; flex-direction: column; gap: 20px;
+    }
+    .wp-apply-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .wp-apply-field { display: flex; flex-direction: column; gap: 8px; }
+    .wp-apply-field label { font-family: 'Cairo', sans-serif; font-size: 13px; font-weight: 700; color: rgba(201,168,76,0.7); }
+    .wp-apply-field input, .wp-apply-field select, .wp-apply-field textarea {
+      background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.07);
+      color: #fff; padding: 14px 16px; font-family: 'Cairo', sans-serif; font-size: 16px;
+      outline: none; transition: border-color 0.2s; width: 100%;
+    }
+    .wp-apply-field input:focus, .wp-apply-field select:focus, .wp-apply-field textarea:focus { border-color: rgba(201,168,76,0.5); }
+    .wp-apply-field select { cursor: pointer; color-scheme: dark; }
+    .wp-apply-field textarea { resize: vertical; min-height: 120px; line-height: 1.8; }
+    .wp-apply-field input::placeholder, .wp-apply-field textarea::placeholder { color: rgba(255,255,255,0.2); }
+    .wp-apply-err { font-size: 13px; color: #ff6666; background: rgba(139,0,0,0.1); border: 1px solid rgba(139,0,0,0.3); padding: 10px 14px; }
+    .wp-apply-submit {
+      align-self: flex-end; padding: 14px 40px;
+      background: linear-gradient(135deg, #8b0000, #5a0000);
+      border: 1px solid rgba(201,168,76,0.25);
+      color: #fff; font-family: 'Cairo', sans-serif; font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: all 0.25s; letter-spacing: 1px;
+    }
+    .wp-apply-submit:hover:not(:disabled) { background: linear-gradient(135deg, #a00000, #6a0000); border-color: rgba(201,168,76,0.5); }
+    .wp-apply-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+    .wp-apply-success {
+      text-align: center; padding: 60px 40px;
+      background: rgba(58,158,101,0.04); border: 1px solid rgba(58,158,101,0.2); border-top: 2px solid rgba(58,158,101,0.6);
+      display: flex; flex-direction: column; align-items: center; gap: 14px;
+    }
+    .wp-apply-success-icon {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: rgba(58,158,101,0.1); border: 2px solid rgba(58,158,101,0.4);
+      display: flex; align-items: center; justify-content: center; font-size: 28px; color: #3a9e65;
+    }
+    .wp-apply-success-title { font-family: 'Cairo', sans-serif; font-size: 22px; font-weight: 900; color: #fff; }
+    .wp-apply-success-sub { font-size: 14px; color: rgba(255,255,255,0.4); line-height: 1.8; }
+
+
+    /* ============================================================
+       SECTION 10 — FOOTER
+       ─────────────────────────────────────────────────────────────
+       Minimal single-line footer: #030303 bg, 1px white/4% top border
+       Centered content: developer avatar (32px circle) + credit text
+         "تطوير Nightmare | خالد 🤍"
+       Very minimal — no links, no columns, just a credit line
+    ============================================================ */
+    .wp-footer {
+      padding: 28px 80px; background: #030303;
+      border-top: 1px solid rgba(255,255,255,0.04);
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      text-align: center;
+    }
+    .wp-footer-made { display: flex; align-items: center; gap: 10px; font-size: 13px; color: rgba(255,255,255,0.35); }
+    .wp-footer-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(201,168,76,0.25); filter: grayscale(20%); }
+
+
+    /* ============================================================
+       RESPONSIVE — TABLET ≤1024px
+    ============================================================ */
+    @media (max-width: 1024px) {
+      .wp-navbar { padding: 0 32px; }
+      .wp-hero-logo { font-size: 90px; letter-spacing: 12px; }
+      .wp-hero-bg-text { font-size: 180px; }
+      #wp-about, #wp-members, #wp-social, #wp-works { padding: 80px 40px; }
+      .wp-members-grid { grid-template-columns: repeat(3, 1fr); }
+      .wp-social-grid  { grid-template-columns: repeat(2, 1fr); }
+      .wp-works-grid   { grid-template-columns: repeat(2, 1fr); }
+      .wp-sec-title { font-size: 40px; }
+    }
+
+    /* ============================================================
+       RESPONSIVE — MOBILE ≤768px
+       ─────────────────────────────────────────────────────────────
+       Navbar: hamburger appears, nav links become full-width dropdown
+       Hero: smaller logo text, hide decorative edges
+       All sections: reduce padding to 64px 20px
+       Grids: members → 2 cols, social → 2 cols, works → 1 col
+       Apply form: single column, submit button full width
+    ============================================================ */
+    @media (max-width: 768px) {
+      .wp-navbar { padding: 0 20px; height: 56px; }
+      .wp-nav-cta  { display: none; }
+      .wp-nav-logo-img { width: 72px; height: 72px; margin-top: 20px; }
+      .wp-hamburger { display: flex; }
+      .wp-hero-logo { font-size: 100px; letter-spacing: 10px; }
+      .wp-hero-bg-text { font-size: 100px; letter-spacing: 10px; }
+      .wp-hero-edge { display: none; }
+      .wp-hero-cta { padding: 13px 40px; font-size: 14px; }
+      #wp-about, #wp-members, #wp-social, #wp-works { padding: 64px 20px; }
+      #wp-apply { padding: 64px 20px; }
+      .wp-sec-head { margin-bottom: 40px; }
+      .wp-sec-title { font-size: 32px; }
+      .wp-members-grid { grid-template-columns: repeat(2, 1fr); }
+      .wp-social-grid  { grid-template-columns: repeat(2, 1fr); }
+      .wp-works-grid   { grid-template-columns: 1fr; }
+      .wp-apply-form { padding: 24px 20px; }
+      .wp-apply-row { grid-template-columns: 1fr; }
+      .wp-apply-submit { align-self: stretch; text-align: center; }
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================
+       NAVBAR
+  ============================================================ -->
+  <nav class="wp-navbar" id="navbar">
+    <div class="wp-nav-logo">
+      <img src="/assets/RevoltaLogoWithoutBack.png" alt="Revolta" class="wp-nav-logo-img" />
+    </div>
+    <ul class="wp-nav-links">
+      <li><button onclick="goTo('wp-about')">من نحن</button></li>
+      <li><button onclick="goTo('wp-members')">الفريق</button></li>
+      <li><button onclick="goTo('wp-social')">تواصل اجتماعي</button></li>
+      <li><button onclick="goTo('wp-works')">أعمالنا</button></li>
+      <li><button onclick="goTo('wp-polls')">التصويتات</button></li>
+      <li><button onclick="goTo('wp-apply')">انضم إلينا</button></li>
+    </ul>
+    <div class="wp-nav-right">
+      <button class="wp-hamburger" id="hamburger" onclick="toggleMenu()">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+
+  <!-- ============================================================
+       HERO
+  ============================================================ -->
+  <section id="wp-hero">
+    <div class="wp-noise"></div>
+    <div class="wp-hero-scan"></div>
+    <div class="wp-hero-particles">
+      <span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="wp-hero-glow"></div>
+    <div class="wp-hero-bg-text">REVOLTA</div>
+    <div class="wp-hero-top-line"></div>
+    <div class="wp-hero-edge left"></div>
+    <div class="wp-hero-edge right"></div>
+
+    <div class="wp-hero-content">
+      <img src="/assets/RevoltaLogoWithoutBack.png" alt="Revolta" class="wp-hero-img" />
+      <div class="wp-hero-eyebrow">
+        <div class="wp-hero-eyebrow-line"></div>
+        WRESTLING TEAM
+        <div class="wp-hero-eyebrow-line"></div>
+      </div>
+      <div class="wp-hero-logo">REV<span class="r-accent">O</span>LTA</div>
+      <div class="wp-hero-divider"></div>
+      <div class="wp-hero-tagline">
+        صناعة محتوى <strong>المصارعة الحرة</strong> بأفضل جودة
+      </div>
+      <button class="wp-hero-cta" onclick="goTo('wp-about')">اكتشف الفريق ↓</button>
+    </div>
+
+    <button class="wp-hero-scroll" onclick="goTo('wp-about')">
+      <div class="wp-hero-scroll-line"></div>
+      <div class="wp-hero-scroll-text">SCROLL</div>
+    </button>
+  </section>
+
+
+  <!-- ============================================================
+       ABOUT
+  ============================================================ -->
+  <section id="wp-about">
+    <div class="wp-noise"></div>
+    <div class="wp-about-glow1"></div>
+    <div class="wp-about-glow2"></div>
+    <div class="wp-about-inner">
+
+      <div class="wp-sec-head wp-reveal">
+        <div class="wp-eyebrow">WHO WE ARE</div>
+        <div class="wp-sec-title">تعريف <span class="hl">بالفريق</span></div>
+        <div class="wp-sec-sub">فريق طموح يسعى لتقديم محتوى المصارعة الحرة بأسلوب مختلف ومميز</div>
+      </div>
+
+      <div class="wp-about-content">
+        <div class="wp-reveal wp-d1">
+          <div class="wp-about-text">
+            <strong>فريق ريفولتا</strong> هو فريق طموح يسعى لتقديم محتوى <em>المصارعة الحرة</em> بأسلوب مختلف ومميز.
+            يضم نخبة من صنّاع المحتوى، الكتّاب، والمصممين،
+            حيث يساهم كل عضو بخبرته وشغفه لصناعة تجربة متكاملة تعكس روح الفريق.
+            <br /><br />
+            هدفنا الوصول إلى جمهور <strong>المصارعة</strong> وتقديم محتوى <strong>عالي الجودة</strong> يواكب شغفهم… لأنهم يستحقون الأفضل.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       MEMBERS
+       NOTE: In the real app, cards are rendered dynamically from Firebase.
+       Replace the static cards below with your actual team members.
+  ============================================================ -->
+  <section id="wp-members">
+    <div class="wp-noise"></div>
+    <div class="wp-members-glow"></div>
+    <div class="wp-members-inner">
+
+      <div class="wp-sec-head wp-reveal">
+        <div class="wp-eyebrow">THE TEAM</div>
+        <div class="wp-sec-title">أعضاء <span class="hl">الفريق</span></div>
+        <div class="wp-sec-sub">الأشخاص الذين يجعلون ريفولتا ما هي عليه كل يوم</div>
+      </div>
+
+      <div class="wp-members-grid">
+        <!-- Member card — Leader variant (larger avatar, gold pulse ring) -->
+        <div class="wp-member-card leader wp-reveal wp-d1">
+          <div class="wp-member-badge">LEADER</div>
+          <div class="wp-member-card-bar"></div>
+          <div class="wp-member-avatar">خ</div>
+          <div class="wp-member-name">خالد</div>
+          <div class="wp-member-role">قائد الفريق</div>
+          <a class="wp-member-twitter" href="#">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            @username
+          </a>
+        </div>
+        <!-- Regular member card -->
+        <div class="wp-member-card wp-reveal wp-d2">
+          <div class="wp-member-card-bar"></div>
+          <div class="wp-member-avatar">م</div>
+          <div class="wp-member-name">اسم العضو</div>
+          <div class="wp-member-role">صانع محتوى</div>
+        </div>
+        <div class="wp-member-card wp-reveal wp-d3">
+          <div class="wp-member-card-bar"></div>
+          <div class="wp-member-avatar">ع</div>
+          <div class="wp-member-name">اسم العضو</div>
+          <div class="wp-member-role">مونتج</div>
+        </div>
+        <div class="wp-member-card wp-reveal wp-d4">
+          <div class="wp-member-card-bar"></div>
+          <div class="wp-member-avatar">س</div>
+          <div class="wp-member-name">اسم العضو</div>
+          <div class="wp-member-role">كاتب</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       SOCIAL
+  ============================================================ -->
+  <section id="wp-social">
+    <div class="wp-noise"></div>
+    <div class="wp-social-glow"></div>
+    <div class="wp-social-inner">
+
+      <div class="wp-sec-head wp-reveal">
+        <div class="wp-eyebrow">FOLLOW US</div>
+        <div class="wp-sec-title"><span class="hl">تابعونا</span></div>
+        <div class="wp-sec-sub">تابعونا على منصاتنا وكونوا أول من يشاهد محتوانا</div>
+      </div>
+
+      <div class="wp-social-grid">
+        <a class="wp-social-card yt wp-reveal wp-d1" href="https://youtube.com/@team_revolta" target="_blank" rel="noreferrer">
+          <div class="wp-social-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor" style="width:28px;height:28px;color:#ff0000"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          </div>
+          <div class="wp-social-platform">YouTube</div>
+          <div class="wp-social-handle">@team_revolta</div>
+          <div class="wp-social-btn">اشترك الآن</div>
+        </a>
+        <a class="wp-social-card ig wp-reveal wp-d2" href="https://www.instagram.com/team.revolta" target="_blank" rel="noreferrer">
+          <div class="wp-social-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor" style="width:28px;height:28px;color:#e1306c"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+          </div>
+          <div class="wp-social-platform">Instagram</div>
+          <div class="wp-social-handle">@team.revolta</div>
+          <div class="wp-social-btn">تابعنا</div>
+        </a>
+        <a class="wp-social-card tw wp-reveal wp-d3" href="https://x.com/Revolta_1" target="_blank" rel="noreferrer">
+          <div class="wp-social-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor" style="width:28px;height:28px;color:#fff"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/></svg>
+          </div>
+          <div class="wp-social-platform">X</div>
+          <div class="wp-social-handle">@Revolta_1</div>
+          <div class="wp-social-btn">تابعنا</div>
+        </a>
+        <a class="wp-social-card tt wp-reveal wp-d4" href="https://www.tiktok.com/@revolta_1" target="_blank" rel="noreferrer">
+          <div class="wp-social-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor" style="width:28px;height:28px;color:#69c9d0"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.17 8.17 0 0 0 4.77 1.52V6.75a4.85 4.85 0 0 1-1-.06z"/></svg>
+          </div>
+          <div class="wp-social-platform">TikTok</div>
+          <div class="wp-social-handle">@revolta_1</div>
+          <div class="wp-social-btn">تابعنا</div>
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       LATEST WORKS
+  ============================================================ -->
+  <section id="wp-works">
+    <div class="wp-noise"></div>
+    <div class="wp-works-glow"></div>
+    <div class="wp-works-inner">
+
+      <div class="wp-sec-head wp-reveal">
+        <div class="wp-eyebrow">LATEST CONTENT</div>
+        <div class="wp-sec-title">أخر <span class="hl">أعمالنا</span></div>
+        <div class="wp-sec-sub">شاهد أحدث ما أنتجه فريق ريفولتا</div>
+      </div>
+
+      <div class="wp-works-grid">
+        <!-- Placeholder cards — replace with real YouTube embeds -->
+        <div class="wp-work-card wp-reveal wp-d1">
+          <div class="wp-work-thumb wp-work-thumb-placeholder" style="aspect-ratio:16/9">
+            <div class="wp-work-placeholder-icon">▶</div>
+          </div>
+          <div class="wp-work-info">
+            <div class="wp-work-platform">▶ YouTube</div>
+            <div class="wp-work-title">عنوان الفيديو</div>
+          </div>
+        </div>
+        <div class="wp-work-card wp-reveal wp-d2">
+          <div class="wp-work-thumb wp-work-thumb-placeholder" style="aspect-ratio:16/9">
+            <div class="wp-work-placeholder-icon">▶</div>
+          </div>
+          <div class="wp-work-info">
+            <div class="wp-work-platform">▶ YouTube</div>
+            <div class="wp-work-title">عنوان الفيديو</div>
+          </div>
+        </div>
+        <div class="wp-work-card wp-reveal wp-d3">
+          <div class="wp-work-thumb wp-work-thumb-placeholder" style="aspect-ratio:16/9">
+            <div class="wp-work-placeholder-icon">▶</div>
+          </div>
+          <div class="wp-work-info">
+            <div class="wp-work-platform">▶ YouTube</div>
+            <div class="wp-work-title">عنوان الفيديو</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       SHOWS REVIEWS (conditional — only if published shows exist)
+  ============================================================ -->
+  <section id="wp-shows">
+    <div class="wp-noise"></div>
+    <div class="wp-shows-glow"></div>
+    <div class="wp-shows-inner">
+
+      <div class="wp-sec-head wp-reveal">
+        <div class="wp-eyebrow">MATCH REVIEWS</div>
+        <div class="wp-sec-title">تقييمات <span class="hl">العروض</span></div>
+        <div class="wp-sec-sub">آراء أعضاء ريفولتا في نزالات العروض الكبرى</div>
+      </div>
+
+      <div class="wp-shows-list">
+        <!-- Example collapsed show card -->
+        <div class="wp-show-card wp-reveal">
+          <div class="wp-show-header">
+            <div class="wp-show-poster">🏆</div>
+            <div class="wp-show-info">
+              <div class="wp-show-name">WRESTLEMANIA 40</div>
+              <div class="wp-show-sub">Philadelphia, Pennsylvania</div>
+              <div class="wp-show-meta">
+                <span>أبريل 2024</span>
+                <span>8 نزالات</span>
+                <span>24 تقييم</span>
+              </div>
+            </div>
+            <span class="wp-show-chevron">▼</span>
+          </div>
+          <!-- Expanded match list would appear here when toggled -->
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       POLLS (conditional — only if polls exist and pollsOpen = true)
+  ============================================================ -->
+  <section id="wp-polls">
+    <div class="wp-noise"></div>
+    <div class="wp-polls-glow"></div>
+    <div class="wp-polls-inner">
+
+      <div class="wp-sec-head wp-reveal">
+        <div class="wp-eyebrow">VOTE NOW</div>
+        <div class="wp-sec-title"><span class="hl">التصويتات</span></div>
+        <div class="wp-sec-sub">شارك برأيك وصوّت الآن</div>
+      </div>
+
+      <div class="wp-polls-grid">
+        <!-- Example poll card -->
+        <a class="wp-poll-card wp-reveal wp-d1" href="/vote/poll-id">
+          <div class="wp-poll-card-bar"></div>
+          <div class="wp-poll-title">من هو أفضل مصارع في 2024؟</div>
+          <div class="wp-poll-desc">صوّت لمصارعك المفضل من بين الخيارات</div>
+          <div class="wp-poll-options-preview">
+            <div class="wp-poll-opt-img">
+              <div class="wp-poll-opt-placeholder">C</div>
+              <div class="wp-poll-opt-name">Cody Rhodes</div>
+            </div>
+            <div class="wp-poll-opt-img">
+              <div class="wp-poll-opt-placeholder">R</div>
+              <div class="wp-poll-opt-name">Roman Reigns</div>
+            </div>
+          </div>
+          <div class="wp-poll-cta">صوّت الآن ←</div>
+        </a>
+        <!-- Expired poll card example -->
+        <a class="wp-poll-card expired wp-reveal wp-d2" href="/vote/poll-id-2">
+          <div class="wp-poll-card-bar"></div>
+          <div class="wp-poll-expired-badge">منتهي</div>
+          <div class="wp-poll-title">أفضل عرض في 2023؟</div>
+          <div class="wp-poll-cta expired">عرض النتائج</div>
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       APPLY (conditional — only if applyOpen = true in Firebase)
+  ============================================================ -->
+  <section id="wp-apply">
+    <div class="wp-noise"></div>
+    <div class="wp-apply-glow"></div>
+    <div class="wp-apply-inner">
+
+      <div class="wp-sec-head wp-reveal visible">
+        <div class="wp-eyebrow">JOIN US</div>
+        <div class="wp-sec-title">انضم إلى <span class="hl">ريفولتا</span></div>
+        <div class="wp-sec-sub">هل لديك شغف بالمصارعة وصناعة المحتوى؟ قدّم الآن وكن جزءاً من الفريق</div>
+      </div>
+
+      <div class="wp-apply-form wp-reveal visible">
+        <!-- Hidden honeypot anti-spam input -->
+        <input type="text" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" tabindex="-1" aria-hidden="true" autocomplete="off" />
+
+        <div class="wp-apply-row">
+          <div class="wp-apply-field">
+            <label>الاسم *</label>
+            <input placeholder="اسمك الكامل أو اللقب" maxlength="100" />
+          </div>
+          <div class="wp-apply-field">
+            <label>حسابك في X *</label>
+            <input placeholder="@username" maxlength="50" />
+          </div>
+          <div class="wp-apply-field">
+            <label>العمر *</label>
+            <input type="number" placeholder="مثال: 22" min="13" max="60" />
+          </div>
+          <div class="wp-apply-field">
+            <label>تصنيفك في صناعة المحتوى *</label>
+            <select>
+              <option value="">التصنيف</option>
+              <option>صانع محتوى</option>
+              <option>مونتج</option>
+              <option>كاتب</option>
+              <option>مصمم</option>
+              <option>مسؤول حسابات تواصل اجتماعي</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="wp-apply-field">
+          <label>ليش تبي تنضم لريفولتا؟ *</label>
+          <textarea placeholder="اكتب هنا دوافعك وما تقدر تضيفه للفريق..." rows="5" maxlength="1000"></textarea>
+        </div>
+
+        <button class="wp-apply-submit">إرسال الطلب ←</button>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       FOOTER
+  ============================================================ -->
+  <footer class="wp-footer">
+    <div class="wp-footer-made">
+      <span>تطوير Nightmare | خالد 🤍</span>
+    </div>
+  </footer>
+
+
+  <script>
+    // Navbar scrolled class
+    window.addEventListener('scroll', () => {
+      document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 40);
+    });
+
+    // Scroll-reveal via IntersectionObserver
+    const observer = new IntersectionObserver(
+      entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
+      { threshold: 0.12 }
+    );
+    document.querySelectorAll('.wp-reveal').forEach(el => observer.observe(el));
+
+    // Smooth scroll
+    function goTo(id) {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+      document.querySelector('.wp-nav-links')?.classList.remove('open');
+    }
+
+    // Mobile hamburger
+    function toggleMenu() {
+      document.querySelector('.wp-nav-links').classList.toggle('open');
+    }
+  </script>
+
+</body>
+</html>

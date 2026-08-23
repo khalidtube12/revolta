@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchPublicProfiles } from '../../services/users.service';
 import type { PublicProfile } from '../../services/users.service';
@@ -6,6 +6,13 @@ import { fetchPublicWorks } from '../../services/works.service';
 import type { PublicWork } from '../../services/works.service';
 import { getAllPolls } from '../../services/polls.service';
 import type { Poll } from '../../services/polls.service';
+import { dbGet } from '../../services/db.service';
+import { ApplyFormSection } from '../../components/apply/ApplyFormSection';
+import { SuggestionsFormSection } from '../../components/suggestions/SuggestionsFormSection';
+import { getAllShows } from '../../services/shows.service';
+import { getAllMatches } from '../../services/matches.service';
+import { getAllShowReviews } from '../../services/showReviews.service';
+import type { Show, Match, ShowReview } from '../../types';
 import './WelcomePage.css';
 
 export function WelcomePage() {
@@ -14,19 +21,47 @@ export function WelcomePage() {
   const [members, setMembers] = useState<PublicProfile[]>([]);
   const [works, setWorks] = useState<PublicWork[]>([]);
   const [polls, setPolls] = useState<Poll[]>([]);
+  const [pubShows, setPubShows] = useState<Show[]>([]);
+  const [pubMatches, setPubMatches] = useState<Match[]>([]);
+  const [pubReviews, setPubReviews] = useState<ShowReview[]>([]);
+  const [expandedShow, setExpandedShow] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [applyOpen, setApplyOpen] = useState(true);
+  const [pollsOpen, setPollsOpen] = useState(true);
+
 
   useEffect(() => {
     fetchPublicWorks().then(setWorks);
     getAllPolls().then(setPolls);
+    dbGet<boolean>('meta/applyOpen').then(v => setApplyOpen(v ?? true));
+    dbGet<boolean>('meta/pollsOpen').then(v => setPollsOpen(v ?? true));
+    Promise.all([getAllShows(), getAllMatches(), getAllShowReviews()]).then(([s, m, r]) => {
+      setPubShows(s.filter(show => show.published));
+      setPubMatches(m);
+      setPubReviews(r);
+    });
   }, []);
 
   useEffect(() => {
     fetchPublicProfiles().then((all) => {
+      const ORDER = [
+        'KLhmk8CwwVRUJlN8AByYY3DiUQ12',
+        'r54j4PkHROhPDwV8ljetoOHn4Eg1',
+        'jwVws5kKG8eBKVP3zJSnGRCHMrD3',
+        '8zveWmNKhDcWUHn6ypf6gKuXDSE2',
+        'OFuLId98qlNAowPHUBstJq2Nwjf2',
+        'BNfM8ijSmMaY0rPL9SRyr24gNDW2',
+        'tiQtlUgyvUOXP59dtubkxhMmSUU2',
+      ];
       const sorted = [...all].sort((a, b) => {
         if (a.isLeader && !b.isLeader) return -1;
         if (!a.isLeader && b.isLeader) return 1;
-        return 0;
+        const ia = ORDER.indexOf(a.id ?? '');
+        const ib = ORDER.indexOf(b.id ?? '');
+        if (ia === -1 && ib === -1) return 0;
+        if (ia === -1) return 1;
+        if (ib === -1) return -1;
+        return ia - ib;
       });
       setMembers(sorted);
     });
@@ -71,7 +106,10 @@ export function WelcomePage() {
           <li><button onClick={() => goTo('wp-members')}>الفريق</button></li>
           <li><button onClick={() => goTo('wp-social')}>تواصل اجتماعي</button></li>
           <li><button onClick={() => goTo('wp-works')}>أعمالنا</button></li>
-          {polls.length > 0 && <li><button onClick={() => goTo('wp-polls')}>التصويتات</button></li>}
+          {pubShows.length > 0 && <li><a href="https://reviews.teamrevolta.com" target="_blank" rel="noopener noreferrer">التقييمات</a></li>}
+          {pollsOpen && polls.length > 0 && <li><button onClick={() => goTo('wp-polls')}>التصويتات</button></li>}
+          {applyOpen && <li><button onClick={() => goTo('wp-apply')}>انضم إلينا</button></li>}
+          <li><button onClick={() => goTo('wp-suggestions')}>اقتراحات</button></li>
         </ul>
         <div className="wp-nav-right">
           <button className="wp-hamburger" onClick={() => setMenuOpen(o => !o)}>
@@ -133,11 +171,11 @@ export function WelcomePage() {
           <div className="wp-about-content">
             <div className="wp-reveal wp-d1">
               <div className="wp-about-text">
-                <strong>فريق ريفولتا</strong> فريق طموح يسعى لتقديم محتوى <em>المصارعة الحرة</em> بأسلوب مختلف ومميز.
-                يضم الفريق مجموعة من صنّاع المحتوى، الكتّاب، المصممين،
-                حيث يساهم كل عضو بطاقته وخبرته في صناعة تجربة متكاملة تُشعل حماس الفريق بأكمله.
+                <strong>فريق ريفولتا</strong> هو فريق طموح يسعى لتقديم محتوى <em>المصارعة الحرة</em> بأسلوب مختلف ومميز.
+                يضم نخبة من صنّاع المحتوى، الكتّاب، والمصممين،
+                حيث يساهم كل عضو بخبرته وشغفه لصناعة تجربة متكاملة تعكس روح الفريق.
                 <br /><br />
-                هدفنا هو الوصول إلى جمهور <strong>المصارعة</strong> وتقديم محتوى <strong>عالي الجودة</strong> يليق بشغفهم… لأنهم يستحقون الأفضل.
+                هدفنا الوصول إلى جمهور <strong>المصارعة</strong> وتقديم محتوى <strong>عالي الجودة</strong> يواكب شغفهم… لأنهم يستحقون الأفضل.
               </div>
             </div>
           </div>
@@ -162,29 +200,32 @@ export function WelcomePage() {
               const delays = ['wp-d1', 'wp-d2', 'wp-d3', 'wp-d4'];
               const delay = delays[i % 4];
               return (
-                <a key={i} className={`wp-member-card${m.isLeader ? ' leader' : ''} wp-reveal ${delay}`}
-                  href={m.twitterHandle ? `https://x.com/${m.twitterHandle}` : undefined}
-                  target={m.twitterHandle ? '_blank' : undefined}
-                  rel="noopener noreferrer"
-                  style={{ textDecoration: 'none', cursor: m.twitterHandle ? 'pointer' : 'default' }}
+                <div key={i} className={`wp-member-card wp-reveal ${delay}`}
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => m.id && navigate('/m/' + m.id)}
                 >
                   <div className="wp-member-card-bar" />
-                  {m.isLeader && <div className="wp-member-badge">LEADER</div>}
                   <div className="wp-member-avatar">
                     {m.photoURL
                       ? <img src={m.photoURL} alt={m.name} />
                       : m.name.charAt(0).toUpperCase()
                     }
                   </div>
-                  <div className="wp-member-name">{m.name.toUpperCase()}</div>
-                  <div className="wp-member-role">{m.isLeader ? 'قائد الفريق' : m.jobRole}</div>
+                  <div className="wp-member-name">{m.name}</div>
+                  <div className="wp-member-role">{m.jobRole}</div>
                   {m.twitterHandle && (
-                    <div className="wp-member-twitter">
+                    <a
+                      className="wp-member-twitter"
+                      href={`https://x.com/${m.twitterHandle}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={e => e.stopPropagation()}
+                    >
                       <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
                       @{m.twitterHandle}
-                    </div>
+                    </a>
                   )}
-                </a>
+                </div>
               );
             })}
           </div>
@@ -303,8 +344,140 @@ export function WelcomePage() {
         </div>
       </section>
 
+      {/* SHOWS REVIEWS */}
+      {pubShows.length > 0 && (
+        <section id="wp-shows">
+          <div className="wp-noise" />
+          <div className="wp-shows-glow" />
+          <div className="wp-shows-inner">
+
+            <div className="wp-sec-head wp-reveal">
+              <div className="wp-eyebrow">MATCH REVIEWS</div>
+              <div className="wp-sec-title">تقييمات <span className="hl">العروض</span></div>
+              <div className="wp-sec-sub">آراء أعضاء ريفولتا في نزالات العروض الكبرى</div>
+            </div>
+
+            <div className="wp-shows-list">
+              {pubShows.map(show => {
+                const showMatches = pubMatches.filter(m => m.showId === show.id).sort((a, b) => a.order - b.order);
+                const isExpanded = expandedShow === show.id;
+                const totalReviews = pubReviews.filter(r => r.showId === show.id).length;
+                return (
+                  <div key={show.id} className="wp-show-card wp-reveal">
+                    <div className="wp-show-header" onClick={() => setExpandedShow(isExpanded ? null : show.id!)}>
+                      <div className="wp-show-poster">
+                        {show.posterUrl
+                          ? <img src={show.posterUrl} alt={show.name} />
+                          : <span>🏆</span>}
+                      </div>
+                      <div className="wp-show-info">
+                        <div className="wp-show-name">{show.name}</div>
+                        {show.subtitle && <div className="wp-show-sub">{show.subtitle}</div>}
+                        <div className="wp-show-meta">
+                          {show.date && <span>{show.date}</span>}
+                          <span>{showMatches.length} نزال</span>
+                          <span>{totalReviews} تقييم</span>
+                        </div>
+                      </div>
+                      <span className="wp-show-chevron">{isExpanded ? '▲' : '▼'}</span>
+                    </div>
+
+                    {isExpanded && (
+                      <div className="wp-matches-list">
+                        {showMatches.map(match => {
+                          const matchReviews = pubReviews.filter(r => r.matchId === match.id);
+                          return (
+                            <div key={match.id} className="wp-match">
+                              <div className="wp-match-header">
+                                <div className="wp-match-img">
+                                  {match.imageUrl
+                                    ? <img src={match.imageUrl} alt={match.title} />
+                                    : <span>🥊</span>}
+                                </div>
+                                <div className="wp-match-info">
+                                  <span className="wp-match-order">#{match.order}</span>
+                                  <span className="wp-match-title">{match.title}</span>
+                                </div>
+                                <span className="wp-match-count">{matchReviews.length} تقييم</span>
+                              </div>
+
+                              {matchReviews.length > 0 && (
+                                <div className="wp-reviews-list">
+                                  {matchReviews.map(review => {
+                                    const stars = Array.from({ length: 5 }, (_, i) => {
+                                      const filled = review.rating >= i + 1;
+                                      const half = !filled && review.rating >= i + 0.5;
+                                      return { filled, half };
+                                    });
+                                    return (
+                                      <div key={review.id} className="wp-review-card">
+                                        <div className="wp-review-author">
+                                          <div className="wp-av">
+                                            {review.authorPhotoURL
+                                              ? <img src={review.authorPhotoURL} alt={review.authorName} />
+                                              : review.authorName.charAt(0)}
+                                          </div>
+                                          <div>
+                                            <div className="wp-author-name">{review.authorName}</div>
+                                            {review.authorTwitter && (
+                                              <div className="wp-author-handle">@{review.authorTwitter}</div>
+                                            )}
+                                          </div>
+                                          <div className="wp-review-rating">
+                                            <div className="wp-stars">
+                                              {stars.map((s, i) => (
+                                                <svg key={i} width="14" height="14" viewBox="0 0 24 24" fill={s.filled ? '#c9a84c' : s.half ? 'url(#half)' : 'none'} stroke="#c9a84c" strokeWidth="1.5">
+                                                  {s.half && (
+                                                    <defs>
+                                                      <linearGradient id="half">
+                                                        <stop offset="50%" stopColor="#c9a84c" />
+                                                        <stop offset="50%" stopColor="transparent" />
+                                                      </linearGradient>
+                                                    </defs>
+                                                  )}
+                                                  <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
+                                                </svg>
+                                              ))}
+                                            </div>
+                                            {review.verdict && <div className="wp-verdict">{review.verdict}</div>}
+                                          </div>
+                                        </div>
+
+                                        {review.points && review.points.length > 0 && (
+                                          <div className="wp-points">
+                                            {review.points.map((pt, i) => (
+                                              <div key={i} className={`wp-point${pt.positive ? '' : ' neg'}`}>
+                                                <span className="wp-point-dot">{pt.positive ? '●' : '●'}</span>
+                                                <span>{pt.text}</span>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        )}
+
+                                        {review.description && (
+                                          <div className="wp-review-desc">{review.description}</div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+          </div>
+        </section>
+      )}
+
       {/* POLLS */}
-      {polls.length > 0 && (
+      {pollsOpen && polls.length > 0 && (
         <section id="wp-polls">
           <div className="wp-noise" />
           <div className="wp-polls-glow" />
@@ -358,6 +531,12 @@ export function WelcomePage() {
           </div>
         </section>
       )}
+
+      {/* APPLY */}
+      {applyOpen && <ApplyFormSection />}
+
+      {/* SUGGESTIONS */}
+      <SuggestionsFormSection />
 
       {/* FOOTER */}
       <footer className="wp-footer">

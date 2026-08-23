@@ -2,6 +2,7 @@ import { dbGet, dbSet, dbUpdate, dbRemove } from './db.service';
 import type { User, UserPermissions } from '../types';
 
 export interface PublicProfile {
+  id?: string;
   name: string;
   jobRole: string;
   photoURL?: string | null;
@@ -17,10 +18,15 @@ export async function removePublicProfile(uid: string) {
   await dbRemove('publicProfiles/' + uid);
 }
 
+export async function fetchPublicProfileById(uid: string): Promise<PublicProfile | null> {
+  const data = await dbGet<Omit<PublicProfile, 'id'>>('publicProfiles/' + uid);
+  return data ? { id: uid, ...data } : null;
+}
+
 export async function fetchPublicProfiles(): Promise<PublicProfile[]> {
-  const data = await dbGet<Record<string, PublicProfile>>('publicProfiles');
+  const data = await dbGet<Record<string, Omit<PublicProfile, 'id'>>>('publicProfiles');
   if (!data) return [];
-  return Object.values(data);
+  return Object.entries(data).map(([id, profile]) => ({ id, ...profile }));
 }
 
 // Syncs all users to publicProfiles — runs on every admin login, safe to re-run

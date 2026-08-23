@@ -1,5 +1,13 @@
 {
   "projects": {
     "default": "revolta-36759"
+  },
+  "targets": {
+    "revolta-36759": {
+      "hosting": {
+        "main": ["revolta-36759"],
+        "reviews": ["revolta-reviews"]
+      }
+    }
   }
 }

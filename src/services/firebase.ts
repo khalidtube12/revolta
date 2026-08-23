@@ -2,7 +2,6 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getDatabase } from 'firebase/database';
 import { getStorage } from 'firebase/storage';
-import { getMessaging, isSupported } from 'firebase/messaging';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -21,8 +20,3 @@ export const secondaryAuth = getAuth(secondaryApp);
 export const db = getDatabase(app);
 export const secondaryDb = getDatabase(secondaryApp);
 export const storage = getStorage(app);
-export const getMessagingInstance = async () => {
-  const supported = await isSupported();
-  if (!supported) return null;
-  return getMessaging(app);
-};

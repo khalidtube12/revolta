@@ -5,7 +5,11 @@
 
     "meta": {
       ".read": "auth != null",
-      ".write": "auth != null && (!data.exists() || root.child('users').child(auth.uid).child('isAdmin').val() === true)"
+      ".write": "auth != null && (!data.exists() || root.child('users').child(auth.uid).child('isAdmin').val() === true)",
+      "applyOpen":        { ".read": true },
+      "auditionOpen":     { ".read": true },
+      "challengeScript":  { ".read": true },
+      "challengeAssets":  { ".read": true }
     },
 
     "users": {
@@ -69,6 +73,110 @@
       ".read": true,
       "$workId": {
         ".write": "auth != null && root.child('users').child(auth.uid).child('isAdmin').val() === true"
+      }
+    },
+
+    "reviews": {
+      ".read": "auth != null",
+      "$reviewId": {
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('isAdmin').val() === true || !data.exists() || (data.exists() && data.child('authorId').val() === auth.uid))"
+      }
+    },
+
+    "shows": {
+      ".read": true,
+      "$showId": {
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('isAdmin').val() === true || root.child('users').child(auth.uid).child('permissions').child('manageShows').val() === true)"
+      }
+    },
+
+    "matches": {
+      ".read": true,
+      "$matchId": {
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('isAdmin').val() === true || root.child('users').child(auth.uid).child('permissions').child('manageShows').val() === true)"
+      }
+    },
+
+    "showReviews": {
+      ".read": true,
+      "$reviewId": {
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('isAdmin').val() === true || !data.exists() || data.child('authorId').val() === auth.uid)"
+      }
+    },
+
+    "showOverallReviews": {
+      ".read": true,
+      "$reviewId": {
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('isAdmin').val() === true || !data.exists() || data.child('authorId').val() === auth.uid)"
+      }
+    },
+
+    "reviewLikes": {
+      "$reviewId": {
+        ".read": true,
+        "$likerId": {
+          ".write": true
+        }
+      }
+    },
+
+    "suggestions": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('isAdmin').val() === true",
+      "$sugId": {
+        ".write": "!data.exists() || (auth != null && root.child('users').child(auth.uid).child('isAdmin').val() === true)",
+        ".validate": "newData.hasChildren(['name','socialHandle','text','submittedAt'])",
+        "name":         { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 100" },
+        "socialHandle": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 100" },
+        "text":         { ".validate": "newData.isString() && newData.val().length >= 10 && newData.val().length <= 500" },
+        "submittedAt":  { ".validate": "newData.isNumber()" },
+        "$other":       { ".validate": false }
+      }
+    },
+
+    "auditions": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('isAdmin').val() === true",
+      "$audId": {
+        ".write": "!data.exists() || (auth != null && root.child('users').child(auth.uid).child('isAdmin').val() === true)",
+        ".validate": "newData.hasChildren(['name','age','platform','handle','videoLink','submittedAt','status'])",
+        "name":        { ".validate": "newData.isString() && newData.val().length >= 2 && newData.val().length <= 100" },
+        "age":         { ".validate": "newData.isNumber() && newData.val() >= 17 && newData.val() <= 60" },
+        "platform":    { ".validate": "newData.isString() && (newData.val() === 'x' || newData.val() === 'tiktok' || newData.val() === 'instagram' || newData.val() === 'youtube')" },
+        "handle":      { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 200" },
+        "videoLink":   { ".validate": "newData.isString() && newData.val().length >= 10 && newData.val().length <= 500" },
+        "submittedAt": { ".validate": "newData.isNumber()" },
+        "status":      { ".validate": "newData.isString() && (newData.val() === 'pending' || newData.val() === 'accepted' || newData.val() === 'rejected')" },
+        "notes":       { ".validate": "newData.isString() && newData.val().length <= 500" },
+        "$other":      { ".validate": false }
+      }
+    },
+
+    "meetings": {
+      ".read": "auth != null",
+      "$meetingId": {
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('isAdmin').val() === true || root.child('users').child(auth.uid).child('permissions').child('addTaskOthers').val() === true)"
+      }
+    },
+
+    "prizes": {
+      ".read": "auth != null",
+      "$month": {
+        ".write": "auth != null && root.child('users').child(auth.uid).child('isAdmin').val() === true"
+      }
+    },
+
+    "applications": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('isAdmin').val() === true",
+      "$appId": {
+        ".write": "!data.exists() || (auth != null && root.child('users').child(auth.uid).child('isAdmin').val() === true)",
+        ".validate": "newData.hasChildren(['name','twitterHandle','contentType','age','reason','submittedAt','status'])",
+        "name":          { ".validate": "newData.isString() && newData.val().length >= 2 && newData.val().length <= 100" },
+        "twitterHandle": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 50" },
+        "contentType":   { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 60" },
+        "age":           { ".validate": "newData.isNumber() && newData.val() >= 13 && newData.val() <= 60" },
+        "reason":        { ".validate": "newData.isString() && newData.val().length >= 10 && newData.val().length <= 1000" },
+        "submittedAt":   { ".validate": "newData.isNumber()" },
+        "status":        { ".validate": "newData.isString() && (newData.val() === 'pending' || newData.val() === 'accepted' || newData.val() === 'rejected')" },
+        "$other":        { ".validate": false }
       }
     }
   }

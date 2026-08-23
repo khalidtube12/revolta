@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore, initAuthListener } from './stores/authStore';
 import type { UserPermissions } from './types';
 import { useNotificationsStore } from './stores/notificationsStore';
-import { initFCM } from './services/fcm.service';
 import { useMembersStore } from './stores/membersStore';
 import { useIdeasStore } from './stores/ideasStore';
 import { AppShell } from './components/layout/AppShell';
@@ -17,10 +16,24 @@ import { ApprovalsPage } from './pages/admin/ApprovalsPage';
 import { MemberHome } from './pages/member/MemberHome';
 import { MyTasksPage } from './pages/member/MyTasksPage';
 import { IdeasPage } from './pages/shared/IdeasPage';
+import { ReviewsPage } from './pages/shared/ReviewsPage';
+import { ShowsPage } from './pages/shows/ShowsPage';
+import { ShowsManagePage } from './pages/admin/ShowsManagePage';
 import { PollsPage } from './pages/admin/PollsPage';
 import { VotePage } from './pages/vote/VotePage';
 import { WelcomePage } from './pages/welcome/WelcomePage';
+import { MemberProfilePage } from './pages/welcome/MemberProfilePage';
+import { ReviewsPublicPage } from './pages/reviews/ReviewsPublicPage';
+import { ShowDetailPage } from './pages/reviews/ShowDetailPage';
 import { SyncPage } from './pages/admin/SyncPage';
+import { ApplicationsPage } from './pages/admin/ApplicationsPage';
+import { ApplyPage } from './pages/public/ApplyPage';
+import { AuditionPage } from './pages/public/AuditionPage';
+import { SuggestionsPage } from './pages/public/SuggestionsPage';
+import { SuggestionsAdminPage } from './pages/admin/SuggestionsAdminPage';
+import { AuditionsAdminPage } from './pages/admin/AuditionsAdminPage';
+import { LeaderboardPage } from './pages/shared/LeaderboardPage';
+import { MeetingsPage } from './pages/admin/MeetingsPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { firebaseUser, initialized } = useAuthStore();
@@ -69,7 +82,6 @@ export default function App() {
       listen(firebaseUser.uid);
       if (profile.isAdmin) loadPendingCount();
       loadIdeas().then(() => updateNewIdeasCount(firebaseUser.uid));
-      initFCM(firebaseUser.uid);
     }
     return () => stopListening();
   }, [firebaseUser, profile, listen, stopListening, loadPendingCount, loadIdeas, updateNewIdeasCount]);
@@ -89,10 +101,24 @@ export default function App() {
           <Route path="/approvals" element={<AdminRoute><ApprovalsPage /></AdminRoute>} />
           <Route path="/my-tasks" element={<MyTasksPage />} />
           <Route path="/ideas" element={<IdeasPage />} />
+          <Route path="/reviews" element={<PermissionRoute permission="postReviews"><ReviewsPage /></PermissionRoute>} />
+          <Route path="/shows" element={<ShowsPage />} />
+          <Route path="/shows/manage" element={<PermissionRoute permission="manageShows"><ShowsManagePage /></PermissionRoute>} />
           <Route path="/polls" element={<PermissionRoute permission="managePolls"><PollsPage /></PermissionRoute>} />
           <Route path="/sync" element={<AdminRoute><SyncPage /></AdminRoute>} />
+          <Route path="/applications" element={<AdminRoute><ApplicationsPage /></AdminRoute>} />
+          <Route path="/auditions" element={<AdminRoute><AuditionsAdminPage /></AdminRoute>} />
+          <Route path="/suggestions-inbox" element={<AdminRoute><SuggestionsAdminPage /></AdminRoute>} />
+          <Route path="/leaderboard" element={<LeaderboardPage />} />
+          <Route path="/meetings" element={<MeetingsPage />} />
         </Route>
+        <Route path="/apply" element={<ApplyPage />} />
+        <Route path="/audition" element={<AuditionPage />} />
+        <Route path="/suggestions" element={<SuggestionsPage />} />
         <Route path="/vote/:pollId" element={<VotePage />} />
+        <Route path="/m/:uid" element={<MemberProfilePage />} />
+        <Route path="/show-reviews" element={<ReviewsPublicPage />} />
+        <Route path="/show-reviews/:showId" element={<ShowDetailPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

@@ -5,12 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:reviews": "vite --config vite.config.reviews.ts --port 5174",
     "build": "tsc -b && vite build",
+    "build:reviews": "vite build --config vite.config.reviews.ts",
     "preview": "vite preview"
   },
   "dependencies": {
     "exceljs": "^4.4.0",
     "firebase": "^10.12.0",
+    "html2canvas": "^1.4.1",
     "lucide-react": "^0.475.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

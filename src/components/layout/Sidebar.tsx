@@ -4,6 +4,7 @@ import { useMembersStore } from '../../stores/membersStore';
 import { useIdeasStore } from '../../stores/ideasStore';
 import './Sidebar.css';
 import type { UserPermissions } from '../../types';
+import { DEFAULT_PERMISSIONS } from '../../types';
 
 interface SidebarProps {
   isMobile?: boolean;
@@ -20,29 +21,47 @@ export function Sidebar({ isMobile, onClose, onOpenProfile }: SidebarProps) {
 
   const isAdmin = profile?.isAdmin;
 
-  const adminItems = [
+  // strict: true = يتجاوز isAdmin ويتحقق من الصلاحية مباشرة
+  const strictPerm = (key: keyof UserPermissions) =>
+    !!(profile?.permissions?.[key] ?? DEFAULT_PERMISSIONS[key]);
+
+  const adminItems: { path: string; icon: string; label: string; permission?: keyof UserPermissions; strict?: boolean; badgeCount?: number }[] = [
     { path: '/dashboard', icon: '📊', label: 'لوحة التحكم' },
     { path: '/my-tasks', icon: '✅', label: 'مهامي' },
     { path: '/members', icon: '👥', label: 'الأعضاء' },
-    { path: '/tasks', icon: '📋', label: 'جميع المهام' },
-    { path: '/ideas', icon: '💡', label: 'أفكار المقاطع', badgeCount: newIdeasCount },
+    { path: '/tasks', icon: '📋', label: 'جميع المهام', permission: 'viewAllTasks', strict: true },
+    { path: '/ideas', icon: '💡', label: 'أفكار المقاطع', permission: 'viewIdeas', strict: true, badgeCount: newIdeasCount },
+    { path: '/shows', icon: '🏆', label: 'العروض' },
+    { path: '/shows/manage', icon: '🎬', label: 'إدارة العروض', permission: 'manageShows' },
+    { path: '/leaderboard', icon: '🥇', label: 'الترتيب الشهري' },
+    { path: '/meetings', icon: '🗓', label: 'الاجتماعات' },
     { path: '/polls', icon: '🗳', label: 'التصويتات' },
     { path: '/approvals', icon: '📩', label: 'طلبات التسجيل', badgeCount: pendingCount },
+    { path: '/applications', icon: '📝', label: 'طلبات الانضمام' },
+    { path: '/auditions', icon: '🎙️', label: 'الأودشن' },
+    { path: '/suggestions-inbox', icon: '💬', label: 'الاقتراحات' },
     { path: '/sync', icon: '🔄', label: 'مزامنة البيانات' },
   ];
 
-  const memberItems: { path: string; icon: string; label: string; permission?: keyof UserPermissions; badgeCount?: number }[] = [
+  const memberItems: { path: string; icon: string; label: string; permission?: keyof UserPermissions; strict?: boolean; badgeCount?: number }[] = [
     { path: '/dashboard', icon: '🏠', label: 'الرئيسية' },
     { path: '/my-tasks', icon: '✅', label: 'مهامي' },
     { path: '/members', icon: '👥', label: 'الأعضاء', permission: 'viewMembers' },
     { path: '/tasks', icon: '📋', label: 'جميع المهام', permission: 'viewAllTasks' },
-    { path: '/ideas', icon: '💡', label: 'أفكار المقاطع', badgeCount: newIdeasCount },
+    { path: '/ideas', icon: '💡', label: 'أفكار المقاطع', permission: 'viewIdeas', badgeCount: newIdeasCount },
+    { path: '/shows', icon: '🏆', label: 'العروض' },
+    { path: '/shows/manage', icon: '🎬', label: 'إدارة العروض', permission: 'manageShows' },
+    { path: '/leaderboard', icon: '🥇', label: 'الترتيب الشهري' },
+    { path: '/meetings', icon: '🗓', label: 'الاجتماعات' },
     { path: '/polls', icon: '🗳', label: 'التصويتات', permission: 'managePolls' },
   ];
 
-  const items = isAdmin
-    ? adminItems
-    : memberItems.filter(item => !item.permission || can(item.permission));
+  const items = (isAdmin ? adminItems : memberItems)
+    .filter(item => {
+      if (!item.permission) return true;
+      if (item.strict) return strictPerm(item.permission);
+      return can(item.permission);
+    });
 
   const handleNav = (path: string) => {
     navigate(path);

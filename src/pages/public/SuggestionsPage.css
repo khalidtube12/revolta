@@ -1,0 +1,72 @@
+.sug-root {
+  min-height: 100vh;
+  background: #050505;
+  font-family: 'Cairo', sans-serif;
+}
+
+/* Navbar */
+.sug-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 62px;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+  background: rgba(4, 4, 4, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sug-nav-logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.sug-nav-logo img {
+  height: 48px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 6px rgba(201,168,76,0.3));
+}
+
+.sug-back {
+  font-family: 'Cairo', sans-serif;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.35);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.sug-back:hover { color: #c9a84c; }
+
+/* Push the shared #wp-suggestions section below the fixed navbar */
+.sug-page-body #wp-suggestions {
+  margin-top: 62px;
+  padding-top: 80px;
+  overflow: visible;
+  height: auto;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .sug-nav {
+    height: 56px;
+    padding: 0 20px;
+  }
+
+  .sug-nav-logo img {
+    height: 38px;
+  }
+
+  .sug-section {
+    margin-top: 56px;
+    padding: 40px 20px 60px;
+  }
+
+  .sug-row {
+    grid-template-columns: 1fr;
+  }
+}

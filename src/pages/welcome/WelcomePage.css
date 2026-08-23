@@ -100,21 +100,27 @@
 }
 .wp-nav-logo span { color: #dbbc7f; }
 .wp-nav-links {
-  display: flex; align-items: center; gap: 28px; list-style: none;
+  display: flex; align-items: center; gap: 28px;
+  list-style: none; padding: 0; margin: 0;
   position: absolute; left: 50%; transform: translateX(-50%);
 }
-.wp-nav-links button {
-  font-family: 'Cairo', sans-serif; font-size: 18px; letter-spacing: 1px;
-  color: rgba(255,255,255,0.4); text-transform: none;
+.wp-nav-links li { list-style: none; padding: 0; margin: 0; }
+.wp-nav-links button,
+.wp-nav-links a {
+  font-family: 'Cairo', sans-serif; font-size: 18px; letter-spacing: 0;
+  color: rgba(255,255,255,0.4); text-transform: none; text-decoration: none;
   background: none; border: none; cursor: pointer; transition: color .2s;
   position: relative; padding: 0;
 }
-.wp-nav-links button::after {
+.wp-nav-links button::after,
+.wp-nav-links a::after {
   content: ''; position: absolute; bottom: -4px; right: 0; left: 0; height: 1px;
   background: #c9a84c; transform: scaleX(0); transform-origin: right; transition: transform .25s;
 }
-.wp-nav-links button:hover { color: #fff; }
-.wp-nav-links button:hover::after { transform: scaleX(1); }
+.wp-nav-links button:hover,
+.wp-nav-links a:hover { color: #fff; }
+.wp-nav-links button:hover::after,
+.wp-nav-links a:hover::after { transform: scaleX(1); }
 .wp-nav-cta {
   padding: 9px 26px;
   background: linear-gradient(135deg, #8b0000, #5a0000);
@@ -354,13 +360,13 @@
   background: rgba(139,0,0,0.15); border: 1px solid rgba(139,0,0,0.3);
   margin: 0 auto 16px;
   display: flex; align-items: center; justify-content: center;
-  font-family: 'Oswald', sans-serif; font-size: 26px; font-weight: 700;
+  font-family: 'Cairo', sans-serif; font-size: 26px; font-weight: 700;
   color: rgba(201,168,76,0.7); overflow: hidden; transition: all .3s;
 }
 .wp-member-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .wp-member-name {
-  font-family: 'Oswald', sans-serif; font-size: 16px; font-weight: 600;
-  letter-spacing: 3px; color: #fff; margin-bottom: 8px;
+  font-family: 'Cairo', sans-serif; font-size: 15px; font-weight: 700;
+  letter-spacing: 0px; color: #fff; margin-bottom: 8px;
 }
 .wp-member-role {
   font-family: 'Cairo', sans-serif; font-size: 11px; color: rgba(201,168,76,0.65); letter-spacing: 0px;
@@ -564,7 +570,7 @@
   .wp-nav-links li { width: 100%; }
   .wp-nav-links button {
     width: 100%; text-align: right; padding: 14px 24px;
-    font-size: 15px; letter-spacing: 0.5px;
+    font-size: 15px; letter-spacing: 0;
     color: rgba(255,255,255,0.6) !important;
     border-bottom: 1px solid rgba(255,255,255,0.04);
   }
@@ -583,7 +589,7 @@
   }
 
   /* Hero */
-  .wp-hero-logo { font-size: 76px; letter-spacing: 10px; }
+  .wp-hero-logo { font-size: 100px; letter-spacing: 10px; }
   .wp-hero-bg-text { font-size: 100px; letter-spacing: 10px; }
   .wp-hero-edge { display: none; }
   .wp-hero-eyebrow { font-size: 9px; letter-spacing: 5px; }
@@ -620,13 +626,109 @@
    SMALL MOBILE — max 480px
 ══════════════════════════ */
 @media (max-width: 480px) {
-  .wp-hero-logo { font-size: 58px; letter-spacing: 7px; }
+  .wp-hero-logo { font-size: 80px; letter-spacing: 7px; }
   .wp-hero-bg-text { display: none; }
   .wp-members-grid { grid-template-columns: 1fr 1fr; gap: 2px; }
   .wp-social-grid  { grid-template-columns: 1fr 1fr; gap: 2px; }
   .wp-member-card  { padding: 24px 12px 20px; }
   .wp-social-card  { padding: 28px 16px 24px; }
   .wp-polls-grid   { grid-template-columns: 1fr; }
+}
+
+/* ─── APPLY ─────────────────────────────────────────────── */
+#wp-apply {
+  position: relative; padding: 120px 80px;
+  background: linear-gradient(180deg, #050505 0%, #0a0000 60%, #060606 100%);
+  overflow: hidden;
+}
+.wp-apply-glow {
+  position: absolute; top: 10%; left: 50%; transform: translateX(-50%);
+  width: 700px; height: 500px; border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(139,0,0,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.wp-apply-inner { position: relative; z-index: 1; max-width: 780px; margin: 0 auto; }
+
+/* form */
+.wp-apply-form {
+  background: rgba(255,255,255,0.018);
+  border: 1px solid rgba(201,168,76,0.12);
+  border-top: 2px solid rgba(201,168,76,0.4);
+  padding: 36px 40px;
+  display: flex; flex-direction: column; gap: 20px;
+}
+.wp-apply-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.wp-apply-field { display: flex; flex-direction: column; gap: 8px; }
+.wp-apply-field label {
+  font-family: 'Cairo', sans-serif; font-size: 13px; font-weight: 700;
+  color: rgba(201,168,76,0.7); letter-spacing: 0;
+}
+.wp-apply-field input,
+.wp-apply-field select,
+.wp-apply-field textarea {
+  background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.07);
+  color: #fff; padding: 14px 16px;
+  font-family: 'Cairo', sans-serif; font-size: 16px;
+  outline: none; transition: border-color 0.2s;
+  width: 100%;
+}
+.wp-apply-field input:focus,
+.wp-apply-field select:focus,
+.wp-apply-field textarea:focus { border-color: rgba(201,168,76,0.5); }
+.wp-apply-field select { cursor: pointer; color-scheme: dark; }
+.wp-apply-field textarea { resize: vertical; min-height: 120px; line-height: 1.8; }
+.wp-apply-field input::placeholder,
+.wp-apply-field textarea::placeholder { color: rgba(255,255,255,0.2); }
+
+.wp-apply-err {
+  font-size: 13px; color: #ff6666;
+  background: rgba(139,0,0,0.1); border: 1px solid rgba(139,0,0,0.3);
+  padding: 10px 14px; font-family: 'Cairo', sans-serif;
+}
+.wp-apply-submit {
+  align-self: flex-end;
+  padding: 14px 40px;
+  background: linear-gradient(135deg, #8b0000, #5a0000);
+  border: 1px solid rgba(201,168,76,0.25);
+  color: #fff; font-family: 'Cairo', sans-serif; font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: all 0.25s; letter-spacing: 1px;
+}
+.wp-apply-submit:hover:not(:disabled) {
+  background: linear-gradient(135deg, #a00000, #6a0000);
+  border-color: rgba(201,168,76,0.5);
+}
+.wp-apply-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* success state */
+.wp-apply-success {
+  text-align: center; padding: 60px 40px;
+  background: rgba(58,158,101,0.04);
+  border: 1px solid rgba(58,158,101,0.2);
+  border-top: 2px solid rgba(58,158,101,0.6);
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+}
+.wp-apply-success-icon {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: rgba(58,158,101,0.1); border: 2px solid rgba(58,158,101,0.4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; color: #3a9e65;
+}
+.wp-apply-success-title { font-family: 'Cairo', sans-serif; font-size: 22px; font-weight: 900; color: #fff; }
+.wp-apply-success-sub { font-size: 14px; color: rgba(255,255,255,0.4); font-family: 'Cairo', sans-serif; line-height: 1.8; }
+.wp-apply-success-btn {
+  margin-top: 8px; background: none; border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.4); padding: 10px 28px;
+  font-family: 'Cairo', sans-serif; font-size: 13px; cursor: pointer;
+  transition: all 0.2s;
+}
+.wp-apply-success-btn:hover { border-color: rgba(255,255,255,0.25); color: rgba(255,255,255,0.7); }
+
+/* mobile */
+@media (max-width: 768px) {
+  #wp-apply { padding: 64px 20px; }
+  .wp-apply-form { padding: 24px 20px; }
+  .wp-apply-row { grid-template-columns: 1fr; }
+  .wp-apply-submit { align-self: stretch; text-align: center; }
 }
 
 /* ─── POLLS ─────────────────────────────────────────────── */
@@ -664,8 +766,8 @@
   color: rgba(255,100,100,0.8); letter-spacing: 1px;
 }
 .wp-poll-title {
-  font-family: 'Oswald', sans-serif; font-size: 18px; font-weight: 600;
-  letter-spacing: 1px; color: #fff; line-height: 1.3;
+  font-family: 'Cairo', sans-serif; font-size: 18px; font-weight: 700;
+  letter-spacing: 0px; color: #fff; line-height: 1.4;
 }
 .wp-poll-desc {
   font-family: 'Cairo', sans-serif; font-size: 12px;
@@ -705,3 +807,89 @@
 .wp-poll-card:hover .wp-poll-cta { color: var(--gold, #c9a84c); }
 .wp-poll-cta.expired { color: rgba(255,255,255,0.25); }
 .wp-poll-card.expired:hover .wp-poll-cta { color: rgba(255,255,255,0.4); }
+
+/* ── SHOWS REVIEWS SECTION ── */
+#wp-shows { position: relative; padding: 80px 0; overflow: hidden; background: #060606; }
+.wp-shows-glow {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 600px; height: 600px; border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(139,0,0,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.wp-shows-inner { max-width: 860px; margin: 0 auto; padding: 0 24px; }
+.wp-shows-list { display: flex; flex-direction: column; gap: 16px; }
+
+.wp-show-card {
+  background: #0c0c0c; border: 1px solid rgba(255,255,255,0.07);
+  border-top: 2px solid rgba(201,168,76,0.3); overflow: hidden;
+}
+.wp-show-header {
+  display: flex; align-items: center; gap: 14px; padding: 14px 16px;
+  cursor: pointer; transition: background 0.15s;
+}
+.wp-show-header:hover { background: rgba(255,255,255,0.02); }
+.wp-show-poster {
+  width: 64px; height: 64px; flex-shrink: 0; overflow: hidden;
+  background: #111; display: flex; align-items: center; justify-content: center; font-size: 28px;
+}
+.wp-show-poster img { width: 100%; height: 100%; object-fit: cover; }
+.wp-show-info { flex: 1; min-width: 0; }
+.wp-show-name {
+  font-family: 'Oswald', sans-serif; font-size: 17px; color: #e0e0e0;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.wp-show-sub { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 3px; }
+.wp-show-meta { display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
+.wp-show-meta span { font-size: 11px; color: rgba(255,255,255,0.3); }
+.wp-show-chevron { font-size: 10px; color: rgba(255,255,255,0.3); flex-shrink: 0; }
+
+.wp-matches-list { border-top: 1px solid rgba(255,255,255,0.06); }
+.wp-match { border-bottom: 1px solid #111; }
+.wp-match:last-child { border-bottom: none; }
+.wp-match-header {
+  display: flex; align-items: center; gap: 12px; padding: 10px 16px;
+  background: rgba(0,0,0,0.3);
+}
+.wp-match-img {
+  width: 52px; height: 52px; flex-shrink: 0; overflow: hidden;
+  background: #111; display: flex; align-items: center; justify-content: center; font-size: 20px;
+}
+.wp-match-img img { width: 100%; height: 100%; object-fit: cover; }
+.wp-match-info { flex: 1; display: flex; align-items: center; gap: 8px; min-width: 0; }
+.wp-match-order { font-family: 'Oswald', sans-serif; font-size: 12px; color: #c9a84c; flex-shrink: 0; }
+.wp-match-title { font-size: 13px; color: #ccc; font-family: 'Cairo', sans-serif; }
+.wp-match-count { font-size: 11px; color: rgba(255,255,255,0.3); flex-shrink: 0; }
+
+.wp-reviews-list {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 12px 16px; background: #080808;
+}
+.wp-review-card {
+  background: #0f0f0f; border: 1px solid #1a1a1a; padding: 14px;
+}
+.wp-review-author { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.wp-av {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
+  background: linear-gradient(135deg, #8b0000, #c9a84c);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 700; color: #fff; font-family: 'Cairo', sans-serif;
+  border: 1px solid rgba(201,168,76,0.4);
+}
+.wp-av img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.wp-author-name { font-size: 13px; font-weight: 700; color: #e0e0e0; font-family: 'Cairo', sans-serif; }
+.wp-author-handle { font-size: 10px; color: #c9a84c; }
+.wp-review-rating { margin-right: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.wp-stars { display: flex; gap: 2px; }
+.wp-verdict { font-size: 11px; color: #c9a84c; font-family: 'Cairo', sans-serif; }
+.wp-points { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+.wp-point {
+  display: flex; gap: 8px; align-items: flex-start;
+  font-size: 12.5px; color: #aaa; font-family: 'Cairo', sans-serif; line-height: 1.6;
+}
+.wp-point-dot { color: #3a9e65; flex-shrink: 0; font-size: 9px; margin-top: 5px; }
+.wp-point.neg .wp-point-dot { color: #8b0000; }
+.wp-review-desc {
+  font-size: 12.5px; color: #999; font-family: 'Cairo', sans-serif; line-height: 1.7;
+  padding: 10px 12px; background: #090909;
+  border-right: 2px solid #2a2a2a; margin-bottom: 0; white-space: pre-wrap;
+}

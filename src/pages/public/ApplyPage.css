@@ -1,0 +1,90 @@
+/* ── Apply Page ── */
+
+.apply-root {
+  min-height: 100vh;
+  background: #050505;
+  font-family: 'Cairo', sans-serif;
+}
+
+/* ── Navbar — fully independent, no wp-navbar dependency ── */
+.apply-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 62px;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+  background: rgba(4, 4, 4, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.apply-nav-logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.apply-nav-logo img {
+  height: 48px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 6px rgba(201,168,76,0.3));
+}
+
+.apply-back {
+  font-family: 'Cairo', sans-serif;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.35);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.apply-back:hover { color: #c9a84c; }
+
+/* ── Section: scoped to apply-root only, push it below the fixed navbar ── */
+.apply-root #wp-apply {
+  margin-top: 62px;
+  padding-top: 80px;
+  overflow: visible;
+  height: auto;
+}
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .apply-nav {
+    height: 56px;
+    padding: 0 20px;
+  }
+
+  .apply-nav-logo img {
+    height: 38px;
+  }
+
+  .apply-root #wp-apply {
+    margin-top: 56px;
+    padding: 40px 20px 60px;
+  }
+}
+
+/* Loading spinner */
+.apply-loading {
+  display: flex;
+  justify-content: center;
+  padding: 80px 0;
+}
+
+.apply-spinner {
+  width: 36px;
+  height: 36px;
+  border: 2px solid rgba(201, 168, 76, 0.15);
+  border-top-color: rgba(201, 168, 76, 0.7);
+  border-radius: 50%;
+  animation: applySpinAnim 0.7s linear infinite;
+}
+
+@keyframes applySpinAnim {
+  to { transform: rotate(360deg); }
+}

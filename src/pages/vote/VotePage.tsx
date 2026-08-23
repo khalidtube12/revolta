@@ -67,9 +67,9 @@ export function VotePage() {
 
   const optionsSorted = poll
     ? Object.entries(poll.options).sort((a, b) => {
-        const ca = results.counts?.[a[0]] ?? 0;
-        const cb = results.counts?.[b[0]] ?? 0;
-        return cb - ca;
+        const numA = parseInt(a[1].name.match(/\d+/)?.[0] ?? '0');
+        const numB = parseInt(b[1].name.match(/\d+/)?.[0] ?? '0');
+        return numA - numB;
       })
     : [];
 

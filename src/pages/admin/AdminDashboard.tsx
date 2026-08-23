@@ -10,7 +10,6 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { TaskModal } from '../../components/modals/TaskModal';
 import { DriveModal } from '../../components/modals/DriveModal';
 import { EditTaskModal } from '../../components/modals/EditTaskModal';
-import { TaskRowV2 as TaskRow } from '../../components/ui/TaskRowV2';
 import { Spinner } from '../../components/ui/Spinner';
 import { getStatus } from '../../utils/status';
 import { useAuthStore } from '../../stores/authStore';
@@ -19,6 +18,7 @@ import type { Task, TaskStatus } from '../../types';
 import { IOSInstallBanner } from '../../components/ui/IOSInstallBanner';
 import { TodayContent } from '../../components/ui/TodayContent';
 import './AdminDashboard.css';
+import '../member/MyTasksPage.css';
 
 export function AdminDashboard() {
   const navigate = useNavigate();
@@ -53,6 +53,17 @@ export function AdminDashboard() {
     const teamIds: string[] = Array.isArray(t.teamMemberIds) ? t.teamMemberIds : Object.values(t.teamMemberIds || {});
     return teamIds.includes(firebaseUser?.uid ?? '');
   });
+
+  const STATUS_META: Record<string, { icon: string; label: string; color: string; bgColor: string }> = {
+    pending:   { icon: '⏳', label: 'معلقة',      color: 'var(--muted)',  bgColor: 'transparent' },
+    ready:     { icon: '🟡', label: 'جاهز للنشر', color: 'var(--gold)',   bgColor: 'rgba(201,168,76,0.05)' },
+    done:      { icon: '✅', label: 'مكتملة',     color: 'var(--green)',  bgColor: 'rgba(58,158,101,0.05)' },
+    published: { icon: '📢', label: 'تم النشر',   color: '#5cb85c',       bgColor: 'rgba(92,184,92,0.05)' },
+    cancelled: { icon: '🚫', label: 'ملغية',      color: '#e05555',       bgColor: 'rgba(224,85,85,0.05)' },
+  };
+  const TYPE_LABEL: Record<string, string> = { short: 'شورت', video: 'مقطع', writing: 'كتابة', x_content: 'محتوى X', podcast: 'بودكاست' };
+  const PRIORITY_COLOR: Record<string, string> = { low: 'var(--muted)', medium: 'var(--gold)', high: '#e05555' };
+  const PRIORITY_LABEL: Record<string, string> = { low: '↓ منخفضة', medium: '— متوسطة', high: '↑ عالية' };
 
   const completeTask = (taskId: string) => {
     const t = tasks.find(t => t.id === taskId);
@@ -117,20 +128,86 @@ export function AdminDashboard() {
         <StatBox value={cancelled} label="المهام الملغية" color="var(--red)" onClick={() => navigate('/tasks')} />
       </div>
 
-      <Card title="مهامي" action={<button className="btn btn-ghost btn-xs" onClick={() => navigate('/my-tasks')}>عرض الكل</button>}>
-        {myTasks.length
-          ? myTasks.slice(0, 5).map(t => (
-              <TaskRow key={t.id} task={t} members={members} isAdmin ideas={ideas}
-                readOnly={t.memberId !== firebaseUser?.uid && !!(Array.isArray(t.teamMemberIds) ? t.teamMemberIds : Object.values(t.teamMemberIds || {})).includes(firebaseUser?.uid ?? '')}
-                onToggle={handleToggle}
-                onChangeStatus={handleChangeStatus}
-                onDelete={handleDelete}
-                onEdit={setEditModal}
-              />
-            ))
-          : <EmptyState icon="✅" message="لا توجد مهام مسندة لك" />
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <h3 style={{ fontFamily: "'Oswald', sans-serif", fontSize: 16, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--text)' }}>مهامي</h3>
+          <button className="btn btn-ghost btn-xs" onClick={() => navigate('/my-tasks')}>عرض الكل</button>
+        </div>
+        {myTasks.length === 0
+          ? <EmptyState icon="✅" message="لا توجد مهام مسندة لك" />
+          : (
+            <div className="mag-list">
+              {myTasks.slice(0, 5).map(t => {
+                const st = getStatus(t);
+                const sm = STATUS_META[st] || STATUS_META.pending;
+                const isLate = !t.done && t.deadline && new Date(t.deadline) < new Date();
+                const isFinal = st === 'done' || st === 'published';
+                const cardOpacity = st === 'cancelled' ? 0.4 : isFinal ? 0.65 : 1;
+                return (
+                  <div className="mag-card" key={t.id} style={{ opacity: cardOpacity }}>
+                    <div className="mag-top">
+                      {t.type && (
+                        <div className={`mag-type-col mag-type-${t.type}`}>
+                          <span className="mag-type-txt">{TYPE_LABEL[t.type]}</span>
+                        </div>
+                      )}
+                      <div className="mag-content">
+                        <div className={`mag-title${st === 'published' || st === 'cancelled' ? ' done' : ''}`}>
+                          {t.title || <span style={{ color: 'var(--muted)', fontStyle: 'italic' }}>بدون عنوان</span>}
+                        </div>
+                      </div>
+                      <div className="mag-status-col" style={{ background: sm.bgColor }}>
+                        <div className="mag-status-icon">{sm.icon}</div>
+                        <div className="mag-status-txt" style={{ color: sm.color }}>{sm.label}</div>
+                      </div>
+                    </div>
+                    <div className="mag-footer">
+                      <span style={{ fontSize: 10, color: PRIORITY_COLOR[t.priority || 'medium'] }}>
+                        {PRIORITY_LABEL[t.priority || 'medium']}
+                      </span>
+                      {t.deadline && (
+                        <span className={`mag-date${isLate ? ' late' : ''}`}>
+                          📅 {isLate ? 'متأخرة' : t.deadline}
+                        </span>
+                      )}
+                      {t.driveLink && (
+                        <a href={t.driveLink} target="_blank" rel="noopener noreferrer"
+                          className="mag-drive" onClick={e => e.stopPropagation()}>
+                          📁 Drive
+                        </a>
+                      )}
+                      <div className="mag-actions">
+                        <select
+                          className="mag-select"
+                          value={st === 'done' && t.type === 'writing' ? 'published' : st}
+                          onChange={e => handleChangeStatus(t.id, e.target.value as TaskStatus)}
+                        >
+                          {t.type === 'writing' ? (
+                            <>
+                              <option value="pending">معلقة</option>
+                              <option value="published">تم النشر</option>
+                            </>
+                          ) : (
+                            <>
+                              <option value="pending">معلقة</option>
+                              <option value="done">مكتملة</option>
+                              <option value="ready">جاهز للنشر</option>
+                              <option value="published">تم النشر</option>
+                              <option value="cancelled">ملغية</option>
+                            </>
+                          )}
+                        </select>
+                        <button className="btn btn-xs btn-ghost" onClick={() => setEditModal(t)}>تعديل</button>
+                        <button className="btn btn-xs btn-ghost" style={{ color: 'var(--red)' }} onClick={() => handleDelete(t.id)}>حذف</button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )
         }
-      </Card>
+      </div>
 
       <div className="two-col">
         <Card title="الأعضاء" action={<button className="btn btn-ghost btn-xs" onClick={() => navigate('/members')}>عرض الكل</button>}>

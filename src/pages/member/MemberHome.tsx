@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
 import { useTasksStore } from '../../stores/tasksStore';
 import { useIdeasStore } from '../../stores/ideasStore';
-import { ProgressRing } from '../../components/ui/ProgressRing';
 import { StatBox } from '../../components/ui/StatBox';
 import { Card } from '../../components/ui/Card';
 import { TaskRowV2 as TaskRow } from '../../components/ui/TaskRowV2';
@@ -21,7 +20,7 @@ export function MemberHome() {
   const { tasks, loadUserTasks, updateTask } = useTasksStore();
   const { ideas, loadIdeas } = useIdeasStore();
   const [loading, setLoading] = useState(true);
-  const [driveModal, setDriveModal] = useState<{ taskId: string; status: TaskStatus } | null>(null);
+  const [driveModal, setDriveModal] = useState<{ taskId: string; status: TaskStatus; taskTitle: string } | null>(null);
 
   const load = useCallback(async () => {
     if (!firebaseUser) return;
@@ -45,13 +44,14 @@ export function MemberHome() {
     if (wasResolved) {
       updateTask(taskId, { done: false, status: 'pending', driveLink: undefined }).then(load);
     } else {
-      setDriveModal({ taskId, status: 'done' });
+      const t = tasks.find(t => t.id === taskId);
+      setDriveModal({ taskId, status: 'done', taskTitle: t?.title || '' });
     }
   };
 
-  const handleDriveSubmit = async (link: string) => {
+  const handleDriveSubmit = async (link: string, title: string) => {
     if (!driveModal) return;
-    await updateTask(driveModal.taskId, { status: driveModal.status, done: true, driveLink: link });
+    await updateTask(driveModal.taskId, { status: driveModal.status, done: true, driveLink: link, ...(title ? { title } : {}) });
     setDriveModal(null);
     load();
   };
@@ -59,13 +59,13 @@ export function MemberHome() {
   return (
     <>
       <IOSInstallBanner />
-      <div className="detail-hdr" style={{ marginBottom: 32 }}>
-        <ProgressRing percentage={pct} />
-        <div>
-          <h1 style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 900, fontSize: 28, letterSpacing: 1 }}>
-            أهلاً، {profile?.name}
-          </h1>
-          <p style={{ color: 'var(--muted)', fontSize: 14 }}>لديك {pending} مهمة معلقة</p>
+      <div className="home-hero">
+        <span className="hero-avatar" style={{ background: profile?.photoURL ? undefined : (profile?.color || 'var(--red)') }}>
+          {profile?.photoURL ? <img src={profile.photoURL} alt="" /> : profile?.name?.charAt(0) || '?'}
+        </span>
+        <div className="hero-text">
+          <h2>مرحبا، {profile?.name}</h2>
+          <p>لديك {pending} مهمة معلقة</p>
         </div>
       </div>
 
@@ -86,7 +86,7 @@ export function MemberHome() {
         {!active.filter(t => !t.done).length && <EmptyState icon="✅" message="أحسنت! لا توجد مهام معلقة" />}
       </Card>
 
-      <DriveModal open={!!driveModal} onClose={() => setDriveModal(null)} onSubmit={handleDriveSubmit} />
+      <DriveModal open={!!driveModal} onClose={() => setDriveModal(null)} onSubmit={handleDriveSubmit} taskTitle={driveModal?.taskTitle ?? ''} />
     </>
   );
 }

@@ -1,0 +1,82 @@
+/* ── Auditions Admin Page ── */
+
+.aud-admin-files {
+  background: #080808;
+  border: 1px solid #1c1c1c;
+  border-top: 2px solid var(--gold);
+  padding: 20px 24px 24px;
+  margin-bottom: 28px;
+}
+
+.aud-admin-files-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 11px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: rgba(201,168,76,0.6);
+  margin-bottom: 16px;
+}
+
+.aud-admin-files-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.aud-admin-file-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #0c0c0c;
+  border: 1px solid #1a1a1a;
+  transition: border-color 0.15s;
+}
+
+.aud-admin-file-card:hover {
+  border-color: #2a2a2a;
+}
+
+.aud-admin-file-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.aud-admin-file-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.aud-admin-file-label {
+  font-family: 'Cairo', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ccc;
+  margin-bottom: 4px;
+}
+
+.aud-admin-file-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  color: #666;
+  font-family: 'Cairo', sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.aud-admin-file-date { color: #3a3a3a; }
+
+.aud-admin-file-empty {
+  font-size: 11px;
+  color: #333;
+  font-family: 'Cairo', sans-serif;
+}
+
+@media (max-width: 640px) {
+  .aud-admin-files-grid { grid-template-columns: 1fr; }
+  .aud-admin-file-card  { flex-wrap: wrap; }
+}
