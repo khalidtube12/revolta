@@ -10,6 +10,7 @@ import { ImportModal } from '../../components/modals/ImportModal';
 import { DriveModal } from '../../components/modals/DriveModal';
 import { EditTaskModal } from '../../components/modals/EditTaskModal';
 import { TwitterModal } from '../../components/modals/TwitterModal';
+import { VideoCompleteModal } from '../../components/modals/VideoCompleteModal';
 import { Spinner } from '../../components/ui/Spinner';
 import { getStatus } from '../../utils/status';
 import { isTitleLate } from '../../utils/date';
@@ -39,6 +40,7 @@ export function AllTasksPage() {
   const [bonusVal, setBonusVal] = useState('');
   const [bonusNote, setBonusNote] = useState('');
   const [twitterModal, setTwitterModal] = useState<string | null>(null);
+  const [videoModal, setVideoModal] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'core' | 'bonus'>('core');
 
   const load = useCallback(async () => {
@@ -97,9 +99,18 @@ export function AllTasksPage() {
       updateTask(taskId, { status: 'done', done: true }).then(load);
     } else if (t?.type === 'x_content') {
       setTwitterModal(taskId);
+    } else if (t?.type === 'video') {
+      setVideoModal(taskId);
     } else {
       setDriveModal({ taskId, status: 'done', taskTitle: t?.title || '' });
     }
+  };
+
+  const handleVideoSubmit = async (driveLink: string, producerId: string) => {
+    if (!videoModal) return;
+    await updateTask(videoModal, { status: 'done', done: true, producerId, ...(driveLink ? { driveLink } : {}) });
+    setVideoModal(null);
+    load();
   };
 
   const handleTwitterSubmit = async (twitterUrl: string) => {
@@ -489,6 +500,18 @@ export function AllTasksPage() {
         onClose={() => setTwitterModal(null)}
         onSubmit={handleTwitterSubmit}
         onSkip={() => handleTwitterSubmit('')}
+      />
+      <VideoCompleteModal
+        open={!!videoModal}
+        onClose={() => setVideoModal(null)}
+        onSubmit={handleVideoSubmit}
+        participants={(() => {
+          const t = tasks.find(t => t.id === videoModal);
+          if (!t) return [];
+          const primary = members.find(m => m.id === t.memberId);
+          const team = (t.teamMemberIds ?? []).map(id => members.find(m => m.id === id)).filter(Boolean);
+          return [primary, ...team].filter((m): m is NonNullable<typeof m> => !!m);
+        })()}
       />
 
       {bonusModal && (

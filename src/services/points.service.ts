@@ -50,19 +50,33 @@ export function calculateMemberMonthlyPoints(
   };
 
   for (const t of tasks) {
-    if (t.memberId !== userId) continue;
     if (!isEarned(t)) continue;
     if (getTaskYearMonth(t) !== month) continue;
 
     const base = t.points ?? getDefaultPoints(t.type);
-    const bonus = t.bonusPoints ?? 0;
-    const typeKey = (t.type ?? '') as keyof MemberMonthlyBreakdown;
+    const bonusAmt = t.bonusPoints ?? 0;
 
-    if (typeKey in breakdown && typeKey !== 'bonus' && typeKey !== 'meetings' && typeKey !== 'total') {
-      (breakdown[typeKey] as number) += base;
+    // عضو رئيسي (memberId)
+    if (t.memberId === userId) {
+      const typeKey = (t.type ?? '') as keyof MemberMonthlyBreakdown;
+      if (typeKey in breakdown && typeKey !== 'bonus' && typeKey !== 'meetings' && typeKey !== 'total') {
+        (breakdown[typeKey] as number) += base;
+      }
+      breakdown.bonus += bonusAmt;
+      breakdown.total += base + bonusAmt;
     }
-    breakdown.bonus += bonus;
-    breakdown.total += base + bonus;
+
+    // عضو تيم في مقطع (teamMemberIds) — يأخذ نفس نقاط المقطع كاملة
+    if (t.type === 'video' && t.teamMemberIds?.includes(userId)) {
+      breakdown.video += base;
+      breakdown.total += base;
+    }
+
+    // منتج المقطع — +200 نقطة إضافية
+    if (t.type === 'video' && t.producerId === userId) {
+      breakdown.bonus += 200;
+      breakdown.total += 200;
+    }
   }
 
   if (meetings) {

@@ -129,6 +129,7 @@ export interface Task {
   bonusPoints?: number;
   bonusNote?: string;
   twitterUrl?: string;
+  producerId?: string;
   isBonus?: boolean;
   pointsApproved?: boolean;
   pointsApprovedBy?: string;
