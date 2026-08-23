@@ -20,11 +20,45 @@ import { STATUS_MAP, PRIORITY_MAP } from '../../types';
 import type { Task, TaskStatus } from '../../types';
 import { getDefaultPoints } from '../../services/points.service';
 
+const TYPE_LABEL: Record<string, string> = {
+  short: 'شورت',
+  video: 'مقطع',
+  writing: 'كتابة',
+  x_content: 'محتوى X',
+  podcast: 'بودكاست',
+  design: 'تصميم',
+};
+
+const TYPE_COLOR: Record<string, string> = {
+  short: '#c9a84c',
+  video: '#3a9e65',
+  writing: '#a09880',
+  x_content: '#e05555',
+  podcast: '#c9a84c',
+  design: '#c45c00',
+};
+
+const STATUS_META: Record<string, { label: string; color: string }> = {
+  pending: { label: 'معلقة', color: '#a09880' },
+  ready: { label: 'جاهز للنشر', color: '#c9a84c' },
+  done: { label: 'مكتملة', color: '#3a9e65' },
+  published: { label: 'تم النشر', color: '#4ade80' },
+  cancelled: { label: 'ملغية', color: '#e05555' },
+};
+
+const STATUS_ORDER: string[] = ['pending', 'ready', 'done', 'published', 'cancelled'];
+
+const PRIORITY_META: Record<string, { label: string; color: string }> = {
+  high: { label: 'عالية', color: '#e05555' },
+  medium: { label: 'متوسطة', color: '#c9a84c' },
+  low: { label: 'منخفضة', color: '#a09880' },
+};
+
 export function AllTasksPage() {
   const { profile, firebaseUser, can } = useAuthStore();
   const { members, loadMembers } = useMembersStore();
   const { tasks, loadAllTasks, updateTask, deleteTask, filterMonth, filterPriority, setFilterMonth, setFilterPriority } = useTasksStore();
-  const { ideas, loadIdeas } = useIdeasStore();
+  const { ideas: _ideas, loadIdeas } = useIdeasStore();
   const isAdmin = !!profile?.isAdmin;
   const [loading, setLoading] = useState(true);
   const [taskModal, setTaskModal] = useState(false);
@@ -33,6 +67,9 @@ export function AllTasksPage() {
   const [editModal, setEditModal] = useState<Task | null>(null);
   const [filterType, setFilterType] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [filterMember, setFilterMember] = useState('');
+  const [filterApproval, setFilterApproval] = useState('');
+  const [search, setSearch] = useState('');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   const [editingTitleId, setEditingTitleId] = useState<string | null>(null);
   const [editingTitleVal, setEditingTitleVal] = useState('');
@@ -74,24 +111,55 @@ export function AllTasksPage() {
 
   const coreTasks = tasks.filter(t => !t.isBonus);
   const bonusTasks = tasks.filter(t => t.isBonus === true);
+  const tabTasks = activeTab === 'core' ? coreTasks : bonusTasks;
 
-  let filtered = activeTab === 'core' ? coreTasks : bonusTasks;
-  if (filterMonth) {
-    const m = filterMonth === 'current' ? thisMonth : filterMonth === 'prev' ? prevMonth : filterMonth;
-    filtered = filtered.filter(t => getTaskMonth(t.deadline, t.createdAt) === m);
-  }
-  if (filterPriority) {
-    filtered = filtered.filter(t => (t.priority || 'medium') === filterPriority);
-  }
-  if (filterType) {
-    filtered = filtered.filter(t => (t.type || '') === filterType);
-  }
-  if (filterStatus) {
-    filtered = filtered.filter(t => getStatus(t) === filterStatus);
-  }
+  const matchesBase = (t: Task) => {
+    if (filterMonth) {
+      const m = filterMonth === 'current' ? thisMonth : filterMonth === 'prev' ? prevMonth : filterMonth;
+      if (getTaskMonth(t.deadline, t.createdAt) !== m) return false;
+    }
+    if (filterPriority && (t.priority || 'medium') !== filterPriority) return false;
+    if (filterType && (t.type || '') !== filterType) return false;
+    if (filterMember && t.memberId !== filterMember) return false;
+    if (filterApproval) {
+      const earned = t.done || t.status === 'published';
+      if (filterApproval === 'approved' && !t.pointsApproved) return false;
+      if (filterApproval === 'waiting' && !(earned && !t.pointsApproved)) return false;
+    }
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      const memberName = members.find(u => u.id === t.memberId)?.name?.toLowerCase() ?? '';
+      const hay = `${t.title ?? ''} ${t.desc ?? ''} ${memberName}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  };
+
+  const baseFiltered = tabTasks.filter(matchesBase);
+  const statusCounts: Record<string, number> = {};
+  baseFiltered.forEach(t => {
+    const s = getStatus(t);
+    statusCounts[s] = (statusCounts[s] ?? 0) + 1;
+  });
+
+  const filtered = filterStatus ? baseFiltered.filter(t => getStatus(t) === filterStatus) : baseFiltered;
   const sorted = [...filtered].sort((a, b) =>
     sortOrder === 'desc' ? (b.createdAt || 0) - (a.createdAt || 0) : (a.createdAt || 0) - (b.createdAt || 0)
   );
+
+  const activeFilterCount =
+    (filterMonth ? 1 : 0) + (filterPriority ? 1 : 0) + (filterType ? 1 : 0) +
+    (filterStatus ? 1 : 0) + (filterMember ? 1 : 0) + (filterApproval ? 1 : 0) + (search.trim() ? 1 : 0);
+
+  const resetFilters = () => {
+    setFilterMonth('');
+    setFilterPriority('');
+    setFilterType('');
+    setFilterStatus('');
+    setFilterMember('');
+    setFilterApproval('');
+    setSearch('');
+  };
 
   const completeTask = (taskId: string) => {
     const t = tasks.find(t => t.id === taskId);
@@ -120,19 +188,8 @@ export function AllTasksPage() {
     load();
   };
 
-  const handleToggle = (taskId: string, wasResolved: boolean) => {
-    if (wasResolved) {
-      if (!isAdmin && !can('setTaskIncomplete')) return;
-      updateTask(taskId, { done: false, status: 'pending', driveLink: undefined }).then(load);
-    } else {
-      if (!isAdmin && !can('setTaskComplete')) return;
-      completeTask(taskId);
-    }
-  };
-
   const handleChangeStatus = (taskId: string, status: TaskStatus) => {
     const t = tasks.find(t => t.id === taskId);
-    // مهام الكتابة: حالتان فقط — معلقة / تم النشر
     if (t?.type === 'writing') {
       if (status === 'published' || status === 'pending') {
         if (!isAdmin && !can('changeTaskStatus') && !can('setTaskComplete') && !can('setTaskIncomplete')) return;
@@ -147,7 +204,7 @@ export function AllTasksPage() {
     }
     if (!isAdmin) {
       if (can('changeTaskStatus')) {
-        // allowed — fall through
+        // allowed
       } else if (status === 'pending' || status === 'cancelled') {
         if (!can('setTaskIncomplete')) return;
       } else {
@@ -194,8 +251,6 @@ export function AllTasksPage() {
     load();
   };
 
-  const TASK_TYPE_LABELS: Record<string, string> = { short: 'شورت', video: 'مقطع', writing: 'كتابة', x_content: 'محتوى X', podcast: 'بودكاست', design: 'تصميم' };
-
   const handleExport = () => {
     if (!sorted.length) { alert('لا توجد مهام للتصدير'); return; }
     const rows = sorted.map(t => {
@@ -209,287 +264,394 @@ export function AllTasksPage() {
         deadline: t.deadline || '',
         priority: PRIORITY_MAP[t.priority || 'medium'],
         status:   si.label,
-        type:     t.type ? TASK_TYPE_LABELS[t.type] || t.type : '',
+        type:     t.type ? TYPE_LABEL[t.type] || t.type : '',
       };
     });
     exportTasksXLSX('Revolta_Tasks_' + new Date().toISOString().slice(0, 10) + '.xlsx', rows).catch(() => {});
   };
 
+  const canEdit = isAdmin || can('editTask');
+  const canDelete = isAdmin || can('deleteTask');
+  const canChangeStatus = isAdmin || can('changeTaskStatus');
+  const canSetIncomplete = isAdmin || can('setTaskIncomplete');
+  const canSetComplete = isAdmin || can('setTaskComplete');
+  const myUid = firebaseUser?.uid;
+
+  const memberOpts = [...members].sort((a, b) => a.name.localeCompare(b.name, 'ar'));
+
   return (
-    <>
-      <div className="page-hdr">
-        <div className="page-hdr-text">
-          <h1>جميع المهام</h1>
-          <p>{filtered.length} من {activeTab === 'core' ? coreTasks.length : bonusTasks.length} مهمة</p>
+    <div className="tk-wrap">
+      <header className="tk-hdr">
+        <div className="tk-hdr-titles">
+          <h1>المهام</h1>
+          <div className="tk-hdr-sub">
+            <span className="tk-hdr-count">{sorted.length}</span>
+            <span>من {tabTasks.length} {activeTab === 'core' ? 'مهمة أساسية' : 'مهمة بونص'}</span>
+            {activeFilterCount > 0 && <span>· {activeFilterCount} فلتر مُطبَّق</span>}
+          </div>
+          <div className="tk-hdr-line" />
         </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {(isAdmin || can('exportTasks')) && <button className="btn" onClick={handleExport}>📥 تصدير Excel</button>}
-          {(isAdmin || can('importTasks')) && <button className="btn" onClick={() => setImportModal(true)}>📤 استيراد Excel</button>}
-          {activeTab === 'core' && (isAdmin || can('addTaskOthers')) && <button className="btn" onClick={() => setTaskModal(true)}>+ مهمة جديدة</button>}
+        <div className="tk-hdr-actions">
+          {(isAdmin || can('exportTasks')) && <button className="btn btn-ghost btn-sm" onClick={handleExport}>تصدير Excel</button>}
+          {(isAdmin || can('importTasks')) && <button className="btn btn-ghost btn-sm" onClick={() => setImportModal(true)}>استيراد Excel</button>}
+          {(isAdmin || can('addTaskOthers')) && <button className="btn btn-sm" onClick={() => setTaskModal(true)}>+ مهمة جديدة</button>}
         </div>
-      </div>
+      </header>
 
-      <div className="tab-bar">
-        <button className={`tab-btn ${activeTab === 'core' ? 'active' : ''}`} onClick={() => setActiveTab('core')}>
-          أساسية <span className="tab-badge">{coreTasks.length}</span>
+      <div className="tk-tabs" role="tablist" aria-label="نوع المهام">
+        <button
+          role="tab"
+          aria-selected={activeTab === 'core'}
+          className={`tk-tab ${activeTab === 'core' ? 'active' : ''}`}
+          onClick={() => { setActiveTab('core'); setFilterApproval(''); }}
+        >
+          المهام الأساسية
+          <span className="tk-tab-count">{coreTasks.length}</span>
         </button>
-        <button className={`tab-btn ${activeTab === 'bonus' ? 'active' : ''}`} onClick={() => setActiveTab('bonus')}>
-          بونص <span className="tab-badge">{bonusTasks.length}</span>
+        <button
+          role="tab"
+          aria-selected={activeTab === 'bonus'}
+          className={`tk-tab bonus ${activeTab === 'bonus' ? 'active' : ''}`}
+          onClick={() => setActiveTab('bonus')}
+        >
+          مهام البونص
+          <span className="tk-tab-count">{bonusTasks.length}</span>
         </button>
       </div>
 
-      <div className="filter-bar">
-        <label>الشهر</label>
-        <select value={filterMonth} onChange={e => setFilterMonth(e.target.value)}>
-          {monthOpts.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
-        </select>
-<label>نوع المهمة</label>
-        <select value={filterType} onChange={e => setFilterType(e.target.value)}>
-          <option value="">كل الأنواع</option>
-          <option value="short">شورت</option>
-          <option value="video">مقطع</option>
-          <option value="writing">كتابة</option>
-          <option value="x_content">محتوى X</option>
-          <option value="podcast">بودكاست</option>
-          <option value="design">تصميم</option>
-        </select>
-        <label>الحالة</label>
-        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-          <option value="">كل الحالات</option>
-          <option value="pending">معلقة</option>
-          <option value="ready">جاهز للنشر</option>
-          <option value="done">مكتملة</option>
-          <option value="published">تم النشر</option>
-          <option value="cancelled">ملغية</option>
-        </select>
-        <label>الترتيب</label>
-        <select value={sortOrder} onChange={e => setSortOrder(e.target.value as 'desc' | 'asc')}>
-          <option value="desc">الأحدث أولاً</option>
-          <option value="asc">الأقدم أولاً</option>
-        </select>
-      </div>
+      <section className="tk-toolbar" aria-label="فلاتر المهام">
+        <div className="tk-toolbar-row">
+          <div className="tk-search">
+            <span className="tk-search-icon" aria-hidden="true">⌕</span>
+            <input
+              type="search"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="ابحث بعنوان المهمة أو اسم العضو…"
+              aria-label="بحث في المهام"
+            />
+            {search && (
+              <button className="tk-search-clear" onClick={() => setSearch('')} aria-label="مسح البحث">×</button>
+            )}
+          </div>
 
-      {sorted.length === 0
-        ? <EmptyState icon={activeTab === 'bonus' ? '⭐' : '📋'} message={activeTab === 'bonus' ? 'لا توجد مهام بونص بعد' : 'لا توجد مهام تطابق الفلتر'} />
-        : (() => {
-            const STATUS_META: Record<string, { icon: string; label: string; color: string; bgColor: string }> = {
-              pending:   { icon: '⏳', label: 'معلقة',      color: 'var(--muted)',  bgColor: 'transparent' },
-              ready:     { icon: '🟡', label: 'جاهز للنشر', color: 'var(--gold)',   bgColor: 'rgba(201,168,76,0.05)' },
-              done:      { icon: '✅', label: 'مكتملة',     color: 'var(--green)',  bgColor: 'rgba(58,158,101,0.05)' },
-              published: { icon: '📢', label: 'تم النشر',   color: '#5cb85c',       bgColor: 'rgba(92,184,92,0.05)' },
-              cancelled: { icon: '🚫', label: 'ملغية',      color: '#e05555',       bgColor: 'rgba(224,85,85,0.05)' },
-            };
-            const TYPE_LABEL: Record<string, string> = { short: 'شورت', video: 'مقطع', writing: 'كتابة', x_content: 'محتوى X', podcast: 'بودكاست', design: 'تصميم' };
-            const TYPE_BADGE: Record<string, string> = { short: 'badge-gold', video: 'badge-green', writing: 'badge-gray', x_content: 'badge-red', podcast: 'badge-gold', design: 'badge-gold' };
-            const PRIORITY_COLOR: Record<string, string> = { low: 'var(--muted)', medium: 'var(--gold)', high: '#e05555' };
-            const PRIORITY_LABEL: Record<string, string> = { low: '↓ منخفضة', medium: '— متوسطة', high: '↑ عالية' };
+          <div className={`tk-field ${filterMonth ? 'active' : ''}`}>
+            <span className="tk-field-lbl">الشهر</span>
+            <select value={filterMonth} onChange={e => setFilterMonth(e.target.value)} aria-label="فلترة بالشهر">
+              {monthOpts.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
+            </select>
+          </div>
 
-            const canEdit        = isAdmin || can('editTask');
-            const canDelete      = isAdmin || can('deleteTask');
-            const canChangeStatus= isAdmin || can('changeTaskStatus');
-            const canSetIncomplete = isAdmin || can('setTaskIncomplete');
-            const canSetComplete = isAdmin || can('setTaskComplete');
-            const myUid = firebaseUser?.uid;
+          <div className={`tk-field ${filterMember ? 'active' : ''}`}>
+            <span className="tk-field-lbl">العضو</span>
+            <select value={filterMember} onChange={e => setFilterMember(e.target.value)} aria-label="فلترة بالعضو">
+              <option value="">كل الأعضاء</option>
+              {memberOpts.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+            </select>
+          </div>
+
+          <div className={`tk-field ${filterType ? 'active' : ''}`}>
+            <span className="tk-field-lbl">النوع</span>
+            <select value={filterType} onChange={e => setFilterType(e.target.value)} aria-label="فلترة بنوع المهمة">
+              <option value="">كل الأنواع</option>
+              {Object.entries(TYPE_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+            </select>
+          </div>
+
+          {activeTab === 'bonus' && (
+            <div className={`tk-field ${filterApproval ? 'active' : ''}`}>
+              <span className="tk-field-lbl">النقاط</span>
+              <select value={filterApproval} onChange={e => setFilterApproval(e.target.value)} aria-label="فلترة بحالة اعتماد النقاط">
+                <option value="">كل النقاط</option>
+                <option value="waiting">بانتظار الموافقة</option>
+                <option value="approved">معتمدة</option>
+              </select>
+            </div>
+          )}
+
+          <div className="tk-field">
+            <span className="tk-field-lbl">الترتيب</span>
+            <select value={sortOrder} onChange={e => setSortOrder(e.target.value as 'desc' | 'asc')} aria-label="ترتيب المهام">
+              <option value="desc">الأحدث أولاً</option>
+              <option value="asc">الأقدم أولاً</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="tk-toolbar-row">
+          <div className="tk-chip-group">
+            <span className="tk-chip-lbl">الحالة</span>
+            <button
+              className={`tk-chip ${!filterStatus ? 'active' : ''}`}
+              onClick={() => setFilterStatus('')}
+            >
+              الكل <span className="tk-chip-num">{baseFiltered.length}</span>
+            </button>
+            {STATUS_ORDER.map(s => {
+              const meta = STATUS_META[s];
+              return (
+                <button
+                  key={s}
+                  className={`tk-chip ${filterStatus === s ? 'active' : ''}`}
+                  style={{ ['--chip' as string]: meta.color }}
+                  onClick={() => setFilterStatus(filterStatus === s ? '' : s)}
+                >
+                  <span className="tk-chip-dot" style={{ background: meta.color }} />
+                  {meta.label} <span className="tk-chip-num">{statusCounts[s] ?? 0}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="tk-toolbar-row">
+          <div className="tk-chip-group">
+            <span className="tk-chip-lbl">الأولوية</span>
+            <button
+              className={`tk-chip ${!filterPriority ? 'active' : ''}`}
+              onClick={() => setFilterPriority('')}
+            >
+              الكل
+            </button>
+            {(['high', 'medium', 'low'] as const).map(p => (
+              <button
+                key={p}
+                className={`tk-chip ${filterPriority === p ? 'active' : ''}`}
+                style={{ ['--chip' as string]: PRIORITY_META[p].color }}
+                onClick={() => setFilterPriority(filterPriority === p ? '' : p)}
+              >
+                {PRIORITY_META[p].label}
+              </button>
+            ))}
+          </div>
+          {activeFilterCount > 0
+            ? <button className="tk-reset" onClick={resetFilters}>مسح كل الفلاتر ({activeFilterCount})</button>
+            : <span className="tk-result-note">لا فلاتر مُطبَّقة — تُعرض كل المهام</span>
+          }
+        </div>
+      </section>
+
+      {sorted.length === 0 ? (
+        <EmptyState
+          icon={activeTab === 'bonus' ? '⭐' : '📋'}
+          message={
+            activeFilterCount > 0
+              ? 'لا توجد مهام تطابق الفلاتر الحالية'
+              : activeTab === 'bonus' ? 'لا توجد مهام بونص بعد' : 'لا توجد مهام بعد'
+          }
+        />
+      ) : (
+        <div className="tk-list">
+          {sorted.map(t => {
+            const st = getStatus(t);
+            const sm = STATUS_META[st] || STATUS_META.pending;
+            const member = members.find(u => u.id === t.memberId);
+            const isLate = !t.done && t.deadline && new Date(t.deadline) < new Date();
+            const isFinal = st === 'done' || st === 'published';
+            const cardOpacity = st === 'cancelled' ? 0.45 : isFinal ? 0.8 : 1;
+            const showSelect = canChangeStatus || (!isFinal && canSetComplete) || (isFinal && canSetIncomplete);
+            const isMyTask = t.memberId === myUid;
+            const canEditTitle = isMyTask && !canEdit && !isFinal;
+            const priority = t.priority || 'medium';
+            const base = t.points ?? getDefaultPoints(t.type);
+            const bonus = t.bonusPoints ?? 0;
+            const total = base + bonus;
+            const earned = t.done || t.status === 'published';
 
             return (
-              <div className="mag-list">
-                {sorted.map(t => {
-                  const st = getStatus(t);
-                  const sm = STATUS_META[st] || STATUS_META.pending;
-                  const member = members.find(u => u.id === t.memberId);
-                  const isLate = !t.done && t.deadline && new Date(t.deadline) < new Date();
-                  const isFinal = st === 'done' || st === 'published';
-                  const cardOpacity = st === 'cancelled' ? 0.4 : isFinal ? 0.65 : 1;
-
-                  const showSelect = canChangeStatus
-                    || (!isFinal && canSetComplete)
-                    || (isFinal && canSetIncomplete);
-
-                  const isMyTask = t.memberId === myUid;
-                  const canEditTitle = isMyTask && !canEdit && !isFinal;
-
-                  return (
-                    <div className="mag-card" key={t.id} style={{ opacity: cardOpacity }}>
-                      {/* TOP */}
-                      <div className="mag-top">
-                        {t.type && (
-                          <div className={`mag-type-col mag-type-${t.type}`}>
-                            <span className="mag-type-txt">{TYPE_LABEL[t.type]}</span>
-                          </div>
-                        )}
-                        <div className="mag-content">
-                          {editingTitleId === t.id ? (
-                            <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 4 }}>
-                              <input
-                                autoFocus
-                                value={editingTitleVal}
-                                onChange={e => setEditingTitleVal(e.target.value)}
-                                onKeyDown={e => { if (e.key === 'Enter') handleSaveTitle(t.id); if (e.key === 'Escape') setEditingTitleId(null); }}
-                                onBlur={() => handleSaveTitle(t.id)}
-                                style={{ flex: 1, background: '#111', border: '1px solid var(--gold)', color: 'var(--text)', padding: '5px 10px', fontFamily: 'Cairo, sans-serif', fontSize: 14, borderRadius: 0 }}
-                              />
-                            </div>
-                          ) : (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                            <div className={`mag-title${st === 'published' || st === 'cancelled' ? ' done' : ''}`}>
-                              {t.title || <span style={{ color: 'var(--muted)', fontStyle: 'italic' }}>بدون عنوان</span>}
-                            </div>
-                            {isTitleLate(t) && (
-                              <span style={{ fontSize: 10, color: '#fff', background: 'var(--red)', padding: '2px 8px', fontFamily: 'Cairo, sans-serif', flexShrink: 0 }}>
-                                ⚠ تأخير في كتابة العنوان
-                              </span>
-                            )}
-                            {canEditTitle && (
-                              <button onClick={() => { setEditingTitleId(t.id); setEditingTitleVal(t.title || ''); }}
-                                style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: 13, padding: '0 4px', lineHeight: 1 }}
-                                title="تعديل العنوان">✎</button>
-                            )}
-                          </div>
-                          )}
-                          <div className="mag-member-row">
-                            {member && (
-                              <>
-                                <div className="mag-avatar" style={{ background: member.color || 'var(--border)' }}>
-                                  {member.photoURL
-                                    ? <img src={member.photoURL} alt={member.name} className="mag-avatar-img" />
-                                    : member.name.charAt(0)
-                                  }
-                                </div>
-                                <span className="mag-member-name">{member.name}</span>
-                              </>
-                            )}
-                            {t.teamMemberIds && t.teamMemberIds.length > 0 && (
-                              <div className="mag-team-avatars">
-                                {t.teamMemberIds.map((tid, i) => {
-                                  const tm = members.find(u => u.id === tid);
-                                  if (!tm) return null;
-                                  return (
-                                    <div
-                                      key={tid}
-                                      className="mag-avatar mag-team-av"
-                                      title={tm.name}
-                                      style={{ background: tm.color || 'var(--border)', zIndex: t.teamMemberIds!.length - i }}
-                                    >
-                                      {tm.photoURL
-                                        ? <img src={tm.photoURL} alt={tm.name} className="mag-avatar-img" />
-                                        : tm.name.charAt(0)
-                                      }
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="mag-status-col" style={{ background: sm.bgColor }}>
-                          <div className="mag-status-icon">{sm.icon}</div>
-                          <div className="mag-status-txt" style={{ color: sm.color }}>{sm.label}</div>
-                        </div>
-                      </div>
-
-                      {/* FOOTER */}
-                      <div className="mag-footer">
-                        <span style={{ fontSize: 10, color: PRIORITY_COLOR[t.priority || 'medium'] }}>
-                          {PRIORITY_LABEL[t.priority || 'medium']}
+              <article
+                className="tk-card"
+                key={t.id}
+                style={{ opacity: cardOpacity, ['--accent' as string]: sm.color }}
+              >
+                <div className="tk-card-body">
+                  <div className="tk-card-main">
+                    <div className="tk-tags">
+                      <span className="tk-tag tk-tag-status" style={{ color: sm.color, borderColor: sm.color }}>
+                        <span className="tk-chip-dot" style={{ background: sm.color }} />
+                        {sm.label}
+                      </span>
+                      {t.type && (
+                        <span className="tk-tag tk-tag-type" style={{ color: TYPE_COLOR[t.type], borderColor: TYPE_COLOR[t.type] }}>
+                          {TYPE_LABEL[t.type] || t.type}
                         </span>
-                        {t.deadline && (
-                          <span className={`mag-date${isLate ? ' late' : ''}`}>
-                            📅 {isLate ? 'متأخرة' : t.deadline}
-                          </span>
-                        )}
-                        {t.driveLink && (
-                          <a href={t.driveLink} target="_blank" rel="noopener noreferrer"
-                            className="mag-drive" onClick={e => e.stopPropagation()}>
-                            📁 Drive
-                          </a>
-                        )}
-                        {(() => {
-                          const base = t.points ?? getDefaultPoints(t.type);
-                          const bonus = t.bonusPoints ?? 0;
-                          const total = base + bonus;
-                          if (total === 0) return null;
-                          const earned = t.done || t.status === 'published';
-                          if (t.isBonus) {
-                            if (earned && t.pointsApproved) {
-                              return (
-                                <span style={{ fontSize: 11, color: 'var(--gold)', fontFamily: 'Oswald, sans-serif' }}>
-                                  ⭐ {total} نقطة ✓
-                                </span>
-                              );
-                            }
-                            if (earned && !t.pointsApproved) {
-                              return (
-                                <span style={{ fontSize: 11, color: '#e09a3a', fontFamily: 'Cairo, sans-serif' }}>
-                                  ⏳ بانتظار الموافقة ({total} نقطة)
-                                </span>
-                              );
-                            }
-                            return (
-                              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', fontFamily: 'Oswald, sans-serif' }}>
-                                {total} نقطة متوقعة
-                              </span>
-                            );
-                          }
-                          return (
-                            <span title={bonus > 0 ? `${base} أساسية + ${bonus} مكافأة` : undefined}
-                              style={{ fontSize: 11, color: 'var(--gold)', fontFamily: 'Oswald, sans-serif', letterSpacing: 0.5 }}>
-                              ⭐ {total} نقطة{bonus > 0 && <span style={{ color: 'var(--green)', fontSize: 10 }}> +{bonus}</span>}
-                            </span>
-                          );
-                        })()}
-                        <div className="mag-actions">
-                          {showSelect && (
-                            <select
-                              className="mag-select"
-                              value={st === 'done' && t.type === 'writing' ? 'published' : st}
-                              onChange={e => handleChangeStatus(t.id, e.target.value as TaskStatus)}
-                            >
-                              {t.type === 'writing' ? (
-                                <>
-                                  <option value="pending">معلقة</option>
-                                  <option value="published">تم النشر</option>
-                                </>
-                              ) : (
-                                <>
-                                  <option value="pending">معلقة</option>
-                                  {(isAdmin || canSetComplete || canChangeStatus) && <option value="done">مكتملة</option>}
-                                  {(isAdmin || canChangeStatus) && <option value="ready">جاهز للنشر</option>}
-                                  {(isAdmin || canChangeStatus) && <option value="published">تم النشر</option>}
-                                  {(isAdmin || canChangeStatus) && <option value="cancelled">ملغية</option>}
-                                </>
-                              )}
-                            </select>
-                          )}
-                          {t.isBonus && (t.done || t.status === 'published') && !t.pointsApproved && (isAdmin || can('addTaskOthers')) && (
-                            <button
-                              className="btn btn-xs"
-                              style={{ background: 'rgba(58,158,101,0.15)', color: 'var(--green)', border: '1px solid rgba(58,158,101,0.4)' }}
-                              onClick={() => handleApproveBonus(t.id)}
-                            >
-                              ✅ موافقة على النقاط
-                            </button>
-                          )}
-                          {!t.isBonus && isAdmin && (
-                            <button className="btn btn-xs btn-ghost" title="إضافة نقاط مكافأة"
-                              onClick={() => { setBonusModal(t); setBonusVal(String(t.bonusPoints ?? 0)); setBonusNote(t.bonusNote ?? ''); }}>
-                              ⭐ مكافأة
-                            </button>
-                          )}
-                          {canEdit && (
-                            <button className="btn btn-xs btn-ghost" onClick={() => setEditModal(t)}>تعديل</button>
-                          )}
-                          {canDelete && (
-                            <button className="btn btn-xs btn-danger" onClick={() => handleDelete(t.id)}>حذف</button>
-                          )}
-                        </div>
-                      </div>
+                      )}
+                      <span className="tk-tag tk-tag-type" style={{ color: PRIORITY_META[priority].color, borderColor: PRIORITY_META[priority].color }}>
+                        أولوية {PRIORITY_META[priority].label}
+                      </span>
+                      {t.isBonus && (
+                        <span className="tk-tag tk-tag-type" style={{ color: '#4ade80', borderColor: 'rgba(45,122,79,0.5)' }}>
+                          بونص
+                        </span>
+                      )}
+                      {isTitleLate(t) && <span className="tk-tag tk-tag-warn">تأخير في كتابة العنوان</span>}
                     </div>
-                  );
-                })}
-              </div>
+
+                    {editingTitleId === t.id ? (
+                      <div className="tk-title-edit">
+                        <input
+                          autoFocus
+                          value={editingTitleVal}
+                          onChange={e => setEditingTitleVal(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.nativeEvent.isComposing || e.keyCode === 229) return;
+                            if (e.key === 'Enter') handleSaveTitle(t.id);
+                            if (e.key === 'Escape') setEditingTitleId(null);
+                          }}
+                          onBlur={() => handleSaveTitle(t.id)}
+                        />
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <h2 className={`tk-title${st === 'published' || st === 'cancelled' ? ' dim' : ''}`}>
+                          {t.title || <span className="tk-title-empty">بدون عنوان</span>}
+                        </h2>
+                        {canEditTitle && (
+                          <button
+                            className="tk-icon-btn"
+                            title="تعديل العنوان"
+                            onClick={() => { setEditingTitleId(t.id); setEditingTitleVal(t.title || ''); }}
+                          >
+                            ✎
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="tk-meta">
+                      {member && (
+                        <span className="tk-meta-item">
+                          <span className="tk-avatar" style={{ background: member.color || 'var(--border2)' }}>
+                            {member.photoURL
+                              ? <img src={member.photoURL} alt="" className="tk-avatar-img" />
+                              : member.name.charAt(0)}
+                          </span>
+                          {member.name}
+                        </span>
+                      )}
+                      {t.teamMemberIds && t.teamMemberIds.length > 0 && (
+                        <span className="tk-meta-item">
+                          <span className="tk-team">
+                            {t.teamMemberIds.map((tid, i) => {
+                              const tm = members.find(u => u.id === tid);
+                              if (!tm) return null;
+                              return (
+                                <span
+                                  key={tid}
+                                  className="tk-avatar"
+                                  title={tm.name}
+                                  style={{ background: tm.color || 'var(--border2)', zIndex: t.teamMemberIds!.length - i }}
+                                >
+                                  {tm.photoURL
+                                    ? <img src={tm.photoURL} alt="" className="tk-avatar-img" />
+                                    : tm.name.charAt(0)}
+                                </span>
+                              );
+                            })}
+                          </span>
+                          فريق
+                        </span>
+                      )}
+                      {t.deadline && (
+                        <span className={`tk-meta-item${isLate ? ' late' : ''}`}>
+                          {isLate ? `متأخرة · ${t.deadline}` : t.deadline}
+                        </span>
+                      )}
+                      {t.driveLink && (
+                        <a
+                          href={t.driveLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="tk-meta-item tk-drive"
+                          onClick={e => e.stopPropagation()}
+                        >
+                          ملف Drive
+                        </a>
+                      )}
+                      {t.twitterUrl && (
+                        <a
+                          href={t.twitterUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="tk-meta-item tk-drive"
+                          onClick={e => e.stopPropagation()}
+                        >
+                          التغريدة
+                        </a>
+                      )}
+                    </div>
+                  </div>
+
+                  {total > 0 && (
+                    <div className={`tk-points${t.isBonus && !earned ? ' pending' : ''}`}>
+                      <span className="tk-points-num">{total}</span>
+                      <span className="tk-points-lbl">
+                        {t.isBonus && !earned ? 'نقطة متوقعة' : 'نقطة'}
+                      </span>
+                      {!t.isBonus && bonus > 0 && (
+                        <span className="tk-points-extra" title={`${base} أساسية + ${bonus} مكافأة`}>+{bonus} مكافأة</span>
+                      )}
+                      {t.isBonus && earned && (
+                        t.pointsApproved
+                          ? <span className="tk-points-ok">معتمدة</span>
+                          : <span className="tk-points-wait">بانتظار الموافقة</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="tk-card-foot">
+                  {showSelect && (
+                    <select
+                      className="tk-select"
+                      aria-label="تغيير حالة المهمة"
+                      value={st === 'done' && t.type === 'writing' ? 'published' : st}
+                      onChange={e => handleChangeStatus(t.id, e.target.value as TaskStatus)}
+                    >
+                      {t.type === 'writing' ? (
+                        <>
+                          <option value="pending">معلقة</option>
+                          <option value="published">تم النشر</option>
+                        </>
+                      ) : (
+                        <>
+                          <option value="pending">معلقة</option>
+                          {(isAdmin || canSetComplete || canChangeStatus) && <option value="done">مكتملة</option>}
+                          {(isAdmin || canChangeStatus) && <option value="ready">جاهز للنشر</option>}
+                          {(isAdmin || canChangeStatus) && <option value="published">تم النشر</option>}
+                          {(isAdmin || canChangeStatus) && <option value="cancelled">ملغية</option>}
+                        </>
+                      )}
+                    </select>
+                  )}
+                  <div className="tk-foot-actions">
+                    {t.isBonus && earned && !t.pointsApproved && (isAdmin || can('addTaskOthers')) && (
+                      <button
+                        className="btn btn-xs"
+                        style={{ background: 'rgba(45,122,79,0.15)', color: '#4ade80', border: '1px solid rgba(45,122,79,0.4)', boxShadow: 'none' }}
+                        onClick={() => handleApproveBonus(t.id)}
+                      >
+                        موافقة على النقاط
+                      </button>
+                    )}
+                    {!t.isBonus && isAdmin && (
+                      <button
+                        className="btn btn-xs btn-ghost"
+                        title="إضافة نقاط مكافأة"
+                        onClick={() => { setBonusModal(t); setBonusVal(String(t.bonusPoints ?? 0)); setBonusNote(t.bonusNote ?? ''); }}
+                      >
+                        مكافأة
+                      </button>
+                    )}
+                    {canEdit && <button className="btn btn-xs btn-ghost" onClick={() => setEditModal(t)}>تعديل</button>}
+                    {canDelete && <button className="btn btn-xs btn-danger" onClick={() => handleDelete(t.id)}>حذف</button>}
+                  </div>
+                </div>
+              </article>
             );
-          })()
-      }
+          })}
+        </div>
+      )}
 
       <TaskModal open={taskModal} onClose={() => setTaskModal(false)} onSuccess={load} />
       <ImportModal open={importModal} onClose={() => setImportModal(false)} onSuccess={load} />
@@ -518,8 +680,8 @@ export function AllTasksPage() {
       {bonusModal && (
         <div className="overlay open" onClick={e => { if (e.target === e.currentTarget) setBonusModal(null); }}>
           <div className="modal" style={{ maxWidth: 380 }}>
-            <div className="modal-title">⭐ نقاط مكافأة</div>
-            <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 12, margin: '0 0 16px' }}>
+            <div className="modal-title">نقاط مكافأة</div>
+            <p style={{ fontSize: 13, color: 'var(--muted)', margin: '0 0 16px' }}>
               {bonusModal.title || 'مهمة'} — النقاط الأساسية: {bonusModal.points ?? getDefaultPoints(bonusModal.type)}
             </p>
             {bonusModal.twitterUrl && (
@@ -531,23 +693,17 @@ export function AllTasksPage() {
                   className="btn btn-ghost"
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, textDecoration: 'none' }}
                 >
-                  🔗 فتح التغريدة
+                  فتح التغريدة
                 </a>
               </div>
             )}
             <div className="form-group">
               <label>نقاط المكافأة</label>
-              <input
-                type="number" min="0" value={bonusVal}
-                onChange={e => setBonusVal(e.target.value)}
-              />
+              <input type="number" min="0" value={bonusVal} onChange={e => setBonusVal(e.target.value)} />
             </div>
             <div className="form-group">
               <label>السبب (اختياري)</label>
-              <input
-                type="text" value={bonusNote} placeholder="مثال: تغريدة 20K+"
-                onChange={e => setBonusNote(e.target.value)}
-              />
+              <input type="text" value={bonusNote} placeholder="مثال: تغريدة 20K+" onChange={e => setBonusNote(e.target.value)} />
             </div>
             <div className="modal-footer">
               <button className="btn" onClick={handleSaveBonus}>حفظ</button>
@@ -556,6 +712,6 @@ export function AllTasksPage() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
