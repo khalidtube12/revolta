@@ -144,7 +144,7 @@ export function MyTasksPage() {
     const isLate = !t.done && t.deadline && new Date(t.deadline) < new Date();
     const isFinal = st === 'done' || st === 'published';
     const cardOpacity = st === 'cancelled' ? 0.4 : isFinal ? 0.65 : 1;
-    const isReadOnly = t.memberId !== firebaseUser?.uid;
+    const isReadOnly = t.memberId !== firebaseUser?.uid && !can('addTaskOthers');
 
     const canSetComplete  = can('setTaskComplete') || can('changeTaskStatus');
     const canSetIncomplete = can('setTaskIncomplete');
