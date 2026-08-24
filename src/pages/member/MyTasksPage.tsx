@@ -21,7 +21,7 @@ export function MyTasksPage() {
   const { firebaseUser, can } = useAuthStore();
   const { tasks, loadUserTasks, updateTask } = useTasksStore();
   const { members, loadMembers } = useMembersStore();
-  const { ideas: _ideas, loadIdeas } = useIdeasStore();
+  const { ideas, loadIdeas } = useIdeasStore();
   const [loading, setLoading] = useState(true);
   const [taskModal, setTaskModal] = useState(false);
   const [driveModal, setDriveModal] = useState<{ taskId: string; status: TaskStatus; taskTitle: string } | null>(null);
@@ -56,7 +56,7 @@ export function MyTasksPage() {
   const now = new Date();
   const thisMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
   const monthlyBreakdown = firebaseUser
-    ? calculateMemberMonthlyPoints(firebaseUser.uid, tasks, thisMonth, meetings)
+    ? calculateMemberMonthlyPoints(firebaseUser.uid, tasks, thisMonth, meetings, ideas)
     : null;
 
   const completeTask = (taskId: string) => {

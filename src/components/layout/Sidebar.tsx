@@ -34,7 +34,7 @@ export function Sidebar({ isMobile, onClose, onOpenProfile }: SidebarProps) {
     { path: '/shows', icon: '🏆', label: 'العروض' },
     { path: '/shows/manage', icon: '🎬', label: 'إدارة العروض', permission: 'manageShows' },
     { path: '/leaderboard', icon: '🥇', label: 'الترتيب الشهري' },
-    { path: '/meetings', icon: '🗓', label: 'الاجتماعات' },
+    { path: '/meetings', icon: '🗓', label: 'الاجتماعات', permission: 'manageMeetings' },
     { path: '/polls', icon: '🗳', label: 'التصويتات' },
     { path: '/approvals', icon: '📩', label: 'طلبات التسجيل', badgeCount: pendingCount },
     { path: '/applications', icon: '📝', label: 'طلبات الانضمام' },
@@ -52,7 +52,7 @@ export function Sidebar({ isMobile, onClose, onOpenProfile }: SidebarProps) {
     { path: '/shows', icon: '🏆', label: 'العروض' },
     { path: '/shows/manage', icon: '🎬', label: 'إدارة العروض', permission: 'manageShows' },
     { path: '/leaderboard', icon: '🥇', label: 'الترتيب الشهري' },
-    { path: '/meetings', icon: '🗓', label: 'الاجتماعات' },
+    { path: '/meetings', icon: '🗓', label: 'الاجتماعات', permission: 'manageMeetings' },
     { path: '/polls', icon: '🗳', label: 'التصويتات', permission: 'managePolls' },
   ];
 

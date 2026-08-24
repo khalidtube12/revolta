@@ -268,6 +268,7 @@ export function MemberDetailPage() {
               deleteShow: 'حذف عرض / نزال',
               viewIdeas: 'عرض أفكار المقاطع',
               manageBonus: 'إضافة نقاط مكافأة',
+              manageMeetings: 'إدارة الاجتماعات',
             }) as [keyof UserPermissions, string][]).map(([key, label]) => {
               const perms = member.permissions ?? DEFAULT_PERMISSIONS;
               const active = perms[key] ?? DEFAULT_PERMISSIONS[key];
