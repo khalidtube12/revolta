@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useAuthStore } from '../../stores/authStore';
 import { useMembersStore } from '../../stores/membersStore';
 import { useTasksStore } from '../../stores/tasksStore';
+import { useIdeasStore } from '../../stores/ideasStore';
 import { Spinner } from '../../components/ui/Spinner';
 import {
   buildLeaderboard,
@@ -48,6 +49,7 @@ export function LeaderboardPage() {
   const { profile } = useAuthStore();
   const { members, loadMembers } = useMembersStore();
   const { tasks, loadAllTasks } = useTasksStore();
+  const { ideas, loadIdeas } = useIdeasStore();
   const isAdmin = !!profile?.isAdmin;
 
   const now = new Date();
@@ -68,18 +70,18 @@ export function LeaderboardPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [,, mtgs] = await Promise.all([loadMembers(), loadAllTasks(), loadAllMeetings()]);
+    const [,, mtgs] = await Promise.all([loadMembers(), loadAllTasks(), loadAllMeetings(), loadIdeas()]);
     setMeetings(mtgs);
     setLoading(false);
-  }, [loadMembers, loadAllTasks]);
+  }, [loadMembers, loadAllTasks, loadIdeas]);
 
   useEffect(() => { load(); }, [load]);
 
   useEffect(() => {
     if (!loading) {
-      setEntries(buildLeaderboard(tasks, members, selectedMonth, meetings));
+      setEntries(buildLeaderboard(tasks, members, selectedMonth, meetings, ideas));
     }
-  }, [loading, tasks, members, selectedMonth, meetings]);
+  }, [loading, tasks, members, selectedMonth, meetings, ideas]);
 
   useEffect(() => {
     loadMonthPrizes(selectedMonth).then(p => {
@@ -235,6 +237,7 @@ export function LeaderboardPage() {
                 {typeKeys.map(k => <th key={k}>{TYPE_LABELS[k]}</th>)}
                 <th>مكافأة</th>
                 <th>حضور</th>
+                <th>أفكار</th>
                 <th>المجموع</th>
               </tr>
             </thead>
@@ -266,6 +269,7 @@ export function LeaderboardPage() {
                   <td>{e.breakdown.podcast || '—'}</td>
                   <td>{e.breakdown.bonus || '—'}</td>
                   <td>{e.breakdown.meetings || '—'}</td>
+                  <td>{e.breakdown.ideas || '—'}</td>
                   <td className="lb-total-cell">{e.breakdown.total}</td>
                 </tr>
               ))}

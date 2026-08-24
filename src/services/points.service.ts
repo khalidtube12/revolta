@@ -1,5 +1,5 @@
 import { dbGet, dbSet } from './db.service';
-import type { Task, User, Meeting } from '../types';
+import type { Task, User, Meeting, Idea } from '../types';
 import { MEETING_POINTS } from './meetings.service';
 
 export const POINTS_BY_TYPE: Record<string, number> = {
@@ -37,6 +37,7 @@ export interface MemberMonthlyBreakdown {
   podcast: number;
   bonus: number;
   meetings: number;
+  ideas: number;
   total: number;
 }
 
@@ -47,9 +48,10 @@ export function calculateMemberMonthlyPoints(
   tasks: Task[],
   month: string,
   meetings?: Meeting[],
+  ideas?: Idea[],
 ): MemberMonthlyBreakdown {
   const breakdown: MemberMonthlyBreakdown = {
-    x_content: 0, short: 0, video: 0, writing: 0, design: 0, podcast: 0, bonus: 0, meetings: 0, total: 0,
+    x_content: 0, short: 0, video: 0, writing: 0, design: 0, podcast: 0, bonus: 0, meetings: 0, ideas: 0, total: 0,
   };
 
   if (month < POINTS_START_MONTH) return breakdown;
@@ -96,6 +98,25 @@ export function calculateMemberMonthlyPoints(
     }
   }
 
+  if (ideas) {
+    for (const idea of ideas) {
+      if (idea.createdBy !== userId) continue;
+      const ideaMonth = new Date(idea.createdAt).toISOString().substring(0, 7);
+      if (ideaMonth !== month) continue;
+      breakdown.ideas += 200;
+      breakdown.total += 200;
+    }
+    for (const t of tasks) {
+      if (!isEarned(t) || !t.linkedIdeaId) continue;
+      if (getTaskYearMonth(t) !== month) continue;
+      const idea = ideas.find(i => i.id === t.linkedIdeaId);
+      if (idea && idea.createdBy === userId && t.memberId !== userId) {
+        breakdown.ideas += 100;
+        breakdown.total += 100;
+      }
+    }
+  }
+
   return breakdown;
 }
 
@@ -110,10 +131,11 @@ export function buildLeaderboard(
   users: User[],
   month: string,
   meetings?: Meeting[],
+  ideas?: Idea[],
 ): LeaderboardEntry[] {
   const entries = users.map(user => ({
     user,
-    breakdown: calculateMemberMonthlyPoints(user.id, tasks, month, meetings),
+    breakdown: calculateMemberMonthlyPoints(user.id, tasks, month, meetings, ideas),
     rank: 0,
   }));
 
