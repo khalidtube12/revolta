@@ -164,6 +164,20 @@
 
 .lb-table td:nth-child(2) {
   text-align: right;
+  white-space: nowrap;
+  min-width: 130px;
+}
+
+.lb-table td:nth-child(2) > div {
+  flex-wrap: nowrap;
+}
+
+.lb-table td:nth-child(2) span:last-child {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+  display: inline-block;
 }
 
 .lb-table tbody tr:hover {
