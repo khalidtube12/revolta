@@ -96,18 +96,21 @@ export function AllTasksPage() {
     ? (now.getFullYear() - 1) + '-12'
     : now.getFullYear() + '-' + String(now.getMonth()).padStart(2, '0');
 
+  const nextMonth = now.getMonth() === 11
+    ? (now.getFullYear() + 1) + '-01'
+    : now.getFullYear() + '-' + String(now.getMonth() + 2).padStart(2, '0');
+
+  const toLabel = (m: string) => new Date(m + '-01').toLocaleDateString('ar-SA', { month: 'long', year: 'numeric' });
+
+  const fixedMonths = [nextMonth, thisMonth, prevMonth];
+  const monthsInTasks = [...new Set(tasks.map(t => getTaskMonth(t.deadline, t.createdAt)))].filter(Boolean).sort().reverse();
+  const extraMonths = monthsInTasks.filter(m => !fixedMonths.includes(m));
+
   const monthOpts: { v: string; l: string }[] = [
     { v: '', l: 'كل الأشهر' },
-    { v: 'current', l: 'هذا الشهر' },
-    { v: 'prev', l: 'الشهر الماضي' },
+    ...fixedMonths.map(m => ({ v: m, l: toLabel(m) })),
+    ...extraMonths.map(m => ({ v: m, l: toLabel(m) })),
   ];
-
-  const monthsInTasks = [...new Set(tasks.map(t => getTaskMonth(t.deadline, t.createdAt)))].filter(Boolean).sort().reverse();
-  monthsInTasks.forEach(m => {
-    if (m !== thisMonth && m !== prevMonth) {
-      monthOpts.push({ v: m, l: new Date(m + '-01').toLocaleDateString('ar-SA', { month: 'long', year: 'numeric' }) });
-    }
-  });
 
   const coreTasks = tasks.filter(t => !t.isBonus);
   const bonusTasks = tasks.filter(t => t.isBonus === true);
