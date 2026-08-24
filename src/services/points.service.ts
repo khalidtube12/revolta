@@ -17,6 +17,7 @@ export function getDefaultPoints(type: string | undefined): number {
 }
 
 function getTaskYearMonth(task: Task): string {
+  if (task.deadline) return task.deadline.substring(0, 7);
   const d = new Date(task.createdAt);
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
 }

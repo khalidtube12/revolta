@@ -7,7 +7,8 @@ export function timeAgo(ts: number | undefined): string {
   return Math.floor(d / 86400000) + ' يوم';
 }
 
-export function getTaskMonth(_deadline?: string, createdAt?: number): string {
+export function getTaskMonth(deadline?: string, createdAt?: number): string {
+  if (deadline) return deadline.substring(0, 7);
   return new Date(createdAt || 0).toISOString().substring(0, 7);
 }
 
