@@ -17,7 +17,7 @@ import { EditTaskModal } from '../../components/modals/EditTaskModal';
 import { Spinner } from '../../components/ui/Spinner';
 import { getStatus } from '../../utils/status';
 import type { Task, TaskStatus, UserPermissions } from '../../types';
-import { DEFAULT_PERMISSIONS } from '../../types';
+import { DEFAULT_PERMISSIONS, CONTENT_MANAGER_PERMISSIONS, detectRolePreset } from '../../types';
 
 export function MemberDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -124,6 +124,15 @@ export function MemberDetailPage() {
     setSavingPerms(false);
   };
 
+  const handleApplyPreset = async (preset: 'content_manager' | 'member') => {
+    if (!isAdmin || member.isAdmin) return;
+    setSavingPerms(true);
+    const perms = preset === 'content_manager' ? CONTENT_MANAGER_PERMISSIONS : DEFAULT_PERMISSIONS;
+    await updatePermissions(member.id, perms);
+    await load();
+    setSavingPerms(false);
+  };
+
   return (
     <>
       <button className="back-btn" onClick={() => navigate('/members')}>← رجوع</button>
@@ -175,6 +184,50 @@ export function MemberDetailPage() {
       {isAdmin && !member.isAdmin && (
         <Card title="الصلاحيات">
           {savingPerms && <div style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 8 }}>جاري الحفظ...</div>}
+
+          {/* Role Preset Selector */}
+          {(() => {
+            const perms = member.permissions ?? DEFAULT_PERMISSIONS;
+            const currentPreset = detectRolePreset(perms, false);
+            const presets: { key: 'content_manager' | 'member'; label: string; desc: string; color: string }[] = [
+              { key: 'content_manager', label: 'مدير صناع المحتوى', desc: 'كل الصلاحيات ما عدا تعديل/حذف الأعضاء', color: 'var(--gold)' },
+              { key: 'member', label: 'عضو عادي', desc: 'صلاحيات محدودة — الافتراضي', color: 'var(--muted)' },
+            ];
+            return (
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1.5, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 10 }}>
+                  الرول
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {presets.map(p => {
+                    const isActive = currentPreset === p.key;
+                    return (
+                      <button
+                        key={p.key}
+                        onClick={() => !isActive && handleApplyPreset(p.key)}
+                        disabled={savingPerms}
+                        style={{
+                          padding: '10px 18px',
+                          border: `1px solid ${isActive ? p.color : 'var(--border)'}`,
+                          background: isActive ? `color-mix(in srgb, ${p.color} 10%, transparent)` : 'var(--dark)',
+                          color: isActive ? p.color : 'var(--muted)',
+                          cursor: isActive ? 'default' : 'pointer',
+                          fontFamily: 'Cairo, sans-serif',
+                          textAlign: 'right',
+                          transition: 'all 0.15s',
+                        }}
+                      >
+                        <div style={{ fontWeight: 800, fontSize: 13 }}>{p.label}</div>
+                        <div style={{ fontSize: 11, marginTop: 2, opacity: 0.7 }}>{p.desc}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div style={{ height: 1, background: 'var(--border)', margin: '16px 0' }} />
+              </div>
+            );
+          })()}
+
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 8 }}>
             {(Object.entries({
               viewMembers: 'عرض الأعضاء',

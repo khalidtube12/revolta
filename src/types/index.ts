@@ -42,6 +42,37 @@ export const DEFAULT_PERMISSIONS: UserPermissions = {
   viewIdeas: true,
 };
 
+export const CONTENT_MANAGER_PERMISSIONS: UserPermissions = {
+  viewAllTasks: true,
+  addTaskSelf: true,
+  addTaskOthers: true,
+  deleteTask: true,
+  editTask: true,
+  editMember: false,
+  deleteMember: false,
+  setTaskComplete: true,
+  setTaskIncomplete: true,
+  changeTaskStatus: true,
+  managePolls: true,
+  postReviews: true,
+  viewMembers: true,
+  exportTasks: true,
+  importTasks: true,
+  manageShows: true,
+  deleteReview: true,
+  deleteShow: true,
+  viewIdeas: true,
+};
+
+export type MemberRolePreset = 'admin' | 'content_manager' | 'member';
+
+export function detectRolePreset(perms: UserPermissions, isAdmin: boolean): MemberRolePreset {
+  if (isAdmin) return 'admin';
+  const keys = Object.keys(CONTENT_MANAGER_PERMISSIONS) as (keyof UserPermissions)[];
+  const isManager = keys.every(k => perms[k] === CONTENT_MANAGER_PERMISSIONS[k]);
+  return isManager ? 'content_manager' : 'member';
+}
+
 export interface Show {
   id: string;
   name: string;
