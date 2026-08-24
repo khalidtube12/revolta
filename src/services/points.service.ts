@@ -39,6 +39,8 @@ export interface MemberMonthlyBreakdown {
   total: number;
 }
 
+const POINTS_START_MONTH = '2026-09';
+
 export function calculateMemberMonthlyPoints(
   userId: string,
   tasks: Task[],
@@ -48,6 +50,8 @@ export function calculateMemberMonthlyPoints(
   const breakdown: MemberMonthlyBreakdown = {
     x_content: 0, short: 0, video: 0, writing: 0, design: 0, podcast: 0, bonus: 0, meetings: 0, total: 0,
   };
+
+  if (month < POINTS_START_MONTH) return breakdown;
 
   for (const t of tasks) {
     if (!isEarned(t)) continue;

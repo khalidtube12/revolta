@@ -27,13 +27,19 @@ function getMonthLabel(month: string): string {
   return new Date(month + '-01').toLocaleDateString('ar-SA', { month: 'long', year: 'numeric' });
 }
 
+const POINTS_START_MONTH = '2026-09';
+
 function buildMonthOptions(): { v: string; l: string }[] {
   const opts: { v: string; l: string }[] = [];
   const now = new Date();
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 24; i++) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const v = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    if (v < POINTS_START_MONTH) break;
     opts.push({ v, l: getMonthLabel(v) });
+  }
+  if (opts.length === 0 || !opts.find(o => o.v === POINTS_START_MONTH)) {
+    opts.push({ v: POINTS_START_MONTH, l: getMonthLabel(POINTS_START_MONTH) });
   }
   return opts;
 }
@@ -45,7 +51,8 @@ export function LeaderboardPage() {
   const isAdmin = !!profile?.isAdmin;
 
   const now = new Date();
-  const defaultMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+  const currentMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+  const defaultMonth = currentMonth >= POINTS_START_MONTH ? currentMonth : POINTS_START_MONTH;
   const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
   const [loading, setLoading] = useState(true);
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
