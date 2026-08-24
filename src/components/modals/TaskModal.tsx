@@ -66,7 +66,8 @@ export function TaskModal({ open, onClose, preMemberId, onSuccess, forceBonus }:
 
   const isVideo = type === 'video';
   const isPodcast = type === 'podcast';
-  const isTeamType = isVideo || isPodcast;
+  const isShort = type === 'short';
+  const isTeamType = isVideo || isPodcast || isShort;
   const TASK_TYPES: { value: string; label: string }[] = [
     { value: 'short',     label: 'شورت' },
     { value: 'video',     label: 'مقطع' },
@@ -190,7 +191,7 @@ export function TaskModal({ open, onClose, preMemberId, onSuccess, forceBonus }:
         </select>
       </div>
 
-      {/* أعضاء التيم — للمقطع والبودكاست */}
+      {/* أعضاء التيم — للشورت والمقطع والبودكاست */}
       {isTeamType && canAddOthers && (
         <div className="form-group">
           <label>

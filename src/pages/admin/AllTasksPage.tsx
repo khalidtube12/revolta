@@ -77,7 +77,7 @@ export function AllTasksPage() {
   const [bonusVal, setBonusVal] = useState('');
   const [bonusNote, setBonusNote] = useState('');
   const [twitterModal, setTwitterModal] = useState<string | null>(null);
-  const [videoModal, setVideoModal] = useState<{ id: string; type: 'video' | 'podcast' } | null>(null);
+  const [videoModal, setVideoModal] = useState<{ id: string; type: 'video' | 'podcast' | 'short' } | null>(null);
   const [activeTab, setActiveTab] = useState<'core' | 'bonus'>('core');
 
   const load = useCallback(async () => {
@@ -96,18 +96,21 @@ export function AllTasksPage() {
     ? (now.getFullYear() - 1) + '-12'
     : now.getFullYear() + '-' + String(now.getMonth()).padStart(2, '0');
 
+  const nextMonth = now.getMonth() === 11
+    ? (now.getFullYear() + 1) + '-01'
+    : now.getFullYear() + '-' + String(now.getMonth() + 2).padStart(2, '0');
+
+  const toLabel = (m: string) => new Date(m + '-01').toLocaleDateString('ar-SA', { month: 'long', year: 'numeric' });
+
+  const fixedMonths = [nextMonth, thisMonth, prevMonth];
+  const monthsInTasks = [...new Set(tasks.map(t => getTaskMonth(t.deadline, t.createdAt)))].filter(Boolean).sort().reverse();
+  const extraMonths = monthsInTasks.filter(m => !fixedMonths.includes(m));
+
   const monthOpts: { v: string; l: string }[] = [
     { v: '', l: 'كل الأشهر' },
-    { v: 'current', l: 'هذا الشهر' },
-    { v: 'prev', l: 'الشهر الماضي' },
+    ...fixedMonths.map(m => ({ v: m, l: toLabel(m) })),
+    ...extraMonths.map(m => ({ v: m, l: toLabel(m) })),
   ];
-
-  const monthsInTasks = [...new Set(tasks.map(t => getTaskMonth(t.deadline, t.createdAt)))].filter(Boolean).sort().reverse();
-  monthsInTasks.forEach(m => {
-    if (m !== thisMonth && m !== prevMonth) {
-      monthOpts.push({ v: m, l: new Date(m + '-01').toLocaleDateString('ar-SA', { month: 'long', year: 'numeric' }) });
-    }
-  });
 
   const coreTasks = tasks.filter(t => !t.isBonus);
   const bonusTasks = tasks.filter(t => t.isBonus === true);
@@ -167,7 +170,7 @@ export function AllTasksPage() {
       updateTask(taskId, { status: 'done', done: true }).then(load);
     } else if (t?.type === 'x_content') {
       setTwitterModal(taskId);
-    } else if (t?.type === 'video' || t?.type === 'podcast') {
+    } else if (t?.type === 'video' || t?.type === 'podcast' || t?.type === 'short') {
       setVideoModal({ id: taskId, type: t.type });
     } else {
       setDriveModal({ taskId, status: 'done', taskTitle: t?.title || '' });
