@@ -6,7 +6,7 @@ interface VideoCompleteModalProps {
   onClose: () => void;
   onSubmit: (driveLink: string, producerId: string) => void;
   participants: User[];
-  taskType?: 'video' | 'podcast';
+  taskType?: 'video' | 'podcast' | 'short';
 }
 
 export function VideoCompleteModal({ open, onClose, onSubmit, participants, taskType = 'video' }: VideoCompleteModalProps) {
@@ -25,7 +25,9 @@ export function VideoCompleteModal({ open, onClose, onSubmit, participants, task
   return (
     <div className="overlay open" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="modal" style={{ maxWidth: 420 }}>
-        <div className="modal-title">{taskType === 'podcast' ? '🎙 إكمال البودكاست' : '🎬 إكمال المقطع'}</div>
+        <div className="modal-title">
+          {taskType === 'podcast' ? '🎙 إكمال البودكاست' : taskType === 'short' ? '📱 إكمال الشورت' : '🎬 إكمال المقطع'}
+        </div>
 
         <div className="form-group">
           <label>رابط Drive (اختياري)</label>
@@ -82,7 +84,7 @@ export function VideoCompleteModal({ open, onClose, onSubmit, participants, task
                   <span style={{ fontSize: 14, fontFamily: 'Cairo, sans-serif' }}>{u.name}</span>
                   {selected && (
                     <span style={{ fontSize: 11, color: 'var(--gold)', fontFamily: 'Oswald, sans-serif', marginRight: 'auto' }}>
-                      +200 ⭐
+                      +{taskType === 'short' ? 100 : 200} ⭐
                     </span>
                   )}
                 </label>

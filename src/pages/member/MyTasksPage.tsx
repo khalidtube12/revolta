@@ -29,7 +29,7 @@ export function MyTasksPage() {
   const [editingTitleId, setEditingTitleId] = useState<string | null>(null);
   const [editingTitleVal, setEditingTitleVal] = useState('');
   const [twitterModal, setTwitterModal] = useState<string | null>(null);
-  const [videoModal, setVideoModal] = useState<{ id: string; type: 'video' | 'podcast' } | null>(null);
+  const [videoModal, setVideoModal] = useState<{ id: string; type: 'video' | 'podcast' | 'short' } | null>(null);
   const [activeTab, setActiveTab] = useState<'core' | 'bonus'>('core');
   const [meetings, setMeetings] = useState<Meeting[]>([]);
 
@@ -65,7 +65,7 @@ export function MyTasksPage() {
       updateTask(taskId, { status: 'done', done: true }).then(load);
     } else if (t?.type === 'x_content') {
       setTwitterModal(taskId);
-    } else if (t?.type === 'video' || t?.type === 'podcast') {
+    } else if (t?.type === 'video' || t?.type === 'podcast' || t?.type === 'short') {
       setVideoModal({ id: taskId, type: t.type });
     } else {
       setDriveModal({ taskId, status: 'done', taskTitle: t?.title || '' });
