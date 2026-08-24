@@ -13,17 +13,19 @@ interface TaskRowV2Props {
   canEdit?: boolean;
   canSetIncomplete?: boolean;
   canChangeStatus?: boolean;
+  canManageBonus?: boolean;
   readOnly?: boolean;
   ideas?: Idea[];
   onToggle?: (id: string, wasResolved: boolean) => void;
   onChangeStatus?: (id: string, status: TaskStatus) => void;
   onDelete?: (id: string) => void;
   onEdit?: (task: Task) => void;
+  onBonus?: (task: Task) => void;
 }
 
 export function TaskRowV2({
-  task, members = [], showMember, isAdmin, canDelete, canEdit, canSetIncomplete, canChangeStatus, readOnly, ideas = [],
-  onToggle, onChangeStatus, onDelete, onEdit,
+  task, members = [], showMember, isAdmin, canDelete, canEdit, canSetIncomplete, canChangeStatus, canManageBonus, readOnly, ideas = [],
+  onToggle, onChangeStatus, onDelete, onEdit, onBonus,
 }: TaskRowV2Props) {
   const m = members.find(u => u.id === task.memberId);
   const dl = deadlineLabel(task.deadline, task.done);
@@ -118,6 +120,7 @@ export function TaskRowV2({
               <option value="published">تم النشر</option>
               <option value="cancelled">ملغية</option>
             </select>
+            {!task.isBonus && onBonus && <button className="btn btn-xs btn-ghost" onClick={() => onBonus(task)}>مكافأة</button>}
             {onEdit && <button className="btn btn-xs btn-ghost" onClick={() => onEdit(task)}>تعديل</button>}
             {onDelete && <button className="btn btn-xs btn-danger" onClick={() => onDelete(task.id)}>حذف</button>}
           </>
@@ -146,6 +149,9 @@ export function TaskRowV2({
               </select>
             ) : (
               <span className={`badge ${si.badge}`}>{si.label}</span>
+            )}
+            {!task.isBonus && canManageBonus && onBonus && (
+              <button className="btn btn-xs btn-ghost" onClick={() => onBonus(task)}>مكافأة</button>
             )}
             {(canEdit || isAdmin) && onEdit && (
               <button className="btn btn-xs btn-ghost" onClick={() => onEdit(task)}>تعديل</button>

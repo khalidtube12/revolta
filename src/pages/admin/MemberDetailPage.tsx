@@ -18,6 +18,7 @@ import { Spinner } from '../../components/ui/Spinner';
 import { getStatus } from '../../utils/status';
 import type { Task, TaskStatus, UserPermissions } from '../../types';
 import { DEFAULT_PERMISSIONS, CONTENT_MANAGER_PERMISSIONS, detectRolePreset } from '../../types';
+import { getDefaultPoints } from '../../services/points.service';
 
 export function MemberDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -31,7 +32,11 @@ export function MemberDetailPage() {
   const [driveModal, setDriveModal] = useState<{ taskId: string; status: TaskStatus; taskTitle: string } | null>(null);
   const [editModal, setEditModal] = useState<Task | null>(null);
   const [savingPerms, setSavingPerms] = useState(false);
+  const [bonusModal, setBonusModal] = useState<Task | null>(null);
+  const [bonusVal, setBonusVal] = useState('');
+  const [bonusNote, setBonusNote] = useState('');
   const isAdmin = !!currentProfile?.isAdmin;
+  const canManageBonus = isAdmin || can('manageBonus');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -124,6 +129,17 @@ export function MemberDetailPage() {
     setSavingPerms(false);
   };
 
+  const handleSaveBonus = async () => {
+    if (!bonusModal) return;
+    const amount = parseInt(bonusVal, 10);
+    if (isNaN(amount) || amount < 0) { alert('أدخل رقماً صحيحاً'); return; }
+    await updateTask(bonusModal.id, { bonusPoints: amount, ...(bonusNote.trim() ? { bonusNote: bonusNote.trim() } : {}) });
+    setBonusModal(null);
+    setBonusVal('');
+    setBonusNote('');
+    load();
+  };
+
   const handleApplyPreset = async (preset: 'content_manager' | 'member') => {
     if (!isAdmin || member.isAdmin) return;
     setSavingPerms(true);
@@ -172,10 +188,12 @@ export function MemberDetailPage() {
                 canEdit={can('editTask')}
                 canSetIncomplete={can('setTaskIncomplete')}
                 canChangeStatus={can('changeTaskStatus')}
+                canManageBonus={canManageBonus}
                 onToggle={handleToggle}
                 onChangeStatus={handleChangeStatus}
                 onDelete={(isAdmin || can('deleteTask')) ? handleDelete : undefined}
-                onEdit={setEditModal} />
+                onEdit={setEditModal}
+                onBonus={canManageBonus ? t => { setBonusModal(t); setBonusVal(String(t.bonusPoints ?? 0)); setBonusNote(t.bonusNote ?? ''); } : undefined} />
             ))
           : <EmptyState icon="📋" message="لا توجد مهام بعد" />
         }
@@ -249,6 +267,7 @@ export function MemberDetailPage() {
               deleteReview: 'حذف تقييم',
               deleteShow: 'حذف عرض / نزال',
               viewIdeas: 'عرض أفكار المقاطع',
+              manageBonus: 'إضافة نقاط مكافأة',
             }) as [keyof UserPermissions, string][]).map(([key, label]) => {
               const perms = member.permissions ?? DEFAULT_PERMISSIONS;
               const active = perms[key] ?? DEFAULT_PERMISSIONS[key];
@@ -277,6 +296,38 @@ export function MemberDetailPage() {
       {isAdmin && <TaskModal open={taskModal} onClose={() => setTaskModal(false)} preMemberId={id} onSuccess={load} />}
       <DriveModal open={!!driveModal} onClose={() => setDriveModal(null)} onSubmit={handleDriveSubmit} taskTitle={driveModal?.taskTitle ?? ''} />
       <EditTaskModal open={!!editModal} task={editModal} onClose={() => setEditModal(null)} onSuccess={load} />
+
+      {bonusModal && (
+        <div className="overlay open" onClick={e => { if (e.target === e.currentTarget) setBonusModal(null); }}>
+          <div className="modal" style={{ maxWidth: 380 }}>
+            <div className="modal-title">نقاط مكافأة</div>
+            <p style={{ fontSize: 13, color: 'var(--muted)', margin: '0 0 16px' }}>
+              {bonusModal.title || 'مهمة'} — النقاط الأساسية: {bonusModal.points ?? getDefaultPoints(bonusModal.type)}
+            </p>
+            {bonusModal.twitterUrl && (
+              <div style={{ marginBottom: 16 }}>
+                <a href={bonusModal.twitterUrl} target="_blank" rel="noopener noreferrer"
+                  className="btn btn-ghost"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, textDecoration: 'none' }}>
+                  فتح التغريدة
+                </a>
+              </div>
+            )}
+            <div className="form-group">
+              <label>نقاط المكافأة</label>
+              <input type="number" min="0" value={bonusVal} onChange={e => setBonusVal(e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label>السبب (اختياري)</label>
+              <input type="text" value={bonusNote} placeholder="مثال: تغريدة 20K+" onChange={e => setBonusNote(e.target.value)} />
+            </div>
+            <div className="modal-footer">
+              <button className="btn" onClick={handleSaveBonus}>حفظ</button>
+              <button className="btn btn-ghost" onClick={() => setBonusModal(null)}>إلغاء</button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

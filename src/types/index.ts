@@ -18,6 +18,7 @@ export interface UserPermissions {
   deleteReview: boolean;
   deleteShow: boolean;
   viewIdeas: boolean;
+  manageBonus: boolean;
 }
 
 export const DEFAULT_PERMISSIONS: UserPermissions = {
@@ -40,6 +41,7 @@ export const DEFAULT_PERMISSIONS: UserPermissions = {
   deleteReview: false,
   deleteShow: false,
   viewIdeas: true,
+  manageBonus: false,
 };
 
 export const CONTENT_MANAGER_PERMISSIONS: UserPermissions = {
@@ -62,6 +64,7 @@ export const CONTENT_MANAGER_PERMISSIONS: UserPermissions = {
   deleteReview: true,
   deleteShow: true,
   viewIdeas: true,
+  manageBonus: true,
 };
 
 export type MemberRolePreset = 'admin' | 'content_manager' | 'member';

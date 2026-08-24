@@ -634,7 +634,7 @@ export function AllTasksPage() {
                         موافقة على النقاط
                       </button>
                     )}
-                    {!t.isBonus && isAdmin && (
+                    {!t.isBonus && (isAdmin || can('manageBonus')) && (
                       <button
                         className="btn btn-xs btn-ghost"
                         title="إضافة نقاط مكافأة"
