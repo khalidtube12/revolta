@@ -19,6 +19,7 @@ export interface UserPermissions {
   deleteShow: boolean;
   viewIdeas: boolean;
   manageBonus: boolean;
+  manageMeetings: boolean;
 }
 
 export const DEFAULT_PERMISSIONS: UserPermissions = {
@@ -42,6 +43,7 @@ export const DEFAULT_PERMISSIONS: UserPermissions = {
   deleteShow: false,
   viewIdeas: true,
   manageBonus: false,
+  manageMeetings: false,
 };
 
 export const CONTENT_MANAGER_PERMISSIONS: UserPermissions = {
@@ -65,6 +67,7 @@ export const CONTENT_MANAGER_PERMISSIONS: UserPermissions = {
   deleteShow: true,
   viewIdeas: true,
   manageBonus: true,
+  manageMeetings: true,
 };
 
 export type MemberRolePreset = 'admin' | 'content_manager' | 'member';
