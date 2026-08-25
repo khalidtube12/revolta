@@ -2,12 +2,6 @@
    WELCOME PAGE
 ═══════════════════════════════════════ */
 
-@font-face {
-  font-family: 'DoublePorter';
-  src: url('/assets/Double-Porter-6.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-}
 
 /* ANIMATIONS */
 @keyframes wpShimmer {
@@ -229,7 +223,7 @@
 }
 .wp-hero-eyebrow-line { width: 32px; height: 1px; background: rgba(201,168,76,0.5); }
 .wp-hero-logo {
-  font-family: 'DoublePorter', 'Oswald', sans-serif; font-size: 180px; font-weight: normal;
+  font-family: 'Oswald', sans-serif; font-size: 180px; font-weight: normal;
   letter-spacing: 18px; line-height: 1;
   background: linear-gradient(90deg, #fff 0%, #fff 30%, #e8c96a 45%, #fff 55%, #fff 100%);
   background-size: 300%;
