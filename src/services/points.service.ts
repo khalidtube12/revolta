@@ -104,7 +104,8 @@ export function calculateMemberMonthlyPoints(
     for (const idea of ideas) {
       if (idea.createdBy !== userId) continue;
       const ideaMonth = new Date(idea.createdAt).toISOString().substring(0, 7);
-      if (ideaMonth !== month) continue;
+      const creditMonth = ideaMonth < POINTS_START_MONTH ? POINTS_START_MONTH : ideaMonth;
+      if (creditMonth !== month) continue;
       breakdown.ideas += 200;
       breakdown.total += 200;
     }
