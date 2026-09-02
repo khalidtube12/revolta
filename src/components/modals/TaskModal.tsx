@@ -17,6 +17,7 @@ interface TaskModalProps {
 export function TaskModal({ open, onClose, preMemberId, onSuccess, forceBonus }: TaskModalProps) {
   const { profile, firebaseUser, can } = useAuthStore();
   const canAddOthers = !forceBonus && (!!profile?.isAdmin || can('addTaskOthers'));
+  const canManageTeam = !!profile?.isAdmin || can('addTaskOthers');
   const { addTask } = useTasksStore();
   const { members, loadMembers } = useMembersStore();
   const [memberId, setMemberId] = useState('');
@@ -77,7 +78,7 @@ export function TaskModal({ open, onClose, preMemberId, onSuccess, forceBonus }:
     { value: 'design',    label: 'تصميم' },
   ];
 
-  const canSubmit = isTeamType ? teamMemberIds.length > 0 : true;
+  const canSubmit = isTeamType && canManageTeam ? teamMemberIds.length > 0 : true;
 
   const handleSave = async () => {
     setLoading(true);
@@ -91,7 +92,7 @@ export function TaskModal({ open, onClose, preMemberId, onSuccess, forceBonus }:
 
       const isBonus = forceBonus || !canAddOthers;
 
-      if (isTeamType && canAddOthers) {
+      if (isTeamType && canManageTeam) {
         if (teamMemberIds.length === 0) { alert('يرجى اختيار عضو واحد على الأقل'); setLoading(false); return; }
         const primary = primaryMemberId || teamMemberIds[0];
         const rest = teamMemberIds.filter(x => x !== primary);
@@ -194,7 +195,7 @@ export function TaskModal({ open, onClose, preMemberId, onSuccess, forceBonus }:
       </div>
 
       {/* أعضاء التيم — للشورت والمقطع والبودكاست */}
-      {isTeamType && canAddOthers && (
+      {isTeamType && canManageTeam && (
         <div className="form-group">
           <label>
             أعضاء التيم
