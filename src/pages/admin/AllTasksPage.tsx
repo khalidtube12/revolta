@@ -333,7 +333,7 @@ export function AllTasksPage() {
       </div>
 
       {activeTab === 'table' && (
-        <TaskGridView tasks={coreTasks} members={members} />
+        <TaskGridView tasks={tasks} members={members} />
       )}
 
       {activeTab !== 'table' && <section className="tk-toolbar" aria-label="فلاتر المهام">
