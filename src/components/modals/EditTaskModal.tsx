@@ -58,7 +58,7 @@ export function EditTaskModal({ open, task, onClose, onSuccess }: EditTaskModalP
       const allIds = Array.from(new Set([task.memberId, ...existingTeam]));
       setTeamMemberIds(allIds);
       setPrimaryMemberId(task.memberId);
-      setProducerId(task.producerId || '');
+      setProducerId('');
     }
   }, [task]);
 
@@ -92,9 +92,7 @@ export function EditTaskModal({ open, task, onClose, onSuccess }: EditTaskModalP
           memberId: primary,
           teamMemberIds: rest,
         } : {}),
-        ...(isProducerType && canManageTeam ? {
-          ...(producerId ? { producerId } : { producerId: null }),
-        } : {}),
+        ...(isProducerType && canManageTeam && producerId ? { producerId } : {}),
       });
       onClose();
       onSuccess?.();
