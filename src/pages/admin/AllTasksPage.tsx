@@ -18,6 +18,7 @@ import { exportTasksXLSX } from '../../utils/csv';
 import { STATUS_MAP, PRIORITY_MAP } from '../../types';
 import type { Task, TaskStatus } from '../../types';
 import { getDefaultPoints } from '../../services/points.service';
+import { TaskGridView } from '../../components/tasks/TaskGridView';
 
 const TYPE_LABEL: Record<string, string> = {
   short: 'شورت',
@@ -79,7 +80,7 @@ export function AllTasksPage() {
   const [bonusNote, setBonusNote] = useState('');
   const [twitterModal, setTwitterModal] = useState<string | null>(null);
   const [videoModal, setVideoModal] = useState<{ id: string; type: 'video' | 'podcast' | 'short' | 'event_coverage' } | null>(null);
-  const [activeTab, setActiveTab] = useState<'core' | 'bonus'>('core');
+  const [activeTab, setActiveTab] = useState<'core' | 'bonus' | 'table'>('core');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -321,9 +322,21 @@ export function AllTasksPage() {
           مهام البونص
           <span className="tk-tab-count">{bonusTasks.length}</span>
         </button>
+        <button
+          role="tab"
+          aria-selected={activeTab === 'table'}
+          className={`tk-tab ${activeTab === 'table' ? 'active' : ''}`}
+          onClick={() => setActiveTab('table')}
+        >
+          عرض المهام
+        </button>
       </div>
 
-      <section className="tk-toolbar" aria-label="فلاتر المهام">
+      {activeTab === 'table' && (
+        <TaskGridView tasks={coreTasks} members={members} />
+      )}
+
+      {activeTab !== 'table' && <section className="tk-toolbar" aria-label="فلاتر المهام">
         <div className="tk-toolbar-row">
           <div className="tk-search">
             <span className="tk-search-icon" aria-hidden="true">⌕</span>
@@ -433,9 +446,9 @@ export function AllTasksPage() {
             : <span className="tk-result-note">لا فلاتر مُطبَّقة — تُعرض كل المهام</span>
           }
         </div>
-      </section>
+      </section>}
 
-      {sorted.length === 0 ? (
+      {activeTab !== 'table' && (sorted.length === 0 ? (
         <EmptyState
           icon={activeTab === 'bonus' ? '⭐' : '📋'}
           message={
@@ -654,7 +667,7 @@ export function AllTasksPage() {
             );
           })}
         </div>
-      )}
+      ))}
 
       <TaskModal open={taskModal} onClose={() => setTaskModal(false)} onSuccess={load} forceBonus={activeTab === 'bonus'} />
       <ImportModal open={importModal} onClose={() => setImportModal(false)} onSuccess={load} />
