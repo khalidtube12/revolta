@@ -52,6 +52,7 @@ export function TaskGridView({ tasks, members }: Props) {
   const [filterMember, setFilterMember] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [selectedCell, setSelectedCell] = useState<{ memberId: string; day: number } | null>(null);
+  const [highlightMode, setHighlightMode] = useState<'filled' | 'empty' | null>(null);
 
   const year = +viewMonth.split('-')[0];
   const month = +viewMonth.split('-')[1];
@@ -126,6 +127,14 @@ export function TaskGridView({ tasks, members }: Props) {
     return date.toLocaleDateString('ar-SA', { day: 'numeric', month: 'long', year: 'numeric' });
   };
 
+  const filledDayNums = new Set(days.filter(d => dayTotal(d) > 0));
+  const isDayHighlighted = (d: number) =>
+    (highlightMode === 'filled' && filledDayNums.has(d)) ||
+    (highlightMode === 'empty' && !filledDayNums.has(d));
+
+  const toggleHighlight = (mode: 'filled' | 'empty') =>
+    setHighlightMode(prev => prev === mode ? null : mode);
+
   const handleCellClick = (memberId: string, day: number) => {
     if (selectedCell?.memberId === memberId && selectedCell?.day === day) {
       setSelectedCell(null);
@@ -175,14 +184,22 @@ export function TaskGridView({ tasks, members }: Props) {
           <span className="tgv-stat-val">{tasksThisMonth}</span>
           <span className="tgv-stat-lbl">مهام الشهر</span>
         </div>
-        <div className="tgv-stat">
+        <button
+          className={`tgv-stat tgv-stat-btn ${highlightMode === 'filled' ? 'tgv-stat-active' : ''}`}
+          onClick={() => toggleHighlight('filled')}
+          title="اضغط لإبراز الأيام الممتلئة"
+        >
           <span className="tgv-stat-val">{filledDays}</span>
           <span className="tgv-stat-lbl">أيام ممتلئة</span>
-        </div>
-        <div className="tgv-stat">
+        </button>
+        <button
+          className={`tgv-stat tgv-stat-btn ${highlightMode === 'empty' ? 'tgv-stat-active' : ''}`}
+          onClick={() => toggleHighlight('empty')}
+          title="اضغط لإبراز الأيام الفاضية"
+        >
           <span className="tgv-stat-val">{emptyDays}</span>
           <span className="tgv-stat-lbl">أيام فاضية</span>
-        </div>
+        </button>
         <div className="tgv-stat">
           <span className="tgv-stat-val">{totalPoints}</span>
           <span className="tgv-stat-lbl">مجموع النقاط</span>
@@ -204,6 +221,7 @@ export function TaskGridView({ tasks, members }: Props) {
                     className={[
                       isToday(d) ? 'tgv-today-th' : '',
                       isFriday(d) ? 'tgv-friday-th' : '',
+                      isDayHighlighted(d) ? 'tgv-highlight-th' : '',
                     ].filter(Boolean).join(' ')}
                   >
                     <div className="tgv-day-num">{d}</div>
@@ -239,6 +257,7 @@ export function TaskGridView({ tasks, members }: Props) {
                           isSelected ? 'tgv-selected' : '',
                           isFriday(d) ? 'tgv-friday-col' : '',
                           isToday(d) ? 'tgv-today-col' : '',
+                          isDayHighlighted(d) ? 'tgv-highlight-col' : '',
                         ].filter(Boolean).join(' ')}
                         onClick={() => handleCellClick(m.id, d)}
                       >
