@@ -110,15 +110,14 @@ export function calculateMemberMonthlyPoints(
     }
     for (const t of tasks) {
       if (!isEarned(t) || !t.linkedIdeaId) continue;
-      const taskMonth = getTaskYearMonth(t);
-      // مهام منفذة قبل بداية النظام تُنسب لأول شهر
-      const creditMonth = taskMonth < POINTS_START_MONTH ? POINTS_START_MONTH : taskMonth;
-      if (creditMonth !== month) continue;
       const idea = ideas.find(i => i.id === t.linkedIdeaId);
-      if (idea && idea.createdBy === userId) {
-        breakdown.ideas += 50;
-        breakdown.total += 50;
-      }
+      if (!idea || idea.createdBy !== userId) continue;
+      // نسب بونص التنفيذ لشهر إنشاء الفكرة (لا موعد المهمة)
+      const ideaMonth = new Date(idea.createdAt).toISOString().substring(0, 7);
+      const creditMonth = ideaMonth < POINTS_START_MONTH ? POINTS_START_MONTH : ideaMonth;
+      if (creditMonth !== month) continue;
+      breakdown.ideas += 50;
+      breakdown.total += 50;
     }
   }
 
