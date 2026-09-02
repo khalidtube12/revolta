@@ -110,7 +110,10 @@ export function calculateMemberMonthlyPoints(
     }
     for (const t of tasks) {
       if (!isEarned(t) || !t.linkedIdeaId) continue;
-      if (getTaskYearMonth(t) !== month) continue;
+      const taskMonth = getTaskYearMonth(t);
+      // مهام منفذة قبل بداية النظام تُنسب لأول شهر
+      const creditMonth = taskMonth < POINTS_START_MONTH ? POINTS_START_MONTH : taskMonth;
+      if (creditMonth !== month) continue;
       const idea = ideas.find(i => i.id === t.linkedIdeaId);
       if (idea && idea.createdBy === userId) {
         breakdown.ideas += 50;
