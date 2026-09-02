@@ -161,7 +161,6 @@ export interface Task {
   linkedIdeaId?: string;
   teamMemberIds?: string[];
   createdAt: number;
-  titleSetAt?: number;
   points?: number;
   bonusPoints?: number;
   bonusNote?: string;

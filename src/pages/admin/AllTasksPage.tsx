@@ -13,7 +13,6 @@ import { TwitterModal } from '../../components/modals/TwitterModal';
 import { VideoCompleteModal } from '../../components/modals/VideoCompleteModal';
 import { Spinner } from '../../components/ui/Spinner';
 import { getStatus } from '../../utils/status';
-import { isTitleLate } from '../../utils/date';
 import { getTaskMonth } from '../../utils/date';
 import { exportTasksXLSX } from '../../utils/csv';
 import { STATUS_MAP, PRIORITY_MAP } from '../../types';
@@ -227,7 +226,7 @@ export function AllTasksPage() {
 
   const handleSaveTitle = async (taskId: string) => {
     const val = editingTitleVal.trim();
-    if (val) await updateTask(taskId, { title: val, titleSetAt: Date.now() });
+    if (val) await updateTask(taskId, { title: val });
     setEditingTitleId(null);
     load();
   };
@@ -487,7 +486,6 @@ export function AllTasksPage() {
                           بونص
                         </span>
                       )}
-                      {isTitleLate(t) && <span className="tk-tag tk-tag-warn">تأخير في كتابة العنوان</span>}
                     </div>
 
                     {editingTitleId === t.id ? (

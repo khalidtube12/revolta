@@ -11,7 +11,6 @@ import { TwitterModal } from '../../components/modals/TwitterModal';
 import { VideoCompleteModal } from '../../components/modals/VideoCompleteModal';
 import { Spinner } from '../../components/ui/Spinner';
 import { getStatus } from '../../utils/status';
-import { isTitleLate } from '../../utils/date';
 import type { Task, TaskStatus, Meeting } from '../../types';
 import { getDefaultPoints, calculateMemberMonthlyPoints } from '../../services/points.service';
 import { loadAllMeetings } from '../../services/meetings.service';
@@ -115,7 +114,7 @@ export function MyTasksPage() {
 
   const handleSaveTitle = async (taskId: string) => {
     const val = editingTitleVal.trim();
-    if (val) await updateTask(taskId, { title: val, titleSetAt: Date.now() });
+    if (val) await updateTask(taskId, { title: val });
     setEditingTitleId(null);
     load();
   };
@@ -154,8 +153,6 @@ export function MyTasksPage() {
     const showSelect = !isReadOnly && (isOwnBonusTask || isWritingOwner || canChangeStatus || (!isFinal && canSetComplete) || (isFinal && canSetIncomplete));
     const isMyTask = t.memberId === firebaseUser?.uid;
     const canEditTitle = isMyTask && !isFinal;
-    const titleLate = isTitleLate(t);
-
     const base = t.points ?? getDefaultPoints(t.type);
     const bonus = t.bonusPoints ?? 0;
     const total = base + bonus;
@@ -187,11 +184,6 @@ export function MyTasksPage() {
                 <div className={`mag-title${st === 'published' || st === 'cancelled' ? ' done' : ''}`}>
                   {t.title || <span style={{ color: 'var(--muted)', fontStyle: 'italic' }}>بدون عنوان</span>}
                 </div>
-                {titleLate && isMyTask && (
-                  <span style={{ fontSize: 10, color: '#fff', background: 'var(--red)', padding: '2px 8px', fontFamily: 'Cairo, sans-serif', flexShrink: 0 }}>
-                    ⚠ تأخير في كتابة العنوان
-                  </span>
-                )}
                 {canEditTitle && (
                   <button onClick={() => { setEditingTitleId(t.id); setEditingTitleVal(t.title || ''); }}
                     style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: 13, padding: '0 4px', lineHeight: 1 }}

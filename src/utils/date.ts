@@ -12,12 +12,6 @@ export function getTaskMonth(deadline?: string, createdAt?: number): string {
   return new Date(createdAt || 0).toISOString().substring(0, 7);
 }
 
-const TWO_DAYS = 2 * 24 * 60 * 60 * 1000;
-export function isTitleLate(task: { createdAt: number; titleSetAt?: number; title: string; done: boolean }): boolean {
-  if (task.done) return false;
-  if (task.title?.trim()) return false;
-  return (Date.now() - task.createdAt) > TWO_DAYS;
-}
 
 export function deadlineLabel(dl: string | undefined, done: boolean): { text: string; className: string } {
   if (!dl) return { text: '', className: '' };
