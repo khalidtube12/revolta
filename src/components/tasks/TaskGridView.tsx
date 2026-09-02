@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import type { Task, User } from '../../types';
 import { getStatus } from '../../utils/status';
-import { getDefaultPoints } from '../../services/points.service';
 import './TaskGridView.css';
 
 interface Props {
@@ -96,14 +95,8 @@ export function TaskGridView({ tasks, members }: Props) {
   const tasksThisMonth = monthTasks.length;
   const filledDays = new Set(monthTasks.map(t => t.deadline)).size;
   const emptyDays = daysInMonth - filledDays;
-  const totalPoints = monthTasks.reduce((s, t) => s + (t.points ?? getDefaultPoints(t.type)), 0);
-
   const memberMonthTasks = (mid: string) =>
     tasks.filter(t => t.deadline?.startsWith(viewMonth) && t.memberId === mid).length;
-  const memberMonthPoints = (mid: string) =>
-    tasks
-      .filter(t => t.deadline?.startsWith(viewMonth) && t.memberId === mid)
-      .reduce((s, t) => s + (t.points ?? getDefaultPoints(t.type)), 0);
 
   const dayTotal = (day: number) => {
     let count = 0;
@@ -200,10 +193,6 @@ export function TaskGridView({ tasks, members }: Props) {
           <span className="tgv-stat-val">{emptyDays}</span>
           <span className="tgv-stat-lbl">أيام فاضية</span>
         </button>
-        <div className="tgv-stat">
-          <span className="tgv-stat-val">{totalPoints}</span>
-          <span className="tgv-stat-lbl">مجموع النقاط</span>
-        </div>
       </div>
 
       {/* Grid Table */}
@@ -269,7 +258,7 @@ export function TaskGridView({ tasks, members }: Props) {
                               key={t.id}
                               className="tgv-badge"
                               style={{ borderColor: col, color: col }}
-                              title={`${t.title} — ${STATUS_LABEL[st] ?? st} — ${t.points ?? getDefaultPoints(t.type)} نقطة`}
+                              title={`${t.title} — ${STATUS_LABEL[st] ?? st}`}
                             >
                               {TYPE_SHORT[t.type ?? ''] ?? '؟'}
                             </span>
@@ -283,7 +272,6 @@ export function TaskGridView({ tasks, members }: Props) {
                   })}
                   <td className="tgv-month-summary">
                     <div>{memberMonthTasks(m.id)}</div>
-                    <div className="tgv-month-pts">{memberMonthPoints(m.id)}</div>
                   </td>
                 </tr>
               ))}
@@ -321,7 +309,6 @@ export function TaskGridView({ tasks, members }: Props) {
               {selectedDayTasks.map(t => {
                 const st = getStatus(t);
                 const col = STATUS_COLOR[st] || 'var(--muted)';
-                const pts = t.points ?? getDefaultPoints(t.type);
                 return (
                   <div key={t.id} className="tgv-task-card">
                     <div className="tgv-task-card-top">
@@ -331,7 +318,6 @@ export function TaskGridView({ tasks, members }: Props) {
                       >
                         {STATUS_LABEL[st] ?? st}
                       </span>
-                      {pts > 0 && <span className="tgv-task-card-pts">{pts} نقطة</span>}
                     </div>
                     <div className="tgv-task-card-title">{t.title}</div>
                     <div className="tgv-task-card-meta">
