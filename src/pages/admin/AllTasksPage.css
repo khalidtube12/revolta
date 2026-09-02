@@ -359,7 +359,6 @@
 
 .tk-tag-status { background: rgba(255, 255, 255, 0.03); }
 .tk-tag-type { background: rgba(255, 255, 255, 0.03); color: var(--text2); border-color: var(--border2); }
-.tk-tag-warn { background: var(--red); color: #fff; }
 
 .tk-title {
   font-size: 15px;
