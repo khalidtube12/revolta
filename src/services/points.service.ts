@@ -101,19 +101,12 @@ export function calculateMemberMonthlyPoints(
   }
 
   if (ideas) {
-    for (const idea of ideas) {
-      if (idea.createdBy !== userId) continue;
-      const ideaMonth = new Date(idea.createdAt).toISOString().substring(0, 7);
-      const creditMonth = ideaMonth < POINTS_START_MONTH ? POINTS_START_MONTH : ideaMonth;
-      if (creditMonth !== month) continue;
-      breakdown.ideas += 200;
-      breakdown.total += 200;
-    }
     for (const t of tasks) {
       if (!isEarned(t) || !t.linkedIdeaId) continue;
       const idea = ideas.find(i => i.id === t.linkedIdeaId);
       if (!idea || idea.createdBy !== userId) continue;
-      // نسب بونص التنفيذ لشهر إنشاء الفكرة (لا موعد المهمة)
+      // فقط لما تُسند الفكرة لشخص آخر غير منشئها
+      if (!idea.ownerId || idea.ownerId === userId) continue;
       const ideaMonth = new Date(idea.createdAt).toISOString().substring(0, 7);
       const creditMonth = ideaMonth < POINTS_START_MONTH ? POINTS_START_MONTH : ideaMonth;
       if (creditMonth !== month) continue;
