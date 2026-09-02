@@ -67,12 +67,9 @@ export function VideoCompleteModal({ open, onClose, onSubmit, members, taskType 
               {members.map(u => {
                 const selected = producerId === u.id;
                 return (
-                  <label
+                  <div
                     key={u.id}
-                    onClick={e => {
-                      e.preventDefault();
-                      setProducerId(prev => prev === u.id ? '' : u.id);
-                    }}
+                    onClick={() => setProducerId(prev => prev === u.id ? '' : u.id)}
                     style={{
                       display: 'flex', alignItems: 'center', gap: 10,
                       padding: '8px 12px', cursor: 'pointer',
@@ -98,13 +95,13 @@ export function VideoCompleteModal({ open, onClose, onSubmit, members, taskType 
                         ? <img src={u.photoURL} alt={u.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', display: 'block' }} />
                         : u.name.charAt(0)}
                     </div>
-                    <span style={{ fontSize: 14, fontFamily: 'Cairo, sans-serif' }}>{u.name}</span>
+                    <span style={{ fontSize: 14, fontFamily: 'Cairo, sans-serif', color: 'var(--text)', letterSpacing: 'normal', textTransform: 'none', fontWeight: 400 }}>{u.name}</span>
                     {selected && (
                       <span style={{ fontSize: 11, color: 'var(--gold)', fontFamily: 'Oswald, sans-serif', marginRight: 'auto' }}>
                         +{producerBonus} ⭐
                       </span>
                     )}
-                  </label>
+                  </div>
                 );
               })}
             </div>
