@@ -61,13 +61,13 @@ export function AdminDashboard() {
     published: { icon: '📢', label: 'تم النشر',   color: '#5cb85c',       bgColor: 'rgba(92,184,92,0.05)' },
     cancelled: { icon: '🚫', label: 'ملغية',      color: '#e05555',       bgColor: 'rgba(224,85,85,0.05)' },
   };
-  const TYPE_LABEL: Record<string, string> = { short: 'شورت', video: 'مقطع', writing: 'كتابة', x_content: 'محتوى X', podcast: 'بودكاست' };
+  const TYPE_LABEL: Record<string, string> = { short: 'شورت', video: 'مقطع', writing: 'كتابة', x_content: 'محتوى X', podcast: 'بودكاست', event_coverage: 'تغطية حدث' };
   const PRIORITY_COLOR: Record<string, string> = { low: 'var(--muted)', medium: 'var(--gold)', high: '#e05555' };
   const PRIORITY_LABEL: Record<string, string> = { low: '↓ منخفضة', medium: '— متوسطة', high: '↑ عالية' };
 
   const completeTask = (taskId: string) => {
     const t = tasks.find(t => t.id === taskId);
-    if (t?.type === 'writing' || t?.type === 'x_content') {
+    if (t?.type === 'writing' || t?.type === 'x_content' || t?.type === 'design') {
       updateTask(taskId, { status: 'done', done: true }).then(load);
     } else {
       setDriveModal({ taskId, status: 'done', taskTitle: t?.title || '' });

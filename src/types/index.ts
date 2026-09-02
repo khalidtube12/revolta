@@ -154,7 +154,7 @@ export interface Task {
   desc?: string;
   deadline?: string;
   priority?: 'low' | 'medium' | 'high';
-  type?: 'short' | 'video' | 'writing' | 'x_content' | 'podcast' | 'design';
+  type?: 'short' | 'video' | 'writing' | 'x_content' | 'podcast' | 'design' | 'event_coverage';
   status?: TaskStatus;
   done: boolean;
   driveLink?: string;
@@ -207,7 +207,7 @@ export interface ImportRow {
   desc: string;
   deadline: string;
   priority: 'low' | 'medium' | 'high';
-  type?: 'short' | 'video' | 'writing' | 'x_content' | 'podcast' | 'design';
+  type?: 'short' | 'video' | 'writing' | 'x_content' | 'podcast' | 'design' | 'event_coverage';
   error?: string;
 }
 

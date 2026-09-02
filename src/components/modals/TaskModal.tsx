@@ -68,14 +68,16 @@ export function TaskModal({ open, onClose, preMemberId, onSuccess, forceBonus }:
   const isVideo = type === 'video';
   const isPodcast = type === 'podcast';
   const isShort = type === 'short';
-  const isTeamType = isVideo || isPodcast || isShort;
+  const isEventCoverage = type === 'event_coverage';
+  const isTeamType = isVideo || isPodcast || isShort || isEventCoverage;
   const TASK_TYPES: { value: string; label: string }[] = [
-    { value: 'short',     label: 'شورت' },
-    { value: 'video',     label: 'مقطع' },
-    { value: 'writing',   label: 'كتابة' },
-    { value: 'x_content', label: 'محتوى X' },
-    { value: 'podcast',   label: 'بودكاست' },
-    { value: 'design',    label: 'تصميم' },
+    { value: 'short',          label: 'شورت' },
+    { value: 'video',          label: 'مقطع' },
+    { value: 'writing',        label: 'كتابة' },
+    { value: 'x_content',      label: 'محتوى X' },
+    { value: 'podcast',        label: 'بودكاست' },
+    { value: 'design',         label: 'تصميم' },
+    { value: 'event_coverage', label: 'تغطية حدث' },
   ];
 
   const canSubmit = isTeamType && canManageTeam ? teamMemberIds.length > 0 : true;
@@ -87,7 +89,7 @@ export function TaskModal({ open, onClose, preMemberId, onSuccess, forceBonus }:
       const notifyBody = 'تم إسناد مهمة جديدة إليك' + (deadline ? ' — تاريخ النشر: ' + deadlineFormatted : '');
       const notifyTitle = '📋 مهمة جديدة: ' + (title.trim() || '—');
 
-      const taskType = type as 'short' | 'video' | 'writing' | 'x_content' | 'podcast' | 'design';
+      const taskType = type as 'short' | 'video' | 'writing' | 'x_content' | 'podcast' | 'design' | 'event_coverage';
       const autoPoints = getDefaultPoints(taskType);
 
       const isBonus = forceBonus || !canAddOthers;

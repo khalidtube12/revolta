@@ -66,7 +66,7 @@ export function MemberDetailPage() {
 
   const completeTask = (taskId: string) => {
     const t = tasks.find(t => t.id === taskId);
-    if (t?.type === 'writing' || t?.type === 'x_content') {
+    if (t?.type === 'writing' || t?.type === 'x_content' || t?.type === 'design') {
       updateTask(taskId, { status: 'done', done: true }).then(load);
     } else {
       setDriveModal({ taskId, status: 'done', taskTitle: t?.title || '' });

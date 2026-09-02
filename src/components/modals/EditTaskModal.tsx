@@ -16,8 +16,9 @@ const TASK_TYPES = [
   { value: 'short',     label: 'شورت' },
   { value: 'video',     label: 'مقطع' },
   { value: 'writing',   label: 'كتابة' },
-  { value: 'x_content', label: 'محتوى X' },
-  { value: 'podcast',   label: 'بودكاست' },
+  { value: 'x_content',      label: 'محتوى X' },
+  { value: 'podcast',        label: 'بودكاست' },
+  { value: 'event_coverage', label: 'تغطية حدث' },
 ];
 
 export function EditTaskModal({ open, task, onClose, onSuccess }: EditTaskModalProps) {
@@ -34,7 +35,7 @@ export function EditTaskModal({ open, task, onClose, onSuccess }: EditTaskModalP
   const [loading, setLoading]         = useState(false);
 
   const canManageTeam = !!profile?.isAdmin || can('addTaskOthers');
-  const isTeamType = type === 'video' || type === 'podcast' || type === 'short';
+  const isTeamType = type === 'video' || type === 'podcast' || type === 'short' || type === 'event_coverage';
 
   useEffect(() => {
     if (open) loadMembers();

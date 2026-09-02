@@ -62,9 +62,10 @@ export function TaskRowV2({
               task.type === 'video' ? 'badge-green' :
               task.type === 'writing' ? 'badge-gray' :
               task.type === 'podcast' ? 'badge-gold' :
+              task.type === 'event_coverage' ? 'badge-blue' :
               'badge-red'
             }`}>
-              {task.type === 'short' ? 'شورت' : task.type === 'video' ? 'مقطع' : task.type === 'writing' ? 'كتابة' : task.type === 'podcast' ? 'بودكاست' : 'محتوى X'}
+              {task.type === 'short' ? 'شورت' : task.type === 'video' ? 'مقطع' : task.type === 'writing' ? 'كتابة' : task.type === 'podcast' ? 'بودكاست' : task.type === 'event_coverage' ? 'تغطية حدث' : 'محتوى X'}
             </span>
           )}
           {task.teamMemberIds && task.teamMemberIds.length > 0 && (

@@ -28,7 +28,7 @@ export function MyTasksPage() {
   const [editingTitleId, setEditingTitleId] = useState<string | null>(null);
   const [editingTitleVal, setEditingTitleVal] = useState('');
   const [twitterModal, setTwitterModal] = useState<string | null>(null);
-  const [videoModal, setVideoModal] = useState<{ id: string; type: 'video' | 'podcast' | 'short' } | null>(null);
+  const [videoModal, setVideoModal] = useState<{ id: string; type: 'video' | 'podcast' | 'short' | 'event_coverage' } | null>(null);
   const [activeTab, setActiveTab] = useState<'core' | 'bonus'>('core');
   const [meetings, setMeetings] = useState<Meeting[]>([]);
 
@@ -64,7 +64,7 @@ export function MyTasksPage() {
       updateTask(taskId, { status: 'done', done: true }).then(load);
     } else if (t?.type === 'x_content') {
       setTwitterModal(taskId);
-    } else if (t?.type === 'video' || t?.type === 'podcast' || t?.type === 'short') {
+    } else if (t?.type === 'video' || t?.type === 'podcast' || t?.type === 'short' || t?.type === 'event_coverage') {
       setVideoModal({ id: taskId, type: t.type });
     } else {
       setDriveModal({ taskId, status: 'done', taskTitle: t?.title || '' });
@@ -133,7 +133,7 @@ export function MyTasksPage() {
     published: { icon: '📢', label: 'تم النشر',   color: '#5cb85c',       bgColor: 'rgba(92,184,92,0.05)' },
     cancelled: { icon: '🚫', label: 'ملغية',      color: '#e05555',       bgColor: 'rgba(224,85,85,0.05)' },
   };
-  const TYPE_LABEL: Record<string, string> = { short: 'شورت', video: 'مقطع', writing: 'كتابة', x_content: 'محتوى X', podcast: 'بودكاست', design: 'تصميم' };
+  const TYPE_LABEL: Record<string, string> = { short: 'شورت', video: 'مقطع', writing: 'كتابة', x_content: 'محتوى X', podcast: 'بودكاست', design: 'تصميم', event_coverage: 'تغطية حدث' };
   const PRIORITY_COLOR: Record<string, string> = { low: 'var(--muted)', medium: 'var(--gold)', high: '#e05555' };
   const PRIORITY_LABEL: Record<string, string> = { low: '↓ منخفضة', medium: '— متوسطة', high: '↑ عالية' };
 
