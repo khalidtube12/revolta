@@ -28,7 +28,6 @@ export function TaskModal({ open, onClose, preMemberId, onSuccess, forceBonus }:
   const [teamMemberIds, setTeamMemberIds] = useState<string[]>([]);
   const [primaryMemberId, setPrimaryMemberId] = useState<string>('');
   const [loading, setLoading] = useState(false);
-  const [isBonusMode, setIsBonusMode] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -39,9 +38,8 @@ export function TaskModal({ open, onClose, preMemberId, onSuccess, forceBonus }:
       setType('short');
       setPriority('medium');
       setTeamMemberIds([]);
-      setIsBonusMode(!!forceBonus);
     }
-  }, [open, loadMembers, forceBonus]);
+  }, [open, loadMembers]);
 
   useEffect(() => {
     if (preMemberId) setMemberId(preMemberId);
@@ -91,7 +89,7 @@ export function TaskModal({ open, onClose, preMemberId, onSuccess, forceBonus }:
       const taskType = type as 'short' | 'video' | 'writing' | 'x_content' | 'podcast' | 'design';
       const autoPoints = getDefaultPoints(taskType);
 
-      const isBonus = forceBonus || isBonusMode || !canAddOthers;
+      const isBonus = forceBonus || !canAddOthers;
 
       if (isTeamType && canAddOthers) {
         if (teamMemberIds.length === 0) { alert('يرجى اختيار عضو واحد على الأقل'); setLoading(false); return; }
@@ -148,7 +146,7 @@ export function TaskModal({ open, onClose, preMemberId, onSuccess, forceBonus }:
     <Modal
       open={open}
       onClose={onClose}
-      title={forceBonus || isBonusMode ? 'مهمة بونص' : 'مهمة جديدة'}
+      title={forceBonus ? 'مهمة بونص' : 'مهمة جديدة'}
       footer={
         <>
           <button className="btn" disabled={loading || !canSubmit} onClick={handleSave}>
@@ -158,22 +156,6 @@ export function TaskModal({ open, onClose, preMemberId, onSuccess, forceBonus }:
         </>
       }
     >
-      {/* مهمة بونص — للأدمن ومدير صناع المحتوى فقط */}
-      {canAddOthers && !forceBonus && (
-        <div className="form-group">
-          <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={isBonusMode}
-              onChange={e => setIsBonusMode(e.target.checked)}
-              style={{ accentColor: 'var(--gold)', width: 15, height: 15, flexShrink: 0 }}
-            />
-            <span>مهمة بونص</span>
-            <span style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 400 }}>تظهر في تبويب البونص وتحتاج موافقة لاحتساب نقاطها</span>
-          </label>
-        </div>
-      )}
-
       {/* تسند لـ — فقط للأنواع غير الفريق */}
       {canAddOthers && !isTeamType && (
         <div className="form-group">

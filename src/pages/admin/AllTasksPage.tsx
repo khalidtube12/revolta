@@ -654,7 +654,7 @@ export function AllTasksPage() {
         </div>
       )}
 
-      <TaskModal open={taskModal} onClose={() => setTaskModal(false)} onSuccess={load} />
+      <TaskModal open={taskModal} onClose={() => setTaskModal(false)} onSuccess={load} forceBonus={activeTab === 'bonus'} />
       <ImportModal open={importModal} onClose={() => setImportModal(false)} onSuccess={load} />
       <DriveModal open={!!driveModal} onClose={() => setDriveModal(null)} onSubmit={handleDriveSubmit} taskTitle={driveModal?.taskTitle ?? ''} />
       <EditTaskModal open={!!editModal} task={editModal} onClose={() => setEditModal(null)} onSuccess={load} />
