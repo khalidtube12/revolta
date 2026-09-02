@@ -118,6 +118,7 @@ export function IdeasPage() {
                     : <span style={{ color: 'var(--muted)', fontSize: 12 }}>بدون صاحب</span>
                   }
                   {creator && <span style={{ fontSize: 11, color: 'var(--muted)' }}>بواسطة {creator.name}</span>}
+                  {idea.createdAt && <span style={{ fontSize: 11, color: 'var(--muted)' }}>{new Date(idea.createdAt).toLocaleDateString('ar-SA', { year: 'numeric', month: 'short', day: 'numeric' })}</span>}
                   {linkedTask && <span style={{ fontSize: 11, color: 'var(--green)', fontWeight: 700 }}>📋 {linkedTask.title}</span>}
                 </div>
               </div>
