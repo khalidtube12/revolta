@@ -9,7 +9,7 @@ interface LinkTaskModalProps {
 }
 
 export function LinkTaskModal({ open, onClose, tasks, onPick }: LinkTaskModalProps) {
-  const typeLabels: Record<string, string> = { short: 'شورت', video: 'مقطع', writing: 'كتابة', x_content: 'محتوى X', podcast: 'بودكاست' };
+  const typeLabels: Record<string, string> = { short: 'شورت', video: 'مقطع', writing: 'كتابة', x_content: 'محتوى X', podcast: 'بودكاست', event_coverage: 'تغطية حدث' };
 
   return (
     <Modal

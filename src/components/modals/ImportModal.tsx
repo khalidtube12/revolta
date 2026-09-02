@@ -23,8 +23,8 @@ export function ImportModal({ open, onClose, onSuccess }: ImportModalProps) {
 
   const PRIORITY_REV: Record<string, string> = { 'منخفضة': 'low', 'متوسطة': 'medium', 'عالية': 'high', low: 'low', medium: 'medium', high: 'high' };
   const PRIORITY_LABEL: Record<string, string> = { low: 'منخفضة', medium: 'متوسطة', high: 'عالية' };
-  const TYPE_REV: Record<string, 'short' | 'video' | 'writing' | 'x_content' | 'podcast'> = { 'شورت': 'short', 'مقطع': 'video', 'كتابة': 'writing', 'محتوى X': 'x_content', 'محتوىX': 'x_content', 'بودكاست': 'podcast', short: 'short', video: 'video', writing: 'writing', x_content: 'x_content', podcast: 'podcast' };
-  const TYPE_LABEL: Record<string, string> = { short: 'شورت', video: 'مقطع', writing: 'كتابة', x_content: 'محتوى X', podcast: 'بودكاست' };
+  const TYPE_REV: Record<string, 'short' | 'video' | 'writing' | 'x_content' | 'podcast' | 'event_coverage'> = { 'شورت': 'short', 'مقطع': 'video', 'كتابة': 'writing', 'محتوى X': 'x_content', 'محتوىX': 'x_content', 'بودكاست': 'podcast', 'تغطية حدث': 'event_coverage', short: 'short', video: 'video', writing: 'writing', x_content: 'x_content', podcast: 'podcast', event_coverage: 'event_coverage' };
+  const TYPE_LABEL: Record<string, string> = { short: 'شورت', video: 'مقطع', writing: 'كتابة', x_content: 'محتوى X', podcast: 'بودكاست', event_coverage: 'تغطية حدث' };
 
   const processRows = (allRows: string[][]) => {
     if (allRows.length < 2) { setError('الملف فارغ أو لا يحتوي على بيانات'); return; }

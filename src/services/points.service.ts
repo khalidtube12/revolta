@@ -3,12 +3,13 @@ import type { Task, User, Meeting, Idea } from '../types';
 import { MEETING_POINTS } from './meetings.service';
 
 export const POINTS_BY_TYPE: Record<string, number> = {
-  x_content: 200,
-  short:     400,
-  video:     600,
-  writing:   200,
-  design:    200,
-  podcast:   200,
+  x_content:      200,
+  short:          400,
+  video:          600,
+  writing:        200,
+  design:         200,
+  podcast:        200,
+  event_coverage: 200,
 };
 
 export function getDefaultPoints(type: string | undefined): number {
@@ -35,6 +36,7 @@ export interface MemberMonthlyBreakdown {
   writing: number;
   design: number;
   podcast: number;
+  event_coverage: number;
   bonus: number;
   meetings: number;
   ideas: number;
@@ -51,7 +53,7 @@ export function calculateMemberMonthlyPoints(
   ideas?: Idea[],
 ): MemberMonthlyBreakdown {
   const breakdown: MemberMonthlyBreakdown = {
-    x_content: 0, short: 0, video: 0, writing: 0, design: 0, podcast: 0, bonus: 0, meetings: 0, ideas: 0, total: 0,
+    x_content: 0, short: 0, video: 0, writing: 0, design: 0, podcast: 0, event_coverage: 0, bonus: 0, meetings: 0, ideas: 0, total: 0,
   };
 
   if (month < POINTS_START_MONTH) return breakdown;
@@ -74,15 +76,15 @@ export function calculateMemberMonthlyPoints(
     }
 
     // عضو تيم في شورت/مقطع/بودكاست (teamMemberIds) — يأخذ نفس النقاط كاملة
-    if ((t.type === 'video' || t.type === 'podcast' || t.type === 'short') && t.teamMemberIds?.includes(userId)) {
+    if ((t.type === 'video' || t.type === 'podcast' || t.type === 'short' || t.type === 'event_coverage') && t.teamMemberIds?.includes(userId)) {
       const typeKey = t.type as keyof MemberMonthlyBreakdown;
       (breakdown[typeKey] as number) += base;
       breakdown.total += base;
     }
 
     // منتج الشورت +100 / المقطع أو البودكاست +200
-    if ((t.type === 'video' || t.type === 'podcast' || t.type === 'short') && t.producerId === userId) {
-      const producerBonus = t.type === 'short' ? 100 : 200;
+    if ((t.type === 'video' || t.type === 'podcast' || t.type === 'short' || t.type === 'event_coverage') && t.producerId === userId) {
+      const producerBonus = (t.type === 'short' || t.type === 'event_coverage') ? 100 : 200;
       breakdown.bonus += producerBonus;
       breakdown.total += producerBonus;
     }
@@ -110,7 +112,7 @@ export function calculateMemberMonthlyPoints(
       if (!isEarned(t) || !t.linkedIdeaId) continue;
       if (getTaskYearMonth(t) !== month) continue;
       const idea = ideas.find(i => i.id === t.linkedIdeaId);
-      if (idea && idea.createdBy === userId && t.memberId !== userId) {
+      if (idea && idea.createdBy === userId) {
         breakdown.ideas += 100;
         breakdown.total += 100;
       }

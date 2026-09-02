@@ -22,6 +22,7 @@ const TYPE_LABELS: Record<string, string> = {
   writing: 'كتابة',
   design: 'تصميم',
   podcast: 'بودكاست',
+  event_coverage: 'تغطية',
 };
 
 function getMonthLabel(month: string): string {
@@ -111,7 +112,7 @@ export function LeaderboardPage() {
   const rest = entries.slice(3);
   const hasPrizes = prizes.first || prizes.second || prizes.third;
 
-  const typeKeys: (keyof typeof TYPE_LABELS)[] = ['x_content', 'short', 'video', 'writing', 'design', 'podcast'];
+  const typeKeys: (keyof typeof TYPE_LABELS)[] = ['x_content', 'short', 'video', 'writing', 'design', 'podcast', 'event_coverage'];
 
   return (
     <>
@@ -267,6 +268,7 @@ export function LeaderboardPage() {
                   <td>{e.breakdown.writing || '—'}</td>
                   <td>{e.breakdown.design || '—'}</td>
                   <td>{e.breakdown.podcast || '—'}</td>
+                  <td>{e.breakdown.event_coverage || '—'}</td>
                   <td>{e.breakdown.bonus || '—'}</td>
                   <td>{e.breakdown.meetings || '—'}</td>
                   <td>{e.breakdown.ideas || '—'}</td>

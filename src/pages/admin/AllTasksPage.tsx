@@ -26,6 +26,7 @@ const TYPE_LABEL: Record<string, string> = {
   x_content: 'محتوى X',
   podcast: 'بودكاست',
   design: 'تصميم',
+  event_coverage: 'تغطية حدث',
 };
 
 const TYPE_COLOR: Record<string, string> = {
@@ -35,6 +36,7 @@ const TYPE_COLOR: Record<string, string> = {
   x_content: '#e05555',
   podcast: '#c9a84c',
   design: '#c45c00',
+  event_coverage: '#00b4d8',
 };
 
 const STATUS_META: Record<string, { label: string; color: string }> = {
@@ -76,7 +78,7 @@ export function AllTasksPage() {
   const [bonusVal, setBonusVal] = useState('');
   const [bonusNote, setBonusNote] = useState('');
   const [twitterModal, setTwitterModal] = useState<string | null>(null);
-  const [videoModal, setVideoModal] = useState<{ id: string; type: 'video' | 'podcast' | 'short' } | null>(null);
+  const [videoModal, setVideoModal] = useState<{ id: string; type: 'video' | 'podcast' | 'short' | 'event_coverage' } | null>(null);
   const [activeTab, setActiveTab] = useState<'core' | 'bonus'>('core');
 
   const load = useCallback(async () => {
@@ -169,7 +171,7 @@ export function AllTasksPage() {
       updateTask(taskId, { status: 'done', done: true }).then(load);
     } else if (t?.type === 'x_content') {
       setTwitterModal(taskId);
-    } else if (t?.type === 'video' || t?.type === 'podcast' || t?.type === 'short') {
+    } else if (t?.type === 'video' || t?.type === 'podcast' || t?.type === 'short' || t?.type === 'event_coverage') {
       setVideoModal({ id: taskId, type: t.type });
     } else {
       setDriveModal({ taskId, status: 'done', taskTitle: t?.title || '' });

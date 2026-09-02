@@ -6,10 +6,10 @@ import type { Task } from '../../types';
 import { getStatus } from '../../utils/status';
 
 const TYPE_LABEL: Record<string, string> = {
-  short: 'شورت', video: 'مقطع', writing: 'كتابة', x_content: 'محتوى X', podcast: 'بودكاست',
+  short: 'شورت', video: 'مقطع', writing: 'كتابة', x_content: 'محتوى X', podcast: 'بودكاست', event_coverage: 'تغطية حدث',
 };
 const TYPE_BADGE: Record<string, string> = {
-  short: 'badge-gold', video: 'badge-green', writing: 'badge-gray', x_content: 'badge-red', podcast: 'badge-gold',
+  short: 'badge-gold', video: 'badge-green', writing: 'badge-gray', x_content: 'badge-red', podcast: 'badge-gold', event_coverage: 'badge-blue',
 };
 
 function todayStr() {
