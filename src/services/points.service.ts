@@ -110,7 +110,7 @@ export function calculateMemberMonthlyPoints(
       if (!isEarned(t) || !t.linkedIdeaId) continue;
       if (getTaskYearMonth(t) !== month) continue;
       const idea = ideas.find(i => i.id === t.linkedIdeaId);
-      if (idea && idea.createdBy === userId && t.memberId !== userId) {
+      if (idea && idea.createdBy === userId) {
         breakdown.ideas += 100;
         breakdown.total += 100;
       }
