@@ -114,7 +114,7 @@ export function calculateMemberMonthlyPoints(
       const idea = ideas.find(i => i.id === t.linkedIdeaId);
       if (idea && idea.createdBy === userId) {
         breakdown.ideas += 50;
-        breakdown.total += 100;
+        breakdown.total += 50;
       }
     }
   }
