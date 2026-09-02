@@ -196,7 +196,7 @@ export function TaskModal({ open, onClose, preMemberId, onSuccess, forceBonus }:
         </select>
       </div>
 
-      {/* أعضاء التيم — للشورت والمقطع والبودكاست */}
+      {/* أعضاء التيم — للشورت والمقطع والبودكاست (مطلوب) */}
       {isTeamType && canManageTeam && (
         <div className="form-group">
           <label>
@@ -257,6 +257,59 @@ export function TaskModal({ open, onClose, preMemberId, onSuccess, forceBonus }:
           {teamMemberIds.length > 0 && (
             <div style={{ fontSize: 12, color: 'var(--gold)', marginTop: 6 }}>
               ✓ {teamMemberIds.length} عضو مختار
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* شركاء في المهمة — اختياري لبقية الأنواع (كتابة، محتوى X، تصميم…) */}
+      {!isTeamType && canManageTeam && (
+        <div className="form-group">
+          <label>
+            شركاء في المهمة
+            <span style={{ color: 'var(--muted)', fontWeight: 400, fontSize: 11, marginRight: 6 }}>
+              (اختياري — سيظهر لهم في مهامهم الشخصية)
+            </span>
+          </label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4 }}>
+            {members.filter(m => m.id !== memberId).map(m => {
+              const selected = teamMemberIds.includes(m.id);
+              return (
+                <label
+                  key={m.id}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer',
+                    padding: '8px 10px',
+                    background: selected ? 'rgba(201,168,76,0.05)' : 'var(--dark)',
+                    border: `1px solid ${selected ? 'rgba(201,168,76,0.3)' : 'var(--border)'}`,
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selected}
+                    onChange={() => setTeamMemberIds(prev =>
+                      prev.includes(m.id) ? prev.filter(x => x !== m.id) : [...prev, m.id]
+                    )}
+                    style={{ accentColor: 'var(--gold)', width: 15, height: 15, flexShrink: 0 }}
+                  />
+                  <div style={{
+                    width: 28, height: 28,
+                    background: m.color || 'var(--border2)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 13, fontWeight: 700, color: '#fff', flexShrink: 0,
+                  }}>
+                    {m.name.charAt(0)}
+                  </div>
+                  <span style={{ fontSize: 14 }}>{m.name}</span>
+                  <span style={{ fontSize: 11, color: 'var(--muted)', marginRight: 'auto' }}>{m.jobRole}</span>
+                </label>
+              );
+            })}
+          </div>
+          {teamMemberIds.length > 0 && (
+            <div style={{ fontSize: 12, color: 'var(--gold)', marginTop: 6 }}>
+              ✓ {teamMemberIds.length} شريك مختار
             </div>
           )}
         </div>

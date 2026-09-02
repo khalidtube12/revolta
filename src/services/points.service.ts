@@ -75,10 +75,15 @@ export function calculateMemberMonthlyPoints(
       breakdown.total += base + bonusAmt;
     }
 
-    // عضو تيم في شورت/مقطع/بودكاست (teamMemberIds) — يأخذ نفس النقاط كاملة
-    if ((t.type === 'video' || t.type === 'podcast' || t.type === 'short' || t.type === 'event_coverage') && t.teamMemberIds?.includes(userId)) {
-      const typeKey = t.type as keyof MemberMonthlyBreakdown;
-      (breakdown[typeKey] as number) += base;
+    // شريك في المهمة (teamMemberIds) — يأخذ نفس النقاط كاملة لأي نوع مهمة
+    const teamIds: string[] = Array.isArray(t.teamMemberIds)
+      ? t.teamMemberIds
+      : Object.values(t.teamMemberIds || {});
+    if (t.memberId !== userId && teamIds.includes(userId)) {
+      const typeKey = (t.type ?? '') as keyof MemberMonthlyBreakdown;
+      if (typeKey in breakdown && typeKey !== 'bonus' && typeKey !== 'meetings' && typeKey !== 'total') {
+        (breakdown[typeKey] as number) += base;
+      }
       breakdown.total += base;
     }
 
@@ -101,21 +106,17 @@ export function calculateMemberMonthlyPoints(
   }
 
   if (ideas) {
-    for (const idea of ideas) {
-      if (idea.createdBy !== userId) continue;
-      const ideaMonth = new Date(idea.createdAt).toISOString().substring(0, 7);
-      if (ideaMonth !== month) continue;
-      breakdown.ideas += 200;
-      breakdown.total += 200;
-    }
     for (const t of tasks) {
       if (!isEarned(t) || !t.linkedIdeaId) continue;
-      if (getTaskYearMonth(t) !== month) continue;
       const idea = ideas.find(i => i.id === t.linkedIdeaId);
-      if (idea && idea.createdBy === userId) {
-        breakdown.ideas += 50;
-        breakdown.total += 50;
-      }
+      if (!idea || idea.createdBy !== userId) continue;
+      // فقط لما تُسند الفكرة لشخص آخر غير منشئها
+      if (!idea.ownerId || idea.ownerId === userId) continue;
+      const ideaMonth = new Date(idea.createdAt).toISOString().substring(0, 7);
+      const creditMonth = ideaMonth < POINTS_START_MONTH ? POINTS_START_MONTH : ideaMonth;
+      if (creditMonth !== month) continue;
+      breakdown.ideas += 50;
+      breakdown.total += 50;
     }
   }
 

@@ -125,7 +125,12 @@ export function AllTasksPage() {
     }
     if (filterPriority && (t.priority || 'medium') !== filterPriority) return false;
     if (filterType && (t.type || '') !== filterType) return false;
-    if (filterMember && t.memberId !== filterMember) return false;
+    if (filterMember) {
+      const teamIds: string[] = Array.isArray(t.teamMemberIds)
+        ? t.teamMemberIds
+        : Object.values(t.teamMemberIds || {});
+      if (t.memberId !== filterMember && !teamIds.includes(filterMember)) return false;
+    }
     if (filterApproval) {
       const earned = t.done || t.status === 'published';
       if (filterApproval === 'approved' && !t.pointsApproved) return false;
