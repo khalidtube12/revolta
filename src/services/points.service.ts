@@ -75,8 +75,8 @@ export function calculateMemberMonthlyPoints(
       breakdown.total += base + bonusAmt;
     }
 
-    // عضو تيم في شورت/مقطع/بودكاست (teamMemberIds) — يأخذ نفس النقاط كاملة
-    if ((t.type === 'video' || t.type === 'podcast' || t.type === 'short' || t.type === 'event_coverage') && t.teamMemberIds?.includes(userId)) {
+    // عضو تيم في شورت/مقطع/بودكاست (teamMemberIds) — يأخذ نفس النقاط كاملة (مع guard ضد الاحتساب المزدوج)
+    if ((t.type === 'video' || t.type === 'podcast' || t.type === 'short' || t.type === 'event_coverage') && t.memberId !== userId && t.teamMemberIds?.includes(userId)) {
       const typeKey = t.type as keyof MemberMonthlyBreakdown;
       (breakdown[typeKey] as number) += base;
       breakdown.total += base;
