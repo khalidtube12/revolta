@@ -75,10 +75,15 @@ export function calculateMemberMonthlyPoints(
       breakdown.total += base + bonusAmt;
     }
 
-    // عضو تيم في شورت/مقطع/بودكاست (teamMemberIds) — يأخذ نفس النقاط كاملة (مع guard ضد الاحتساب المزدوج)
-    if ((t.type === 'video' || t.type === 'podcast' || t.type === 'short' || t.type === 'event_coverage') && t.memberId !== userId && t.teamMemberIds?.includes(userId)) {
-      const typeKey = t.type as keyof MemberMonthlyBreakdown;
-      (breakdown[typeKey] as number) += base;
+    // شريك في المهمة (teamMemberIds) — يأخذ نفس النقاط كاملة لأي نوع مهمة
+    const teamIds: string[] = Array.isArray(t.teamMemberIds)
+      ? t.teamMemberIds
+      : Object.values(t.teamMemberIds || {});
+    if (t.memberId !== userId && teamIds.includes(userId)) {
+      const typeKey = (t.type ?? '') as keyof MemberMonthlyBreakdown;
+      if (typeKey in breakdown && typeKey !== 'bonus' && typeKey !== 'meetings' && typeKey !== 'total') {
+        (breakdown[typeKey] as number) += base;
+      }
       breakdown.total += base;
     }
 
