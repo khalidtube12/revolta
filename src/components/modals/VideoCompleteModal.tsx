@@ -63,47 +63,25 @@ export function VideoCompleteModal({ open, onClose, onSubmit, members, taskType 
                 (اختياري — يأخذ {producerBonus} نقطة)
               </span>
             </label>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 6, maxHeight: 260, overflowY: 'auto' }}>
-              {members.map(u => {
-                const selected = producerId === u.id;
-                return (
-                  <div
-                    key={u.id}
-                    onClick={() => setProducerId(prev => prev === u.id ? '' : u.id)}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 10,
-                      padding: '8px 12px', cursor: 'pointer',
-                      background: selected ? 'rgba(201,168,76,0.12)' : 'var(--dark)',
-                      border: `1px solid ${selected ? 'rgba(201,168,76,0.5)' : 'var(--border)'}`,
-                      transition: 'all 0.12s',
-                    }}
-                  >
-                    <div style={{
-                      width: 14, height: 14, borderRadius: '50%', flexShrink: 0,
-                      border: `2px solid ${selected ? 'var(--gold)' : 'var(--border2)'}`,
-                      background: selected ? 'var(--gold)' : 'transparent',
-                      transition: 'all 0.12s',
-                    }} />
-                    <div style={{
-                      width: 28, height: 28, borderRadius: '50%',
-                      background: u.color || 'var(--border)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 13, fontWeight: 700, color: '#fff', flexShrink: 0, overflow: 'hidden',
-                    }}>
-                      {u.photoURL
-                        ? <img src={u.photoURL} alt={u.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', display: 'block' }} />
-                        : u.name.charAt(0)}
-                    </div>
-                    <span style={{ fontSize: 14, fontFamily: 'Cairo, sans-serif', color: 'var(--text)', letterSpacing: 'normal', textTransform: 'none', fontWeight: 400 }}>{u.name}</span>
-                    {selected && (
-                      <span style={{ fontSize: 11, color: 'var(--gold)', fontFamily: 'Oswald, sans-serif', marginRight: 'auto' }}>
-                        +{producerBonus} ⭐
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+            <select
+              value={producerId}
+              onChange={e => setProducerId(e.target.value)}
+              style={{
+                width: '100%', background: 'var(--dark)', border: '1px solid var(--border)',
+                color: producerId ? 'var(--text)' : 'var(--muted)',
+                padding: '10px 12px', fontFamily: 'Cairo, sans-serif', fontSize: 14, cursor: 'pointer',
+              }}
+            >
+              <option value="">— اختر الممنتج —</option>
+              {members.map(u => (
+                <option key={u.id} value={u.id}>{u.name}</option>
+              ))}
+            </select>
+            {producerId && (
+              <div style={{ fontSize: 11, color: 'var(--gold)', marginTop: 5 }}>
+                ✓ {members.find(u => u.id === producerId)?.name} · +{producerBonus} نقطة
+              </div>
+            )}
           </div>
         )}
 
