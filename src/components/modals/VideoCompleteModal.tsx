@@ -78,13 +78,12 @@ export function VideoCompleteModal({ open, onClose, onSubmit, members, taskType 
                       transition: 'all 0.12s',
                     }}
                   >
-                    <input
-                      type="radio"
-                      name="producer"
-                      checked={selected}
-                      readOnly
-                      style={{ accentColor: 'var(--gold)', flexShrink: 0, pointerEvents: 'none' }}
-                    />
+                    <div style={{
+                      width: 14, height: 14, borderRadius: '50%', flexShrink: 0,
+                      border: `2px solid ${selected ? 'var(--gold)' : 'var(--border2)'}`,
+                      background: selected ? 'var(--gold)' : 'transparent',
+                      transition: 'all 0.12s',
+                    }} />
                     <div style={{
                       width: 28, height: 28, borderRadius: '50%',
                       background: u.color || 'var(--border)',

@@ -232,12 +232,12 @@ export function EditTaskModal({ open, task, onClose, onSuccess }: EditTaskModalP
                     transition: 'all 0.12s',
                   }}
                 >
-                  <input
-                    type="radio"
-                    checked={selected}
-                    readOnly
-                    style={{ accentColor: 'var(--gold)', width: 14, height: 14, flexShrink: 0, pointerEvents: 'none' }}
-                  />
+                  <div style={{
+                    width: 14, height: 14, borderRadius: '50%', flexShrink: 0,
+                    border: `2px solid ${selected ? 'var(--gold)' : 'var(--border2)'}`,
+                    background: selected ? 'var(--gold)' : 'transparent',
+                    transition: 'all 0.12s',
+                  }} />
                   <div style={{
                     width: 26, height: 26,
                     background: m.color || 'var(--border2)',
