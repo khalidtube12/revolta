@@ -32,6 +32,7 @@ export function EditTaskModal({ open, task, onClose, onSuccess }: EditTaskModalP
   const [type, setType]               = useState('short');
   const [teamMemberIds, setTeamMemberIds] = useState<string[]>([]);
   const [primaryMemberId, setPrimaryMemberId] = useState('');
+  const [producerId, setProducerId]   = useState('');
   const [loading, setLoading]         = useState(false);
 
   const canManageTeam = !!profile?.isAdmin || can('addTaskOthers');
@@ -57,6 +58,7 @@ export function EditTaskModal({ open, task, onClose, onSuccess }: EditTaskModalP
       const allIds = Array.from(new Set([task.memberId, ...existingTeam]));
       setTeamMemberIds(allIds);
       setPrimaryMemberId(task.memberId);
+      setProducerId('');
     }
   }, [task]);
 
@@ -79,6 +81,7 @@ export function EditTaskModal({ open, task, onClose, onSuccess }: EditTaskModalP
       const primary = primaryMemberId || teamMemberIds[0] || task.memberId;
       const rest = teamMemberIds.filter(x => x !== primary);
 
+      const isProducerType = type === 'short' || type === 'video';
       await updateTask(task.id, {
         title: title.trim(),
         desc: desc.trim(),
@@ -89,6 +92,7 @@ export function EditTaskModal({ open, task, onClose, onSuccess }: EditTaskModalP
           memberId: primary,
           teamMemberIds: rest,
         } : {}),
+        ...(isProducerType && canManageTeam && producerId ? { producerId } : {}),
       });
       onClose();
       onSuccess?.();
@@ -200,6 +204,61 @@ export function EditTaskModal({ open, task, onClose, onSuccess }: EditTaskModalP
           {teamMemberIds.length === 0 && (
             <div style={{ fontSize: 12, color: 'var(--red)', marginTop: 6 }}>
               ⚠ يجب اختيار عضو واحد على الأقل
+            </div>
+          )}
+        </div>
+      )}
+
+      {(type === 'short' || type === 'video') && canManageTeam && (
+        <div className="form-group">
+          <label>
+            الممنتج
+            <span style={{ color: 'var(--muted)', fontWeight: 400, fontSize: 11, marginRight: 6 }}>
+              (اختياري — {type === 'short' ? '400' : '500'} نقطة)
+            </span>
+          </label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4, maxHeight: 220, overflowY: 'auto' }}>
+            {members.map(m => {
+              const selected = producerId === m.id;
+              return (
+                <div
+                  key={m.id}
+                  onClick={() => setProducerId(prev => prev === m.id ? '' : m.id)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer',
+                    padding: '7px 10px',
+                    background: selected ? 'rgba(201,168,76,0.12)' : 'var(--dark)',
+                    border: `1px solid ${selected ? 'rgba(201,168,76,0.5)' : 'var(--border)'}`,
+                    transition: 'all 0.12s',
+                  }}
+                >
+                  <input
+                    type="radio"
+                    checked={selected}
+                    readOnly
+                    style={{ accentColor: 'var(--gold)', width: 14, height: 14, flexShrink: 0, pointerEvents: 'none' }}
+                  />
+                  <div style={{
+                    width: 26, height: 26,
+                    background: m.color || 'var(--border2)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0,
+                  }}>
+                    {m.name.charAt(0)}
+                  </div>
+                  <span style={{ fontSize: 13, color: 'var(--text)', letterSpacing: 'normal', textTransform: 'none', fontWeight: 400 }}>{m.name}</span>
+                  {selected && (
+                    <span style={{ fontSize: 11, color: 'var(--gold)', fontFamily: 'Oswald, sans-serif', marginRight: 'auto' }}>
+                      +{type === 'short' ? 400 : 500} ⭐
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          {producerId && (
+            <div style={{ fontSize: 11, color: 'var(--gold)', marginTop: 5 }}>
+              ✓ {members.find(m => m.id === producerId)?.name ?? '—'} محدد كممنتج
             </div>
           )}
         </div>

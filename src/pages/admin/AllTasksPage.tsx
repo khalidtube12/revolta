@@ -186,7 +186,11 @@ export function AllTasksPage() {
 
   const handleVideoSubmit = async (driveLink: string, producerId: string) => {
     if (!videoModal) return;
-    await updateTask(videoModal.id, { status: 'done', done: true, producerId, ...(driveLink ? { driveLink } : {}) });
+    await updateTask(videoModal.id, {
+      status: 'done', done: true,
+      ...(producerId ? { producerId } : {}),
+      ...(driveLink ? { driveLink } : {}),
+    });
     setVideoModal(null);
     load();
   };
@@ -689,13 +693,7 @@ export function AllTasksPage() {
         onClose={() => setVideoModal(null)}
         onSubmit={handleVideoSubmit}
         taskType={videoModal?.type}
-        participants={(() => {
-          const t = tasks.find(t => t.id === videoModal?.id);
-          if (!t) return [];
-          const primary = members.find(m => m.id === t.memberId);
-          const team = (t.teamMemberIds ?? []).map(id => members.find(m => m.id === id)).filter(Boolean);
-          return [primary, ...team].filter((m): m is NonNullable<typeof m> => !!m);
-        })()}
+        members={members}
       />
 
       {bonusModal && (

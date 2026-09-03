@@ -87,9 +87,9 @@ export function calculateMemberMonthlyPoints(
       breakdown.total += base;
     }
 
-    // منتج الشورت +100 / المقطع أو البودكاست +200
-    if ((t.type === 'video' || t.type === 'podcast' || t.type === 'short' || t.type === 'event_coverage') && t.producerId === userId) {
-      const producerBonus = (t.type === 'short' || t.type === 'event_coverage') ? 100 : 200;
+    // ممنتج الشورت +400 / المقطع +500
+    if ((t.type === 'short' || t.type === 'video') && t.producerId === userId) {
+      const producerBonus = t.type === 'short' ? 400 : 500;
       breakdown.bonus += producerBonus;
       breakdown.total += producerBonus;
     }
