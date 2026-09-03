@@ -87,8 +87,8 @@ export function calculateMemberMonthlyPoints(
       breakdown.total += base;
     }
 
-    // ممنتج الشورت +400 / المقطع +500 — فقط إذا المهمة جماعية (أكثر من شخص)
-    if ((t.type === 'short' || t.type === 'video') && teamIds.length > 0 && t.producerId === userId) {
+    // ممنتج الشورت +400 / المقطع +500 — فقط إذا الممنتج غير صاحب المهمة الأصلي
+    if ((t.type === 'short' || t.type === 'video') && t.producerId === userId && t.memberId !== userId) {
       const producerBonus = t.type === 'short' ? 400 : 500;
       breakdown.bonus += producerBonus;
       breakdown.total += producerBonus;

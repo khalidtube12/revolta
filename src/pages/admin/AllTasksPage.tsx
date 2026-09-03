@@ -582,6 +582,14 @@ export function AllTasksPage() {
                           {isLate ? `متأخرة · ${t.deadline}` : t.deadline}
                         </span>
                       )}
+                      {t.producerId && (() => {
+                        const producer = members.find(u => u.id === t.producerId);
+                        return producer ? (
+                          <span className="tk-meta-item" style={{ color: 'var(--gold)', fontSize: 11 }}>
+                            🎬 {producer.name}
+                          </span>
+                        ) : null;
+                      })()}
                       {t.driveLink && (
                         <a
                           href={t.driveLink}
