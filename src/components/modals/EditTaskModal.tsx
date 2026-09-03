@@ -58,7 +58,7 @@ export function EditTaskModal({ open, task, onClose, onSuccess }: EditTaskModalP
       const allIds = Array.from(new Set([task.memberId, ...existingTeam]));
       setTeamMemberIds(allIds);
       setPrimaryMemberId(task.memberId);
-      setProducerId('');
+      setProducerId(task.producerId || '');
     }
   }, [task]);
 
@@ -82,18 +82,23 @@ export function EditTaskModal({ open, task, onClose, onSuccess }: EditTaskModalP
       const rest = teamMemberIds.filter(x => x !== primary);
 
       const isProducerType = type === 'short' || type === 'video';
-      await updateTask(task.id, {
+      console.log('[EditTaskModal] saving task', task.id, { type, isProducerType, canManageTeam, producerId });
+      const updateData: Partial<Task> = {
         title: title.trim(),
         desc: desc.trim(),
         deadline,
         priority: priority as 'low' | 'medium' | 'high',
         type: type as Task['type'],
-        ...(isTeamType && canManageTeam ? {
-          memberId: primary,
-          teamMemberIds: rest,
-        } : {}),
-        ...(isProducerType && canManageTeam && producerId ? { producerId } : {}),
-      });
+      };
+      if (isTeamType && canManageTeam) {
+        updateData.memberId = primary;
+        updateData.teamMemberIds = rest;
+      }
+      if (isProducerType && producerId) {
+        updateData.producerId = producerId;
+      }
+      console.log('[EditTaskModal] updateData:', JSON.stringify(updateData));
+      await updateTask(task.id, updateData);
       onClose();
       onSuccess?.();
     } catch (e: unknown) {

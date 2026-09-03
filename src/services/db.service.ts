@@ -16,7 +16,9 @@ export async function dbPush(path: string, value: unknown): Promise<string | nul
 }
 
 export async function dbUpdate(path: string, value: Record<string, unknown>): Promise<void> {
+  console.log('[Firebase dbUpdate]', path, JSON.stringify(value));
   await update(ref(db, path), value);
+  console.log('[Firebase dbUpdate] done:', path);
 }
 
 export async function dbRemove(path: string): Promise<void> {
