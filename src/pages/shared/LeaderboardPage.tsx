@@ -26,6 +26,8 @@ const TYPE_LABELS: Record<string, string> = {
   event_coverage: 'تغطية',
 };
 
+const nf = new Intl.NumberFormat('en-US');
+
 function getMonthLabel(month: string): string {
   return new Date(month + '-01').toLocaleDateString('ar-SA', { month: 'long', year: 'numeric' });
 }
@@ -45,6 +47,46 @@ function buildMonthOptions(): { v: string; l: string }[] {
     opts.push({ v: POINTS_START_MONTH, l: getMonthLabel(POINTS_START_MONTH) });
   }
   return opts;
+}
+
+function PodiumAvatar({ entry, size, first }: { entry: LeaderboardEntry; size: number; first?: boolean }) {
+  const { user } = entry;
+  return (
+    <div
+      className={`lb-pod-avatar${first ? ' lb-pod-avatar-1' : ''}`}
+      style={{ width: size, height: size, background: user.color || 'var(--lb-line)' }}
+    >
+      {user.photoURL
+        ? <img src={user.photoURL} alt={user.name} />
+        : <span className="lb-pod-avatar-fallback" style={{ fontSize: Math.max(11, Math.round(size * 0.42)) }}>{user.name.charAt(0)}</span>}
+    </div>
+  );
+}
+
+function PodiumSlot({ entry, place }: { entry: LeaderboardEntry; place: 1 | 2 | 3 }) {
+  const first = place === 1;
+  const total = entry.breakdown.total;
+  return (
+    <div className={`lb-podium-slot lb-podium-${place}`}>
+      <div className="lb-pod-avatar-wrap">
+        {first && <span className="lb-pod-crown shimmer-text">♛</span>}
+        <PodiumAvatar entry={entry} size={first ? 112 : 84} first={first} />
+        {first ? (
+          <span className="lb-pod-medal-first">🥇 الأول</span>
+        ) : (
+          <span className={`lb-pod-medal-sm lb-pod-medal-${place}`}>
+            {place === 2 ? '🥈 الثاني' : '🥉 الثالث'}
+          </span>
+        )}
+      </div>
+      <h3 className={`lb-pod-name${first ? ' lb-pod-name-1' : ''}`} title={entry.user.name}>
+        {entry.user.name}
+      </h3>
+      <p className={first ? 'lb-pod-points-1 shimmer-text' : 'lb-pod-points'}>{nf.format(total)}</p>
+      <p className="lb-pod-unit">نقطة</p>
+      <div className={`lb-pod-base lb-pod-base-${place}`} />
+    </div>
+  );
 }
 
 export function LeaderboardPage() {
@@ -95,6 +137,13 @@ export function LeaderboardPage() {
     });
   }, [selectedMonth]);
 
+  const openEditPrizes = () => {
+    setPrizeFirst(prizes.first ?? '');
+    setPrizeSecond(prizes.second ?? '');
+    setPrizeThird(prizes.third ?? '');
+    setEditingPrizes(true);
+  };
+
   const handleSavePrizes = async () => {
     setSavingPrizes(true);
     const updated: MonthPrizes = {
@@ -111,199 +160,199 @@ export function LeaderboardPage() {
   if (loading) return <Spinner />;
 
   const top3 = entries.slice(0, 3);
-  const rest = entries.slice(3);
-  const hasPrizes = prizes.first || prizes.second || prizes.third;
+  const hasPrizes = !!(prizes.first || prizes.second || prizes.third);
 
   const typeKeys: (keyof typeof TYPE_LABELS)[] = ['x_content', 'short', 'video', 'writing', 'design', 'podcast', 'event_coverage'];
 
   return (
-    <>
-      <div className="page-hdr">
-        <div className="page-hdr-text">
-          <h1>الترتيب الشهري</h1>
-          <p>{entries.length} عضو · {getMonthLabel(selectedMonth)}</p>
+    <div className="lb-page">
+      <header className="lb-hdr">
+        <div className="lb-hdr-text">
+          <h1 className="lb-title">
+            لوحة الترتيب <span className="shimmer-text">الشهرية</span>
+          </h1>
         </div>
-        <select
-          value={selectedMonth}
-          onChange={e => setSelectedMonth(e.target.value)}
-          style={{ fontFamily: 'Cairo, sans-serif', background: 'var(--dark)', color: 'var(--text)', border: '1px solid var(--border)', padding: '8px 14px', fontSize: 14 }}
-        >
-          {monthOptions.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
-        </select>
-      </div>
 
-      {/* Podium */}
-      {top3.length > 0 && (
-        <div className="lb-podium-wrap">
-          {/* 2nd */}
-          {top3[1] && (
-            <div className="lb-podium lb-podium-2">
-              <div className="lb-pod-avatar" style={{ background: top3[1].user.color || 'var(--border)' }}>
-                {top3[1].user.photoURL
-                  ? <img src={top3[1].user.photoURL} alt={top3[1].user.name} />
-                  : top3[1].user.name.charAt(0)}
-              </div>
-              <div className="lb-pod-name">{top3[1].user.name}</div>
-              <div className="lb-pod-points">{top3[1].breakdown.total}</div>
-              <div className="lb-pod-rank lb-rank-2">2</div>
-              <div className="lb-pod-base" style={{ height: 80 }} />
-            </div>
-          )}
-          {/* 1st */}
-          <div className="lb-podium lb-podium-1">
-            <div className="lb-pod-crown">👑</div>
-            <div className="lb-pod-avatar lb-pod-avatar-1" style={{ background: top3[0].user.color || 'var(--border)' }}>
-              {top3[0].user.photoURL
-                ? <img src={top3[0].user.photoURL} alt={top3[0].user.name} />
-                : top3[0].user.name.charAt(0)}
-            </div>
-            <div className="lb-pod-name">{top3[0].user.name}</div>
-            <div className="lb-pod-points lb-pod-points-1">{top3[0].breakdown.total}</div>
-            <div className="lb-pod-rank lb-rank-1">1</div>
-            <div className="lb-pod-base lb-pod-base-1" style={{ height: 120 }} />
+        <div className="lb-hdr-actions">
+          <div className="lb-count-pill">
+            <span className="lb-count-num">{entries.length}</span>
+            <span className="lb-count-lbl">عضوًا</span>
           </div>
-          {/* 3rd */}
-          {top3[2] && (
-            <div className="lb-podium lb-podium-3">
-              <div className="lb-pod-avatar" style={{ background: top3[2].user.color || 'var(--border)' }}>
-                {top3[2].user.photoURL
-                  ? <img src={top3[2].user.photoURL} alt={top3[2].user.name} />
-                  : top3[2].user.name.charAt(0)}
-              </div>
-              <div className="lb-pod-name">{top3[2].user.name}</div>
-              <div className="lb-pod-points">{top3[2].breakdown.total}</div>
-              <div className="lb-pod-rank lb-rank-3">3</div>
-              <div className="lb-pod-base" style={{ height: 60 }} />
-            </div>
-          )}
+          <div className="lb-select-wrap">
+            <select
+              className="lb-select"
+              value={selectedMonth}
+              onChange={e => setSelectedMonth(e.target.value)}
+            >
+              {monthOptions.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
+            </select>
+            <span className="lb-select-arrow">▾</span>
+          </div>
         </div>
+      </header>
+
+      {/* منصة الأوائل */}
+      {top3.length > 0 && (
+        <section className="lb-podium-section">
+          <p className="lb-podium-eyebrow">منصة الأوائل — {getMonthLabel(selectedMonth)}</p>
+          <div className="lb-podium-wrap">
+            {top3[1] && <PodiumSlot entry={top3[1]} place={2} />}
+            <PodiumSlot entry={top3[0]} place={1} />
+            {top3[2] && <PodiumSlot entry={top3[2]} place={3} />}
+          </div>
+        </section>
       )}
 
-      {/* Prizes */}
-      {(hasPrizes || isAdmin) && (
-        <div className="lb-prizes-card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <h3 style={{ fontFamily: 'Oswald, sans-serif', color: 'var(--gold)', margin: 0, fontSize: 16, textTransform: 'uppercase' }}>
-              🏆 جوائز الشهر
-            </h3>
-            {isAdmin && !editingPrizes && (
-              <button className="btn btn-xs btn-ghost" onClick={() => setEditingPrizes(true)}>تعديل الجوائز</button>
+      {/* جوائز الشهر */}
+      <section className="lb-prizes-section">
+        <div className="lb-prizes-hdr">
+          <h2 className="lb-section-title">🏆 جوائز الشهر</h2>
+          {isAdmin && (
+            <button className="lb-btn-gold" onClick={openEditPrizes}>✎ تعديل الجوائز</button>
+          )}
+        </div>
+
+        {!hasPrizes ? (
+          <p className="lb-prizes-empty">لم تُحدَّد جوائز لهذا الشهر بعد</p>
+        ) : (
+          <div className="lb-prizes-grid">
+            {prizes.first && (
+              <div className="lb-prize-card">
+                <p className="lb-prize-rank">🥇 المركز الأول</p>
+                <p className="lb-prize-text">{prizes.first}</p>
+              </div>
+            )}
+            {prizes.second && (
+              <div className="lb-prize-card">
+                <p className="lb-prize-rank">🥈 المركز الثاني</p>
+                <p className="lb-prize-text">{prizes.second}</p>
+              </div>
+            )}
+            {prizes.third && (
+              <div className="lb-prize-card">
+                <p className="lb-prize-rank">🥉 المركز الثالث</p>
+                <p className="lb-prize-text">{prizes.third}</p>
+              </div>
             )}
           </div>
+        )}
+      </section>
 
-          {editingPrizes ? (
-            <div>
-              <div className="form-group" style={{ marginBottom: 8 }}>
-                <label style={{ fontSize: 12 }}>🥇 المركز الأول</label>
-                <input type="text" value={prizeFirst} onChange={e => setPrizeFirst(e.target.value)} placeholder="اكتب الجائزة..." />
-              </div>
-              <div className="form-group" style={{ marginBottom: 8 }}>
-                <label style={{ fontSize: 12 }}>🥈 المركز الثاني</label>
-                <input type="text" value={prizeSecond} onChange={e => setPrizeSecond(e.target.value)} placeholder="اكتب الجائزة..." />
-              </div>
-              <div className="form-group" style={{ marginBottom: 12 }}>
-                <label style={{ fontSize: 12 }}>🥉 المركز الثالث</label>
-                <input type="text" value={prizeThird} onChange={e => setPrizeThird(e.target.value)} placeholder="اكتب الجائزة..." />
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button className="btn" disabled={savingPrizes} onClick={handleSavePrizes}>
-                  {savingPrizes ? <div className="spinner" /> : 'حفظ'}
-                </button>
-                <button className="btn btn-ghost" onClick={() => setEditingPrizes(false)}>إلغاء</button>
-              </div>
+      {/* الترتيب الكامل */}
+      <section className="lb-table-section">
+        <div className="lb-table-hdr">
+          <h2 className="lb-section-title">الترتيب الكامل</h2>
+          <span className="lb-table-hint">انقر أي صف لعرض التفاصيل</span>
+        </div>
+
+        {entries.length === 0 ? (
+          <div className="lb-empty">لا توجد بيانات لهذا الشهر</div>
+        ) : (
+          <div className="lb-table-wrap">
+            <table className="lb-table">
+              <thead>
+                <tr>
+                  <th className="lb-th-rank">#</th>
+                  <th className="lb-th-member">العضو</th>
+                  {typeKeys.map(k => <th key={k}>{TYPE_LABELS[k]}</th>)}
+                  <th>مكافأة</th>
+                  <th>حضور</th>
+                  <th>أفكار</th>
+                  <th className="lb-th-total">المجموع</th>
+                  <th className="lb-th-expand" />
+                </tr>
+              </thead>
+              <tbody>
+                {entries.map(e => {
+                  const open = expandedMember === e.user.id;
+                  return (
+                    <Fragment key={e.user.id}>
+                      <tr
+                        className={`lb-row${e.rank === 1 ? ' lb-row-gold' : ''}`}
+                        aria-expanded={open}
+                        onClick={() => setExpandedMember(open ? null : e.user.id)}
+                      >
+                        <td className={`lb-rank-cell${e.rank <= 3 ? ` lb-rank-${e.rank}` : ''}`}>
+                          {e.rank === 1 ? '🥇' : e.rank === 2 ? '🥈' : e.rank === 3 ? '🥉' : e.rank}
+                        </td>
+                        <td className="lb-member-cell">
+                          <div className="lb-member-inline">
+                            <div className="lb-row-avatar" style={{ background: e.user.color || 'var(--lb-line)' }}>
+                              {e.user.photoURL
+                                ? <img src={e.user.photoURL} alt={e.user.name} />
+                                : e.user.name.charAt(0)}
+                            </div>
+                            <span className="lb-member-name">{e.user.name}</span>
+                          </div>
+                        </td>
+                        {typeKeys.map(k => (
+                          <td key={k}>{e.breakdown[k as keyof typeof e.breakdown] || <span className="lb-dash">—</span>}</td>
+                        ))}
+                        <td>{e.breakdown.bonus || <span className="lb-dash">—</span>}</td>
+                        <td>{e.breakdown.meetings || <span className="lb-dash">—</span>}</td>
+                        <td>{e.breakdown.ideas || <span className="lb-dash">—</span>}</td>
+                        <td className={`lb-total-cell${e.rank === 1 ? ' lb-total-gold' : ''}`}>{nf.format(e.breakdown.total)}</td>
+                        <td className="lb-expand-cell">
+                          <span className={`lb-chevron${open ? ' lb-chevron-open' : ''}`}>▼</span>
+                        </td>
+                      </tr>
+                      {open && (
+                        <tr className="lb-detail-row">
+                          <td colSpan={14}>
+                            <MemberPointsDetail
+                              userId={e.user.id}
+                              tasks={tasks}
+                              meetings={meetings}
+                              ideas={ideas}
+                              month={selectedMonth}
+                              memberName={e.user.name}
+                              monthLabel={getMonthLabel(selectedMonth)}
+                            />
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <p className="lb-table-note">المهام غير المنتهية تظهر بحالة «قيد التنفيذ» وتُستبعد من المجموع.</p>
+      </section>
+
+      <footer className="lb-footer">
+        <p>REVOLTA · الترتيب الشهري — {getMonthLabel(selectedMonth)}</p>
+        <p>النقاط تُحتسب من {getMonthLabel(POINTS_START_MONTH)} فصاعدًا</p>
+      </footer>
+
+      {editingPrizes && (
+        <div className="lb-overlay" onClick={() => setEditingPrizes(false)}>
+          <div className="lb-modal" onClick={e => e.stopPropagation()}>
+            <h3 className="lb-modal-title">تعديل جوائز الشهر</h3>
+            <div className="lb-modal-body">
+              <label className="lb-field">
+                <span>🥇 المركز الأول</span>
+                <input value={prizeFirst} onChange={e => setPrizeFirst(e.target.value)} placeholder="اكتب الجائزة" />
+              </label>
+              <label className="lb-field">
+                <span>🥈 المركز الثاني</span>
+                <input value={prizeSecond} onChange={e => setPrizeSecond(e.target.value)} placeholder="اكتب الجائزة" />
+              </label>
+              <label className="lb-field">
+                <span>🥉 المركز الثالث</span>
+                <input value={prizeThird} onChange={e => setPrizeThird(e.target.value)} placeholder="اكتب الجائزة" />
+              </label>
             </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {prizes.first && <div className="lb-prize-row"><span>🥇</span><span>{prizes.first}</span></div>}
-              {prizes.second && <div className="lb-prize-row"><span>🥈</span><span>{prizes.second}</span></div>}
-              {prizes.third && <div className="lb-prize-row"><span>🥉</span><span>{prizes.third}</span></div>}
-              {!hasPrizes && isAdmin && (
-                <p style={{ fontSize: 12, color: 'var(--muted)', margin: 0 }}>لم تُحدَّد جوائز لهذا الشهر بعد</p>
-              )}
+            <div className="lb-modal-footer">
+              <button className="lb-btn-ghost" onClick={() => setEditingPrizes(false)}>إلغاء</button>
+              <button className="lb-btn-gold" disabled={savingPrizes} onClick={handleSavePrizes}>
+                {savingPrizes ? <div className="spinner" /> : 'حفظ'}
+              </button>
             </div>
-          )}
+          </div>
         </div>
       )}
-
-      {/* Full Table */}
-      {entries.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--muted)', fontSize: 14 }}>
-          لا توجد بيانات لهذا الشهر
-        </div>
-      ) : (
-        <div className="lb-table-wrap">
-          <table className="lb-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>العضو</th>
-                {typeKeys.map(k => <th key={k}>{TYPE_LABELS[k]}</th>)}
-                <th>مكافأة</th>
-                <th>حضور</th>
-                <th>أفكار</th>
-                <th>المجموع</th>
-                <th style={{ width: 24 }} />
-              </tr>
-            </thead>
-            <tbody>
-              {entries.map(e => (
-                <Fragment key={e.user.id}>
-                  <tr
-                    className={`${e.rank <= 3 ? `lb-row-top lb-row-${e.rank}` : ''} lb-row-clickable`}
-                    onClick={() => setExpandedMember(expandedMember === e.user.id ? null : e.user.id)}
-                  >
-                    <td className="lb-rank-cell">
-                      {e.rank === 1 ? '🥇' : e.rank === 2 ? '🥈' : e.rank === 3 ? '🥉' : e.rank}
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div style={{
-                          width: 28, height: 28, background: e.user.color || 'var(--border)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: 13, fontWeight: 700, color: '#fff', flexShrink: 0, overflow: 'hidden',
-                        }}>
-                          {e.user.photoURL
-                            ? <img src={e.user.photoURL} alt={e.user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                            : e.user.name.charAt(0)}
-                        </div>
-                        <span style={{ fontSize: 13 }}>{e.user.name}</span>
-                      </div>
-                    </td>
-                    <td>{e.breakdown.x_content || '—'}</td>
-                    <td>{e.breakdown.short || '—'}</td>
-                    <td>{e.breakdown.video || '—'}</td>
-                    <td>{e.breakdown.writing || '—'}</td>
-                    <td>{e.breakdown.design || '—'}</td>
-                    <td>{e.breakdown.podcast || '—'}</td>
-                    <td>{e.breakdown.event_coverage || '—'}</td>
-                    <td>{e.breakdown.bonus || '—'}</td>
-                    <td>{e.breakdown.meetings || '—'}</td>
-                    <td>{e.breakdown.ideas || '—'}</td>
-                    <td className="lb-total-cell">{e.breakdown.total}</td>
-                    <td className="lb-expand-cell">{expandedMember === e.user.id ? '▲' : '▼'}</td>
-                  </tr>
-                  {expandedMember === e.user.id && (
-                    <tr className="lb-detail-row">
-                      <td colSpan={14}>
-                        <MemberPointsDetail
-                          userId={e.user.id}
-                          tasks={tasks}
-                          meetings={meetings}
-                          ideas={ideas}
-                          month={selectedMonth}
-                        />
-                      </td>
-                    </tr>
-                  )}
-                </Fragment>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Remaining members below top3 — already in table */}
-      {rest.length === 0 && entries.length > 0 && null}
-    </>
+    </div>
   );
 }
