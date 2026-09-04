@@ -58,7 +58,7 @@ export function EditTaskModal({ open, task, onClose, onSuccess }: EditTaskModalP
       const allIds = Array.from(new Set([task.memberId, ...existingTeam]));
       setTeamMemberIds(allIds);
       setPrimaryMemberId(task.memberId);
-      setProducerId('');
+      setProducerId(task.producerId || '');
     }
   }, [task]);
 
@@ -82,18 +82,28 @@ export function EditTaskModal({ open, task, onClose, onSuccess }: EditTaskModalP
       const rest = teamMemberIds.filter(x => x !== primary);
 
       const isProducerType = type === 'short' || type === 'video';
-      await updateTask(task.id, {
+      console.log('[EditTaskModal] saving task', task.id, { type, isProducerType, canManageTeam, producerId });
+      const updateData: Partial<Task> = {
         title: title.trim(),
         desc: desc.trim(),
         deadline,
         priority: priority as 'low' | 'medium' | 'high',
         type: type as Task['type'],
-        ...(isTeamType && canManageTeam ? {
-          memberId: primary,
-          teamMemberIds: rest,
-        } : {}),
-        ...(isProducerType && canManageTeam && producerId ? { producerId } : {}),
-      });
+      };
+      if (isTeamType && canManageTeam) {
+        updateData.memberId = primary;
+        updateData.teamMemberIds = rest;
+      }
+      if (isProducerType) {
+        // send null explicitly to delete from Firebase when cleared
+        (updateData as Record<string, unknown>)['producerId'] = producerId || null;
+      }
+      console.log('[EditTaskModal] updateData:', JSON.stringify(updateData));
+      await updateTask(task.id, updateData);
+      // verify what Firebase actually has now
+      const { dbGet } = await import('../../services/db.service');
+      const saved = await dbGet<Record<string, unknown>>('tasks/' + task.id);
+      console.log('[EditTaskModal] Firebase after save:', JSON.stringify(saved));
       onClose();
       onSuccess?.();
     } catch (e: unknown) {
@@ -217,45 +227,20 @@ export function EditTaskModal({ open, task, onClose, onSuccess }: EditTaskModalP
               (اختياري — {type === 'short' ? '400' : '500'} نقطة)
             </span>
           </label>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4, maxHeight: 220, overflowY: 'auto' }}>
-            {members.map(m => {
-              const selected = producerId === m.id;
-              return (
-                <div
-                  key={m.id}
-                  onClick={() => setProducerId(prev => prev === m.id ? '' : m.id)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer',
-                    padding: '7px 10px',
-                    background: selected ? 'rgba(201,168,76,0.12)' : 'var(--dark)',
-                    border: `1px solid ${selected ? 'rgba(201,168,76,0.5)' : 'var(--border)'}`,
-                    transition: 'all 0.12s',
-                  }}
-                >
-                  <input
-                    type="radio"
-                    checked={selected}
-                    readOnly
-                    style={{ accentColor: 'var(--gold)', width: 14, height: 14, flexShrink: 0, pointerEvents: 'none' }}
-                  />
-                  <div style={{
-                    width: 26, height: 26,
-                    background: m.color || 'var(--border2)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0,
-                  }}>
-                    {m.name.charAt(0)}
-                  </div>
-                  <span style={{ fontSize: 13, color: 'var(--text)', letterSpacing: 'normal', textTransform: 'none', fontWeight: 400 }}>{m.name}</span>
-                  {selected && (
-                    <span style={{ fontSize: 11, color: 'var(--gold)', fontFamily: 'Oswald, sans-serif', marginRight: 'auto' }}>
-                      +{type === 'short' ? 400 : 500} ⭐
-                    </span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          <select
+            value={producerId}
+            onChange={e => setProducerId(e.target.value)}
+            style={{
+              width: '100%', background: 'var(--dark)', border: '1px solid var(--border)',
+              color: producerId ? 'var(--text)' : 'var(--muted)',
+              padding: '10px 12px', fontFamily: 'Cairo, sans-serif', fontSize: 14, cursor: 'pointer',
+            }}
+          >
+            <option value="">— اختر الممنتج (اختياري) —</option>
+            {members.map(m => (
+              <option key={m.id} value={m.id}>{m.name}</option>
+            ))}
+          </select>
           {producerId && (
             <div style={{ fontSize: 11, color: 'var(--gold)', marginTop: 5 }}>
               ✓ {members.find(m => m.id === producerId)?.name ?? '—'} محدد كممنتج

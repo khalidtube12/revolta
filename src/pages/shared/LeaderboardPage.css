@@ -188,9 +188,49 @@
   background: rgba(201, 168, 76, 0.04);
 }
 
-.lb-row-1 td:last-child { color: var(--gold); }
-.lb-row-2 td:last-child { color: #9aa0a6; }
-.lb-row-3 td:last-child { color: #cd7f32; }
+.lb-row-1 .lb-total-cell { color: var(--gold); }
+.lb-row-2 .lb-total-cell { color: #9aa0a6; }
+.lb-row-3 .lb-total-cell { color: #cd7f32; }
+
+/* Expandable rows */
+.lb-row-clickable { cursor: pointer; transition: background 0.12s; }
+.lb-row-clickable:hover { background: rgba(201,168,76,0.06) !important; }
+.lb-expand-cell { color: var(--muted); font-size: 9px; width: 24px; text-align: center; user-select: none; }
+.lb-detail-row > td { padding: 0 !important; background: var(--dark); }
+
+/* MemberPointsDetail */
+.mpd-wrap { padding: 14px 16px; display: flex; flex-direction: column; gap: 14px; border-top: 1px solid var(--border); }
+.mpd-group { display: flex; flex-direction: column; gap: 2px; }
+.mpd-group-label {
+  font-size: 10px; font-family: 'Oswald', sans-serif; text-transform: uppercase;
+  letter-spacing: 0.6px; display: flex; align-items: center; gap: 10px;
+  padding-bottom: 5px; border-bottom: 1px solid var(--border); margin-bottom: 3px;
+}
+.mpd-label-owner    { color: var(--gold); }
+.mpd-label-team     { color: #7bb3ff; }
+.mpd-label-producer { color: var(--green2); }
+.mpd-label-meetings { color: #c084fc; }
+.mpd-label-ideas    { color: #fb923c; }
+.mpd-group-total { font-size: 10px; color: var(--muted); font-family: 'Cairo', sans-serif; margin-right: auto; }
+
+.mpd-task-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 5px 4px; font-size: 12px; flex-wrap: wrap;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.mpd-task-row:last-child { border-bottom: none; }
+.mpd-type   { color: var(--muted); min-width: 62px; font-size: 11px; flex-shrink: 0; }
+.mpd-title  { flex: 1; min-width: 120px; }
+.mpd-role   { font-size: 10px; padding: 2px 7px; border-radius: 2px; white-space: nowrap; flex-shrink: 0; }
+.mpd-role-owner    { background: rgba(201,168,76,0.15); color: var(--gold); }
+.mpd-role-team     { background: rgba(123,179,255,0.1); color: #7bb3ff; }
+.mpd-role-producer { background: rgba(58,158,101,0.12); color: var(--green2); }
+.mpd-role-meetings { background: rgba(192,132,252,0.1); color: #c084fc; }
+.mpd-role-ideas    { background: rgba(251,146,60,0.1);  color: #fb923c; }
+.mpd-pts    { font-family: 'Oswald'; font-size: 14px; min-width: 80px; text-align: center; flex-shrink: 0; }
+.mpd-status { font-size: 11px; min-width: 100px; flex-shrink: 0; }
+.mpd-empty  { padding: 12px 16px; color: var(--muted); font-size: 12px; }
+.mpd-bonus-extra { color: var(--green2); font-size: 11px; margin-right: 4px; font-family: 'Cairo', sans-serif; }
 
 .lb-rank-cell {
   font-family: 'Oswald', sans-serif;
