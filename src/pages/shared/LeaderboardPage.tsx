@@ -29,7 +29,7 @@ const TYPE_LABELS: Record<string, string> = {
 const nf = new Intl.NumberFormat('en-US');
 
 function getMonthLabel(month: string): string {
-  return new Date(month + '-01').toLocaleDateString('ar-SA', { month: 'long', year: 'numeric' });
+  return new Date(month + '-01').toLocaleDateString('ar-SA-u-ca-gregory', { month: 'long', year: 'numeric' });
 }
 
 const POINTS_START_MONTH = '2026-09';

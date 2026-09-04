@@ -92,7 +92,7 @@
   content: ''; position: absolute; inset-inline: 0; top: 0; height: 1px;
   background: linear-gradient(90deg, transparent, rgba(246,196,85,0.6), transparent);
 }
-.lb-podium-eyebrow { text-align: center; font-size: 11px; font-weight: 700; letter-spacing: 4px; color: var(--lb-mute); }
+.lb-podium-eyebrow { text-align: center; font-size: 11px; font-weight: 700; color: var(--lb-mute); }
 
 .lb-podium-wrap {
   display: grid; grid-template-columns: 1fr; align-items: end; gap: 32px;
@@ -219,7 +219,7 @@
 .lb-table thead { position: sticky; top: 0; z-index: 1; background: var(--lb-panel2); }
 .lb-table th {
   font-size: 11px; font-weight: 700;
-  color: var(--lb-mute); padding: 12px; text-align: center; white-space: nowrap; letter-spacing: 0.5px;
+  color: var(--lb-mute); padding: 12px; text-align: center; white-space: nowrap;
 }
 .lb-th-rank, .lb-th-member { text-align: right; }
 .lb-th-expand { width: 32px; }
