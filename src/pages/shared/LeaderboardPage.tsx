@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, Fragment } from 'react';
 import { useAuthStore } from '../../stores/authStore';
 import { useMembersStore } from '../../stores/membersStore';
 import { useTasksStore } from '../../stores/tasksStore';
@@ -13,6 +13,7 @@ import {
 } from '../../services/points.service';
 import { loadAllMeetings } from '../../services/meetings.service';
 import type { Meeting } from '../../types';
+import { MemberPointsDetail } from '../../components/ui/MemberPointsDetail';
 import './LeaderboardPage.css';
 
 const TYPE_LABELS: Record<string, string> = {
@@ -66,6 +67,7 @@ export function LeaderboardPage() {
   const [prizeThird, setPrizeThird] = useState('');
   const [savingPrizes, setSavingPrizes] = useState(false);
   const [meetings, setMeetings] = useState<Meeting[]>([]);
+  const [expandedMember, setExpandedMember] = useState<string | null>(null);
 
   const monthOptions = buildMonthOptions();
 
@@ -240,40 +242,54 @@ export function LeaderboardPage() {
                 <th>حضور</th>
                 <th>أفكار</th>
                 <th>المجموع</th>
+                <th style={{ width: 24 }} />
               </tr>
             </thead>
             <tbody>
               {entries.map(e => (
-                <tr key={e.user.id} className={e.rank <= 3 ? `lb-row-top lb-row-${e.rank}` : ''}>
-                  <td className="lb-rank-cell">
-                    {e.rank === 1 ? '🥇' : e.rank === 2 ? '🥈' : e.rank === 3 ? '🥉' : e.rank}
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div style={{
-                        width: 28, height: 28, background: e.user.color || 'var(--border)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 13, fontWeight: 700, color: '#fff', flexShrink: 0, overflow: 'hidden',
-                      }}>
-                        {e.user.photoURL
-                          ? <img src={e.user.photoURL} alt={e.user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          : e.user.name.charAt(0)}
+                <Fragment key={e.user.id}>
+                  <tr
+                    className={`${e.rank <= 3 ? `lb-row-top lb-row-${e.rank}` : ''} lb-row-clickable`}
+                    onClick={() => setExpandedMember(expandedMember === e.user.id ? null : e.user.id)}
+                  >
+                    <td className="lb-rank-cell">
+                      {e.rank === 1 ? '🥇' : e.rank === 2 ? '🥈' : e.rank === 3 ? '🥉' : e.rank}
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{
+                          width: 28, height: 28, background: e.user.color || 'var(--border)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: 13, fontWeight: 700, color: '#fff', flexShrink: 0, overflow: 'hidden',
+                        }}>
+                          {e.user.photoURL
+                            ? <img src={e.user.photoURL} alt={e.user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            : e.user.name.charAt(0)}
+                        </div>
+                        <span style={{ fontSize: 13 }}>{e.user.name}</span>
                       </div>
-                      <span style={{ fontSize: 13 }}>{e.user.name}</span>
-                    </div>
-                  </td>
-                  <td>{e.breakdown.x_content || '—'}</td>
-                  <td>{e.breakdown.short || '—'}</td>
-                  <td>{e.breakdown.video || '—'}</td>
-                  <td>{e.breakdown.writing || '—'}</td>
-                  <td>{e.breakdown.design || '—'}</td>
-                  <td>{e.breakdown.podcast || '—'}</td>
-                  <td>{e.breakdown.event_coverage || '—'}</td>
-                  <td>{e.breakdown.bonus || '—'}</td>
-                  <td>{e.breakdown.meetings || '—'}</td>
-                  <td>{e.breakdown.ideas || '—'}</td>
-                  <td className="lb-total-cell">{e.breakdown.total}</td>
-                </tr>
+                    </td>
+                    <td>{e.breakdown.x_content || '—'}</td>
+                    <td>{e.breakdown.short || '—'}</td>
+                    <td>{e.breakdown.video || '—'}</td>
+                    <td>{e.breakdown.writing || '—'}</td>
+                    <td>{e.breakdown.design || '—'}</td>
+                    <td>{e.breakdown.podcast || '—'}</td>
+                    <td>{e.breakdown.event_coverage || '—'}</td>
+                    <td>{e.breakdown.bonus || '—'}</td>
+                    <td>{e.breakdown.meetings || '—'}</td>
+                    <td>{e.breakdown.ideas || '—'}</td>
+                    <td className="lb-total-cell">{e.breakdown.total}</td>
+                    <td className="lb-expand-cell">{expandedMember === e.user.id ? '▲' : '▼'}</td>
+                  </tr>
+                  {expandedMember === e.user.id && (
+                    <tr className="lb-detail-row">
+                      <td colSpan={14}>
+                        <MemberPointsDetail userId={e.user.id} tasks={tasks} month={selectedMonth} />
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
               ))}
             </tbody>
           </table>
