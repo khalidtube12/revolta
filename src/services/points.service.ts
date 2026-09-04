@@ -146,14 +146,12 @@ export function buildLeaderboard(
 
   entries.sort((a, b) => b.breakdown.total - a.breakdown.total);
 
-  let rank = 1;
-  entries.forEach((e, i) => {
-    if (i > 0 && e.breakdown.total === entries[i - 1].breakdown.total) {
-      e.rank = entries[i - 1].rank;
-    } else {
-      e.rank = rank;
-    }
-    rank++;
+  let rank = 0;
+  let prevTotal: number | null = null;
+  entries.forEach(e => {
+    if (prevTotal === null || e.breakdown.total !== prevTotal) rank++;
+    e.rank = rank;
+    prevTotal = e.breakdown.total;
   });
 
   return entries;

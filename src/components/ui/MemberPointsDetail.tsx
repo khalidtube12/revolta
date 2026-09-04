@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { Task, Meeting, Idea } from '../../types';
 
 const POINTS_START_MONTH = '2026-09';
@@ -44,36 +45,60 @@ const STATUS_AR: Record<string, string> = {
   done: 'تمت', published: 'منشور', cancelled: 'ملغي',
 };
 
-// ─── Task row ─────────────────────────────────────────────────────────────────
+type GroupColor = 'owner' | 'team' | 'producer' | 'meetings' | 'ideas';
 
-interface TaskRowProps {
-  task: Task;
-  role: 'owner' | 'team' | 'producer';
-  pts: number;
+// ─── Item + card building blocks ───────────────────────────────────────────────
+
+function StatusPill({ earned }: { earned: boolean }) {
+  return earned ? (
+    <span className="mpd-pill mpd-pill-done">مكتملة</span>
+  ) : (
+    <span className="mpd-pill mpd-pill-pending">قيد التنفيذ</span>
+  );
 }
 
-function TaskRow({ task, role, pts }: TaskRowProps) {
-  const earned = isEarned(task);
-  const status = task.status || (task.done ? 'done' : 'pending');
-  const roleAr = role === 'owner' ? 'مالك' : role === 'team' ? 'شريك تيم' : 'ممنتج';
-  const baseType = TYPE_AR[task.type ?? ''] ?? task.type ?? '';
-  const label = task.isBonus ? `${baseType} (بونص)` : baseType;
+interface DetailItemProps {
+  title: string;
+  role: string;
+  pts: number;
+  earned: boolean;
+  sub?: string;
+  extra?: string;
+}
 
+function DetailItem({ title, role, pts, earned, sub, extra }: DetailItemProps) {
   return (
-    <div className="mpd-task-row">
-      <span className="mpd-type">{label}</span>
-      <span className="mpd-title">{task.title}</span>
-      <span className={`mpd-role mpd-role-${role}`}>{roleAr}</span>
-      <span className="mpd-pts" style={{ color: earned ? 'var(--gold)' : 'var(--muted)' }}>
-        {role === 'producer' ? '+' : ''}{pts} نقطة
-        {role === 'owner' && (task.bonusPoints ?? 0) > 0 && (
-          <span className="mpd-bonus-extra"> +{task.bonusPoints} مكافأة</span>
-        )}
-      </span>
-      <span className="mpd-status" style={{ color: earned ? 'var(--green2)' : 'var(--muted)' }}>
-        {STATUS_AR[status] ?? status}
-        {!earned && ' — لم تُحتسب'}
-      </span>
+    <div className={`mpd-item${earned ? '' : ' mpd-item-muted'}`}>
+      <div className="mpd-item-main">
+        <p className="mpd-item-title">{title}</p>
+        <p className="mpd-item-role">{role}{sub ? ` · ${sub}` : ''}</p>
+      </div>
+      <div className="mpd-item-meta">
+        <span className="mpd-item-pts">+{pts} نقطة{extra ? ` ${extra}` : ''}</span>
+        <StatusPill earned={earned} />
+      </div>
+    </div>
+  );
+}
+
+interface DetailCardProps {
+  label: string;
+  note: string;
+  color: GroupColor;
+  totalLabel: string;
+  wide?: boolean;
+  children: ReactNode;
+}
+
+function DetailCard({ label, note, color, totalLabel, wide, children }: DetailCardProps) {
+  return (
+    <div className={`mpd-card mpd-card-${color}${wide ? ' mpd-card-wide' : ''}`}>
+      <div className="mpd-card-hdr">
+        <p className="mpd-card-label">{label}</p>
+        <span className="mpd-card-total">{totalLabel}</span>
+      </div>
+      <p className="mpd-card-note">{note}</p>
+      <div className="mpd-card-items">{children}</div>
     </div>
   );
 }
@@ -86,11 +111,13 @@ interface Props {
   meetings: Meeting[];
   ideas: Idea[];
   month: string;
+  memberName?: string;
+  monthLabel?: string;
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function MemberPointsDetail({ userId, tasks, meetings, ideas, month }: Props) {
+export function MemberPointsDetail({ userId, tasks, meetings, ideas, month, memberName, monthLabel }: Props) {
   const monthTasks = tasks.filter(t => getTaskMonth(t) === month);
 
   // مهام المالك
@@ -113,7 +140,6 @@ export function MemberPointsDetail({ userId, tasks, meetings, ideas, month }: Pr
   });
 
   // أفكار — نقطة عندما تُسند فكرتك لشخص آخر ويُنجز مهمتها
-  // نبحث في كل المهام لأن الشهر يُحدَّد من تاريخ الفكرة وليس deadline المهمة
   const myIdeaCredits: { task: Task; idea: Idea }[] = [];
   for (const t of tasks) {
     if (!isEarned(t) || !t.linkedIdeaId) continue;
@@ -135,90 +161,109 @@ export function MemberPointsDetail({ userId, tasks, meetings, ideas, month }: Pr
 
   const hasAny = ownedTasks.length + teamTasks.length + producerTasks.length + myMeetings.length + myIdeaCredits.length > 0;
 
-  if (!hasAny) return <div className="mpd-empty">لا توجد بيانات لهذا الشهر</div>;
-
   return (
     <div className="mpd-wrap">
+      <div className="mpd-heading">
+        <span className="mpd-heading-bar" />
+        تفاصيل نقاط {memberName ?? 'العضو'}{monthLabel ? ` — ${monthLabel}` : ''}
+      </div>
 
-      {/* مهام المالك */}
-      {ownedTasks.length > 0 && (
-        <div className="mpd-group">
-          <div className="mpd-group-label mpd-label-owner">
-            مهام المالك
-            <span className="mpd-group-total">{earnedOwned} نقطة محتسبة</span>
-          </div>
-          {ownedTasks.map(t => (
-            <TaskRow key={t.id} task={t} role="owner"
-              pts={t.points ?? POINTS_BY_TYPE[t.type ?? ''] ?? 0} />
-          ))}
+      {!hasAny ? (
+        <p className="mpd-empty">لا توجد بيانات لهذا الشهر</p>
+      ) : (
+        <div className="mpd-grid">
+          {ownedTasks.length > 0 && (
+            <DetailCard label="🟡 مهام المالك" note="مهام يملكها العضو" color="owner" totalLabel={`${earnedOwned} نقطة محتسبة`}>
+              {ownedTasks.map(t => {
+                const earned = isEarned(t);
+                const pts = t.points ?? POINTS_BY_TYPE[t.type ?? ''] ?? 0;
+                const baseType = TYPE_AR[t.type ?? ''] ?? t.type ?? '';
+                const status = t.status || (t.done ? 'done' : 'pending');
+                return (
+                  <DetailItem
+                    key={t.id}
+                    title={t.title}
+                    role={`مالك · ${t.isBonus ? `${baseType} (بونص)` : baseType}`}
+                    pts={pts}
+                    earned={earned}
+                    sub={STATUS_AR[status] ?? status}
+                    extra={(t.bonusPoints ?? 0) > 0 ? `(+${t.bonusPoints} مكافأة)` : undefined}
+                  />
+                );
+              })}
+            </DetailCard>
+          )}
+
+          {producerTasks.length > 0 && (
+            <DetailCard label="🟢 إنتاج ممنتج" note="نقاط مونتاج مقطع / شورت" color="producer" totalLabel={`+${earnedProducer} نقطة محتسبة`}>
+              {producerTasks.map(t => {
+                const earned = isEarned(t);
+                const status = t.status || (t.done ? 'done' : 'pending');
+                return (
+                  <DetailItem
+                    key={t.id}
+                    title={t.title}
+                    role="ممنتج"
+                    pts={getProducerBonus(t)}
+                    earned={earned}
+                    sub={STATUS_AR[status] ?? status}
+                  />
+                );
+              })}
+            </DetailCard>
+          )}
+
+          {teamTasks.length > 0 && (
+            <DetailCard label="🔵 مشاركة في فريق" note="مهام شارك فيها مع غيره" color="team" totalLabel={`${earnedTeam} نقطة محتسبة`}>
+              {teamTasks.map(t => {
+                const earned = isEarned(t);
+                const pts = t.points ?? POINTS_BY_TYPE[t.type ?? ''] ?? 0;
+                const baseType = TYPE_AR[t.type ?? ''] ?? t.type ?? '';
+                const status = t.status || (t.done ? 'done' : 'pending');
+                return (
+                  <DetailItem
+                    key={t.id}
+                    title={t.title}
+                    role={`شريك تيم · ${baseType}`}
+                    pts={pts}
+                    earned={earned}
+                    sub={STATUS_AR[status] ?? status}
+                  />
+                );
+              })}
+            </DetailCard>
+          )}
+
+          {myMeetings.length > 0 && (
+            <DetailCard label="🟣 حضور الاجتماعات" note="100 نقطة لكل اجتماع محضور" color="meetings" totalLabel={`${earnedMeetings} نقطة`}>
+              {myMeetings.map(m => (
+                <DetailItem key={m.id} title={m.title} role="حضور" pts={MEETING_PTS} earned sub={m.date} />
+              ))}
+            </DetailCard>
+          )}
+
+          {myIdeaCredits.length > 0 && (
+            <DetailCard
+              label="🟠 أفكار"
+              note="50 نقطة لكل فكرة نُفّذت واعتُمدت"
+              color="ideas"
+              totalLabel={`${earnedIdeas} نقطة`}
+              wide
+            >
+              {myIdeaCredits.map(({ task, idea }) => (
+                <DetailItem
+                  key={task.id}
+                  title={task.title}
+                  role="مقترح الفكرة"
+                  pts={IDEA_PTS}
+                  earned
+                  sub={TYPE_AR[idea.type] ?? idea.type}
+                />
+              ))}
+            </DetailCard>
+          )}
         </div>
       )}
-
-      {/* مشاركة في تيم */}
-      {teamTasks.length > 0 && (
-        <div className="mpd-group">
-          <div className="mpd-group-label mpd-label-team">
-            مشاركة في تيم
-            <span className="mpd-group-total">{earnedTeam} نقطة محتسبة</span>
-          </div>
-          {teamTasks.map(t => (
-            <TaskRow key={t.id} task={t} role="team"
-              pts={t.points ?? POINTS_BY_TYPE[t.type ?? ''] ?? 0} />
-          ))}
-        </div>
-      )}
-
-      {/* إنتاج */}
-      {producerTasks.length > 0 && (
-        <div className="mpd-group">
-          <div className="mpd-group-label mpd-label-producer">
-            إنتاج (ممنتج)
-            <span className="mpd-group-total">+{earnedProducer} نقطة محتسبة</span>
-          </div>
-          {producerTasks.map(t => (
-            <TaskRow key={t.id} task={t} role="producer" pts={getProducerBonus(t)} />
-          ))}
-        </div>
-      )}
-
-      {/* حضور الاجتماعات */}
-      {myMeetings.length > 0 && (
-        <div className="mpd-group">
-          <div className="mpd-group-label mpd-label-meetings">
-            حضور الاجتماعات
-            <span className="mpd-group-total">{earnedMeetings} نقطة</span>
-          </div>
-          {myMeetings.map(m => (
-            <div key={m.id} className="mpd-task-row">
-              <span className="mpd-type">اجتماع</span>
-              <span className="mpd-title">{m.title}</span>
-              <span className="mpd-role mpd-role-meetings">حضور</span>
-              <span className="mpd-pts" style={{ color: 'var(--gold)' }}>{MEETING_PTS} نقطة</span>
-              <span className="mpd-status" style={{ color: 'var(--muted)' }}>{m.date}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* أفكار */}
-      {myIdeaCredits.length > 0 && (
-        <div className="mpd-group">
-          <div className="mpd-group-label mpd-label-ideas">
-            أفكار (فكرتك أُسندت لغيرك)
-            <span className="mpd-group-total">{earnedIdeas} نقطة</span>
-          </div>
-          {myIdeaCredits.map(({ task, idea }) => (
-            <div key={task.id} className="mpd-task-row">
-              <span className="mpd-type">{TYPE_AR[idea.type] ?? idea.type}</span>
-              <span className="mpd-title">{task.title}</span>
-              <span className="mpd-role mpd-role-ideas">مقترح الفكرة</span>
-              <span className="mpd-pts" style={{ color: 'var(--gold)' }}>+{IDEA_PTS} نقطة</span>
-              <span className="mpd-status" style={{ color: 'var(--green2)' }}>مكتملة</span>
-            </div>
-          ))}
-        </div>
-      )}
-
     </div>
   );
 }
