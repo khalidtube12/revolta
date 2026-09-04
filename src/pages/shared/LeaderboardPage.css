@@ -209,6 +209,8 @@
 .mpd-label-owner    { color: var(--gold); }
 .mpd-label-team     { color: #7bb3ff; }
 .mpd-label-producer { color: var(--green2); }
+.mpd-label-meetings { color: #c084fc; }
+.mpd-label-ideas    { color: #fb923c; }
 .mpd-group-total { font-size: 10px; color: var(--muted); font-family: 'Cairo', sans-serif; margin-right: auto; }
 
 .mpd-task-row {
@@ -223,9 +225,12 @@
 .mpd-role-owner    { background: rgba(201,168,76,0.15); color: var(--gold); }
 .mpd-role-team     { background: rgba(123,179,255,0.1); color: #7bb3ff; }
 .mpd-role-producer { background: rgba(58,158,101,0.12); color: var(--green2); }
+.mpd-role-meetings { background: rgba(192,132,252,0.1); color: #c084fc; }
+.mpd-role-ideas    { background: rgba(251,146,60,0.1);  color: #fb923c; }
 .mpd-pts    { font-family: 'Oswald'; font-size: 14px; min-width: 80px; text-align: center; flex-shrink: 0; }
 .mpd-status { font-size: 11px; min-width: 100px; flex-shrink: 0; }
 .mpd-empty  { padding: 12px 16px; color: var(--muted); font-size: 12px; }
+.mpd-bonus-extra { color: var(--green2); font-size: 11px; margin-right: 4px; font-family: 'Cairo', sans-serif; }
 
 .lb-rank-cell {
   font-family: 'Oswald', sans-serif;

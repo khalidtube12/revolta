@@ -285,7 +285,13 @@ export function LeaderboardPage() {
                   {expandedMember === e.user.id && (
                     <tr className="lb-detail-row">
                       <td colSpan={14}>
-                        <MemberPointsDetail userId={e.user.id} tasks={tasks} month={selectedMonth} />
+                        <MemberPointsDetail
+                          userId={e.user.id}
+                          tasks={tasks}
+                          meetings={meetings}
+                          ideas={ideas}
+                          month={selectedMonth}
+                        />
                       </td>
                     </tr>
                   )}
