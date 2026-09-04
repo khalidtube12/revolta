@@ -99,6 +99,10 @@ export function EditTaskModal({ open, task, onClose, onSuccess }: EditTaskModalP
       }
       console.log('[EditTaskModal] updateData:', JSON.stringify(updateData));
       await updateTask(task.id, updateData);
+      // verify what Firebase actually has now
+      const { dbGet } = await import('../../services/db.service');
+      const saved = await dbGet<Record<string, unknown>>('tasks/' + task.id);
+      console.log('[EditTaskModal] Firebase after save:', JSON.stringify(saved));
       onClose();
       onSuccess?.();
     } catch (e: unknown) {
