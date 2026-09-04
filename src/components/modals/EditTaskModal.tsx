@@ -94,8 +94,9 @@ export function EditTaskModal({ open, task, onClose, onSuccess }: EditTaskModalP
         updateData.memberId = primary;
         updateData.teamMemberIds = rest;
       }
-      if (isProducerType && producerId) {
-        updateData.producerId = producerId;
+      if (isProducerType) {
+        // send null explicitly to delete from Firebase when cleared
+        (updateData as Record<string, unknown>)['producerId'] = producerId || null;
       }
       console.log('[EditTaskModal] updateData:', JSON.stringify(updateData));
       await updateTask(task.id, updateData);
