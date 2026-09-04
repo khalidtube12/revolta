@@ -113,8 +113,9 @@ export function MemberPointsDetail({ userId, tasks, meetings, ideas, month }: Pr
   });
 
   // أفكار — نقطة عندما تُسند فكرتك لشخص آخر ويُنجز مهمتها
+  // نبحث في كل المهام لأن الشهر يُحدَّد من تاريخ الفكرة وليس deadline المهمة
   const myIdeaCredits: { task: Task; idea: Idea }[] = [];
-  for (const t of monthTasks) {
+  for (const t of tasks) {
     if (!isEarned(t) || !t.linkedIdeaId) continue;
     const idea = ideas.find(i => i.id === t.linkedIdeaId);
     if (!idea || idea.createdBy !== userId) continue;
