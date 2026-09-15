@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
 import { ProfileModal } from '../modals/ProfileModal';
+import { PushPermissionBanner } from '../ui/PushPermissionBanner';
 import './AppShell.css';
 
 export function AppShell() {
@@ -31,6 +32,7 @@ export function AppShell() {
       <div className="layout">
         <Sidebar onOpenProfile={() => setProfileOpen(true)} />
         <div className="content">
+          <PushPermissionBanner />
           <Outlet />
         </div>
       </div>

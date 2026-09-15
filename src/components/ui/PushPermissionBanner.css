@@ -1,0 +1,56 @@
+.push-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--card2);
+  border: 1px solid var(--border2);
+  border-right: 3px solid var(--gold);
+  padding: 14px 16px;
+  margin-bottom: 24px;
+  position: relative;
+  animation: fadeUp 0.3s ease;
+}
+
+.push-banner-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.push-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.push-banner-text strong {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.push-banner-text span {
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.6;
+}
+
+.push-banner-close {
+  background: none;
+  border: 1px solid var(--border2);
+  color: var(--muted);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 11px;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.push-banner-close:hover {
+  border-color: var(--red);
+  color: var(--red);
+}

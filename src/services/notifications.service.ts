@@ -1,5 +1,5 @@
 import { ref, onValue, off } from 'firebase/database';
-import { db } from './firebase';
+import { db, auth } from './firebase';
 import { dbPush, dbUpdate, dbGet, dbRemove } from './db.service';
 import type { Notification } from '../types';
 
@@ -24,7 +24,8 @@ export function listenToNotifications(
 const MAX_NOTIFS_PER_USER = 5;
 
 export async function createNotification(notification: Omit<Notification, 'id'>) {
-  await dbPush('notifs', notification);
+  const notifId = await dbPush('notifs', notification);
+  if (notifId) triggerPush(notifId).catch(() => {});
 
   // إذا تجاوز عدد إشعارات المستخدم الحد، احذف الكل
   const data = await dbGet<Record<string, Omit<Notification, 'id'>>>('notifs');
@@ -37,6 +38,17 @@ export async function createNotification(notification: Omit<Notification, 'id'>)
     const toDelete = userNotifs.slice(MAX_NOTIFS_PER_USER);
     await Promise.all(toDelete.map(([id]) => dbRemove('notifs/' + id)));
   }
+}
+
+// إرسال push للجوال — best-effort، لا يوقف تدفق الإشعار داخل التطبيق لو فشل
+async function triggerPush(notifId: string): Promise<void> {
+  const idToken = await auth.currentUser?.getIdToken();
+  if (!idToken) return;
+  await fetch('/api/send-push', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+    body: JSON.stringify({ notifId }),
+  });
 }
 
 export async function markAllRead(notifications: Notification[]) {
