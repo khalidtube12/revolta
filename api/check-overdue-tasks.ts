@@ -1,8 +1,8 @@
 import type { IncomingMessage, ServerResponse } from 'http';
 import { getDatabase } from 'firebase-admin/database';
 import { getMessaging } from 'firebase-admin/messaging';
-import { getAdminApp } from './_lib/firebaseAdmin';
-import { sendPushToUser } from './_lib/sendPush';
+import { getAdminApp } from '../lib/firebaseAdmin';
+import { sendPushToUser } from '../lib/sendPush';
 
 interface VercelRequest extends IncomingMessage {
   headers: IncomingMessage['headers'];
