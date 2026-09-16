@@ -83,6 +83,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const tokensSnap = await db.ref(`fcmTokens/${notif.userId}`).get();
   const tokens = tokensSnap.exists() ? Object.keys(tokensSnap.val() as Record<string, true>) : [];
   console.log('[send-push] tokens found for user', notif.userId, '->', tokens.length);
+  console.log('[send-push] token previews', tokens.map(t => ({ length: t.length, start: t.slice(0, 12), end: t.slice(-6), hasColon: t.includes(':') })));
   if (tokens.length === 0) {
     res.status(200).json({ sent: 0 });
     return;
