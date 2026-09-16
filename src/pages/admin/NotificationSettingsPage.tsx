@@ -8,6 +8,7 @@ import {
 } from '../../services/notificationSettings.service';
 import { Card } from '../../components/ui/Card';
 import { Spinner } from '../../components/ui/Spinner';
+import { EmptyState } from '../../components/ui/EmptyState';
 import type { NotificationType } from '../../types';
 
 const TYPE_META: Record<Exclude<NotificationType, 'admin_broadcast'>, { label: string; desc: string }> = {
@@ -21,6 +22,7 @@ type RecipientMode = 'all' | 'one' | 'multi';
 export function NotificationSettingsPage() {
   const { members, loadMembers } = useMembersStore();
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [settings, setSettings] = useState<NotificationSettingsMap>({});
   const [savingType, setSavingType] = useState<NotificationType | null>(null);
 
@@ -34,14 +36,30 @@ export function NotificationSettingsPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [, s] = await Promise.all([loadMembers(), loadNotificationTypeSettings()]);
-    setSettings(s);
-    setLoading(false);
+    setLoadError(false);
+    try {
+      const [, s] = await Promise.all([loadMembers(), loadNotificationTypeSettings()]);
+      setSettings(s);
+    } catch {
+      setLoadError(true);
+    } finally {
+      setLoading(false);
+    }
   }, [loadMembers]);
 
   useEffect(() => { load(); }, [load]);
 
   if (loading) return <Spinner />;
+  if (loadError) {
+    return (
+      <>
+        <EmptyState icon="⚠️" message="تعذّر تحميل الإعدادات — تأكد من نشر قواعد قاعدة البيانات في Firebase Console" />
+        <div style={{ textAlign: 'center' }}>
+          <button className="btn btn-sm" onClick={load}>إعادة المحاولة</button>
+        </div>
+      </>
+    );
+  }
 
   const toggleTypeField = async (type: NotificationType, field: 'enabled' | 'pushEnabled') => {
     setSavingType(type);
