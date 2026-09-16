@@ -40,6 +40,13 @@
       }
     },
 
+    "fcmTokens": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+
     "polls": {
       ".read": true,
       "$pollId": {
