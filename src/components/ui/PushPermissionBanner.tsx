@@ -9,6 +9,7 @@ export function PushPermissionBanner() {
   const { profile } = useAuthStore();
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -34,12 +35,21 @@ export function PushPermissionBanner() {
   const handleEnable = async () => {
     if (!profile) return;
     setLoading(true);
+    setError(null);
     try {
-      await enablePushNotifications(profile.id);
+      const result = await enablePushNotifications(profile.id);
+      if (result === 'granted') {
+        setShow(false);
+        localStorage.setItem(DISMISS_KEY, '1');
+      } else if (result === 'denied') {
+        setError('رفضت الإذن من إعدادات الجهاز — لازم تفعّله يدوياً من إعدادات الإشعارات');
+      } else {
+        setError('المتصفح ما يدعم الإشعارات بهذي الطريقة');
+      }
+    } catch {
+      setError('صار خطأ أثناء التفعيل — جرب مرة ثانية');
     } finally {
       setLoading(false);
-      setShow(false);
-      localStorage.setItem(DISMISS_KEY, '1');
     }
   };
 
@@ -50,7 +60,7 @@ export function PushPermissionBanner() {
       <div className="push-banner-icon">🔔</div>
       <div className="push-banner-text">
         <strong>فعّل إشعارات الجوال</strong>
-        <span>خلّك أول من يعرف بالمهام والتحديثات الجديدة</span>
+        <span>{error || 'خلّك أول من يعرف بالمهام والتحديثات الجديدة'}</span>
       </div>
       <button className="btn btn-sm btn-gold" disabled={loading} onClick={handleEnable}>
         {loading ? '...' : 'تفعيل'}
