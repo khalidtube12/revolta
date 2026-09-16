@@ -20,6 +20,7 @@ export interface UserPermissions {
   viewIdeas: boolean;
   manageBonus: boolean;
   manageMeetings: boolean;
+  manageNotifications: boolean;
 }
 
 export const DEFAULT_PERMISSIONS: UserPermissions = {
@@ -44,6 +45,7 @@ export const DEFAULT_PERMISSIONS: UserPermissions = {
   viewIdeas: true,
   manageBonus: false,
   manageMeetings: false,
+  manageNotifications: false,
 };
 
 export const CONTENT_MANAGER_PERMISSIONS: UserPermissions = {
@@ -68,6 +70,7 @@ export const CONTENT_MANAGER_PERMISSIONS: UserPermissions = {
   viewIdeas: true,
   manageBonus: true,
   manageMeetings: true,
+  manageNotifications: true,
 };
 
 export type MemberRolePreset = 'admin' | 'content_manager' | 'member';
@@ -170,15 +173,24 @@ export interface Task {
   pointsApproved?: boolean;
   pointsApprovedBy?: string;
   pointsApprovedAt?: number;
+  overdueNotifiedAt?: number;
 }
+
+export type NotificationType = 'task_assigned' | 'meeting_now' | 'task_overdue' | 'admin_broadcast';
 
 export interface Notification {
   id: string;
   userId: string;
+  type: NotificationType;
   title: string;
   body: string;
   read: boolean;
   createdAt: number;
+}
+
+export interface NotificationTypeSettings {
+  enabled?: boolean;
+  pushEnabled?: boolean;
 }
 
 export interface Meeting {

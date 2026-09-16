@@ -1,7 +1,7 @@
 import { ref, onValue, off } from 'firebase/database';
 import { db, auth } from './firebase';
 import { dbPush, dbUpdate, dbGet, dbRemove } from './db.service';
-import type { Notification } from '../types';
+import type { Notification, NotificationTypeSettings } from '../types';
 
 export function listenToNotifications(
   userId: string,
@@ -24,8 +24,11 @@ export function listenToNotifications(
 const MAX_NOTIFS_PER_USER = 5;
 
 export async function createNotification(notification: Omit<Notification, 'id'>) {
+  const typeSettings = await dbGet<NotificationTypeSettings>(`settings/notifications/${notification.type}`);
+  if (typeSettings?.enabled === false) return;
+
   const notifId = await dbPush('notifs', notification);
-  if (notifId) triggerPush(notifId).catch(() => {});
+  if (notifId && typeSettings?.pushEnabled !== false) triggerPush(notifId).catch(() => {});
 
   // إذا تجاوز عدد إشعارات المستخدم الحد، احذف الكل
   const data = await dbGet<Record<string, Omit<Notification, 'id'>>>('notifs');

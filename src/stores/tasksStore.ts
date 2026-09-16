@@ -52,6 +52,7 @@ export const useTasksStore = create<TasksState>((set, get) => ({
       Promise.all(allRecipients.map(userId =>
         createNotification({
           userId,
+          type: 'task_assigned',
           title: notifyTitle,
           body: notifyBody || '',
           read: false,

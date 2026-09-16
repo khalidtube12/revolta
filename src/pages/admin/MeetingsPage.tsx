@@ -4,6 +4,7 @@ import { useMembersStore } from '../../stores/membersStore';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Spinner } from '../../components/ui/Spinner';
 import { loadAllMeetings, createMeeting, saveAttendance, deleteMeeting, MEETING_POINTS } from '../../services/meetings.service';
+import { createNotification } from '../../services/notifications.service';
 import type { Meeting } from '../../types';
 import './MeetingsPage.css';
 
@@ -24,6 +25,7 @@ export function MeetingsPage() {
   const [attendanceModal, setAttendanceModal] = useState<Meeting | null>(null);
   const [attendanceMap, setAttendanceMap] = useState<Record<string, boolean>>({});
   const [savingAttendance, setSavingAttendance] = useState(false);
+  const [notifyingId, setNotifyingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -62,6 +64,22 @@ export function MeetingsPage() {
     if (!confirm('حذف الاجتماع؟')) return;
     await deleteMeeting(id);
     load();
+  };
+
+  const handleNotifyNow = async (m: Meeting) => {
+    if (!confirm(`تنبيه كل الأعضاء بأن اجتماع "${m.title}" بدأ الآن؟`)) return;
+    setNotifyingId(m.id);
+    await Promise.all(members.map(u =>
+      createNotification({
+        userId: u.id,
+        type: 'meeting_now',
+        title: '📢 اجتماع الآن: ' + m.title,
+        body: 'الاجتماع بدأ الآن — انضم الآن',
+        read: false,
+        createdAt: Date.now(),
+      })
+    )).catch(() => {});
+    setNotifyingId(null);
   };
 
   if (loading) return <Spinner />;
@@ -144,6 +162,11 @@ export function MeetingsPage() {
                       )}
                     </div>
                     <div className="meeting-actions">
+                      {canManage && (
+                        <button className="btn btn-xs btn-ghost" disabled={notifyingId === m.id} onClick={() => handleNotifyNow(m)}>
+                          {notifyingId === m.id ? <div className="spinner" /> : '🔔 نبّه الأعضاء'}
+                        </button>
+                      )}
                       {canManage && (
                         <button className="btn btn-xs" onClick={() => openAttendance(m)}>
                           تسجيل الحضور

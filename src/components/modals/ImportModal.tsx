@@ -118,6 +118,7 @@ export function ImportModal({ open, onClose, onSuccess }: ImportModalProps) {
         });
         createNotification({
           userId: r.memberId!,
+          type: 'task_assigned',
           title: '📋 مهمة جديدة: ' + r.title,
           body: 'تم إسناد مهمة جديدة إليك' + (r.deadline ? ' — تاريخ النشر: ' + new Date(r.deadline).toLocaleDateString('ar') : ''),
           read: false,

@@ -269,6 +269,7 @@ export function MemberDetailPage() {
               viewIdeas: 'عرض أفكار المقاطع',
               manageBonus: 'إضافة نقاط مكافأة',
               manageMeetings: 'إدارة الاجتماعات',
+              manageNotifications: 'إدارة إعدادات الإشعارات',
             }) as [keyof UserPermissions, string][]).map(([key, label]) => {
               const perms = member.permissions ?? DEFAULT_PERMISSIONS;
               const active = perms[key] ?? DEFAULT_PERMISSIONS[key];

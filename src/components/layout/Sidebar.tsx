@@ -36,6 +36,7 @@ export function Sidebar({ isMobile, onClose, onOpenProfile }: SidebarProps) {
     { path: '/leaderboard', icon: '🥇', label: 'الترتيب الشهري' },
     { path: '/meetings', icon: '🗓', label: 'الاجتماعات', permission: 'manageMeetings' },
     { path: '/polls', icon: '🗳', label: 'التصويتات' },
+    { path: '/notification-settings', icon: '🔔', label: 'إعدادات الإشعارات', permission: 'manageNotifications' },
     { path: '/approvals', icon: '📩', label: 'طلبات التسجيل', badgeCount: pendingCount },
     { path: '/applications', icon: '📝', label: 'طلبات الانضمام' },
     { path: '/auditions', icon: '🎙️', label: 'الأودشن' },
@@ -54,6 +55,7 @@ export function Sidebar({ isMobile, onClose, onOpenProfile }: SidebarProps) {
     { path: '/leaderboard', icon: '🥇', label: 'الترتيب الشهري' },
     { path: '/meetings', icon: '🗓', label: 'الاجتماعات', permission: 'manageMeetings' },
     { path: '/polls', icon: '🗳', label: 'التصويتات', permission: 'managePolls' },
+    { path: '/notification-settings', icon: '🔔', label: 'إعدادات الإشعارات', permission: 'manageNotifications' },
   ];
 
   const items = (isAdmin ? adminItems : memberItems)

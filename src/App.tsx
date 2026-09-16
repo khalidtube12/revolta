@@ -34,6 +34,7 @@ import { SuggestionsAdminPage } from './pages/admin/SuggestionsAdminPage';
 import { AuditionsAdminPage } from './pages/admin/AuditionsAdminPage';
 import { LeaderboardPage } from './pages/shared/LeaderboardPage';
 import { MeetingsPage } from './pages/admin/MeetingsPage';
+import { NotificationSettingsPage } from './pages/admin/NotificationSettingsPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { firebaseUser, initialized } = useAuthStore();
@@ -111,6 +112,7 @@ export default function App() {
           <Route path="/suggestions-inbox" element={<AdminRoute><SuggestionsAdminPage /></AdminRoute>} />
           <Route path="/leaderboard" element={<LeaderboardPage />} />
           <Route path="/meetings" element={<MeetingsPage />} />
+          <Route path="/notification-settings" element={<PermissionRoute permission="manageNotifications"><NotificationSettingsPage /></PermissionRoute>} />
         </Route>
         <Route path="/apply" element={<ApplyPage />} />
         <Route path="/audition" element={<AuditionPage />} />
