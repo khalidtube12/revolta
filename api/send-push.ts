@@ -66,18 +66,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const notifSnap = await db.ref(`notifs/${notifId}`).get();
   if (!notifSnap.exists()) {
+    console.log('[send-push] notif not found', notifId);
     res.status(404).json({ error: 'notification not found' });
     return;
   }
 
   const notif = notifSnap.val() as StoredNotif;
+  console.log('[send-push] notif loaded', { notifId, userId: notif.userId, createdAt: notif.createdAt, ageMs: Date.now() - notif.createdAt });
+
   if (!notif.userId || typeof notif.createdAt !== 'number' || Date.now() - notif.createdAt > MAX_NOTIF_AGE_MS) {
+    console.log('[send-push] notif expired or malformed');
     res.status(410).json({ error: 'notification expired' });
     return;
   }
 
   const tokensSnap = await db.ref(`fcmTokens/${notif.userId}`).get();
   const tokens = tokensSnap.exists() ? Object.keys(tokensSnap.val() as Record<string, true>) : [];
+  console.log('[send-push] tokens found for user', notif.userId, '->', tokens.length);
   if (tokens.length === 0) {
     res.status(200).json({ sent: 0 });
     return;
@@ -86,6 +91,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const result = await getMessaging(app).sendEachForMulticast({
     tokens,
     notification: { title: notif.title, body: notif.body },
+  });
+
+  console.log('[send-push] fcm result', {
+    successCount: result.successCount,
+    failureCount: result.failureCount,
+    responses: result.responses.map(r => ({ success: r.success, code: r.error?.code, message: r.error?.message })),
   });
 
   const deadTokens: string[] = [];
@@ -99,5 +110,5 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     await Promise.all(deadTokens.map(t => db.ref(`fcmTokens/${notif.userId}/${t}`).remove()));
   }
 
-  res.status(200).json({ sent: result.successCount });
+  res.status(200).json({ sent: result.successCount, failed: result.failureCount });
 }
