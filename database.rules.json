@@ -47,6 +47,15 @@
       }
     },
 
+    "settings": {
+      "notifications": {
+        ".read": "auth != null",
+        "$type": {
+          ".write": "auth != null && (root.child('users').child(auth.uid).child('isAdmin').val() === true || root.child('users').child(auth.uid).child('permissions').child('manageNotifications').val() === true)"
+        }
+      }
+    },
+
     "polls": {
       ".read": true,
       "$pollId": {

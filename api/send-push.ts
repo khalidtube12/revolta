@@ -1,8 +1,9 @@
 import type { IncomingMessage, ServerResponse } from 'http';
-import { cert, getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getDatabase } from 'firebase-admin/database';
 import { getMessaging } from 'firebase-admin/messaging';
+import { getAdminApp } from './_lib/firebaseAdmin';
+import { sendPushToUser } from './_lib/sendPush';
 
 interface VercelRequest extends IncomingMessage {
   method?: string;
@@ -16,16 +17,6 @@ interface VercelResponse extends ServerResponse {
 }
 
 const MAX_NOTIF_AGE_MS = 2 * 60 * 1000;
-
-function getAdminApp() {
-  const existing = getApps();
-  if (existing.length) return existing[0]!;
-  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT as string);
-  return initializeApp({
-    credential: cert(serviceAccount),
-    databaseURL: process.env.FIREBASE_DATABASE_URL,
-  });
-}
 
 interface StoredNotif {
   userId: string;
@@ -66,56 +57,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const notifSnap = await db.ref(`notifs/${notifId}`).get();
   if (!notifSnap.exists()) {
-    console.log('[send-push] notif not found', notifId);
     res.status(404).json({ error: 'notification not found' });
     return;
   }
 
   const notif = notifSnap.val() as StoredNotif;
-  console.log('[send-push] notif loaded', { notifId, userId: notif.userId, createdAt: notif.createdAt, ageMs: Date.now() - notif.createdAt });
 
   if (!notif.userId || typeof notif.createdAt !== 'number' || Date.now() - notif.createdAt > MAX_NOTIF_AGE_MS) {
-    console.log('[send-push] notif expired or malformed');
     res.status(410).json({ error: 'notification expired' });
     return;
   }
 
-  const tokensSnap = await db.ref(`fcmTokens/${notif.userId}`).get();
-  const tokens = tokensSnap.exists() ? Object.keys(tokensSnap.val() as Record<string, true>) : [];
-  console.log('[send-push] tokens found for user', notif.userId, '->', tokens.length);
-  console.log('[send-push] token previews', tokens.map(t => ({ length: t.length, start: t.slice(0, 12), end: t.slice(-6), hasColon: t.includes(':') })));
-  if (tokens.length === 0) {
-    res.status(200).json({ sent: 0 });
-    return;
-  }
-
-  const result = await getMessaging(app).sendEachForMulticast({
-    tokens,
-    data: { title: notif.title, body: notif.body },
-  });
-
-  console.log('[send-push] fcm result', {
-    successCount: result.successCount,
-    failureCount: result.failureCount,
-    responses: result.responses.map(r => ({ success: r.success, code: r.error?.code, message: r.error?.message })),
-  });
-
-  const DEAD_TOKEN_CODES = new Set([
-    'messaging/registration-token-not-registered',
-    'messaging/invalid-registration-token',
-    'messaging/invalid-argument',
-  ]);
-  const deadTokens: string[] = [];
-  result.responses.forEach((r, i) => {
-    const code = r.error?.code;
-    if (!r.success && code && DEAD_TOKEN_CODES.has(code)) {
-      deadTokens.push(tokens[i]);
-    }
-  });
-  if (deadTokens.length) {
-    console.log('[send-push] removing dead tokens', deadTokens.length);
-    await Promise.all(deadTokens.map(t => db.ref(`fcmTokens/${notif.userId}/${t}`).remove()));
-  }
-
-  res.status(200).json({ sent: result.successCount, failed: result.failureCount });
+  const result = await sendPushToUser(db, getMessaging(app), notif.userId, notif.title, notif.body);
+  res.status(200).json(result);
 }
