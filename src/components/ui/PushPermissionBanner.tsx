@@ -46,8 +46,9 @@ export function PushPermissionBanner() {
       } else {
         setError('المتصفح ما يدعم الإشعارات بهذي الطريقة');
       }
-    } catch {
-      setError('صار خطأ أثناء التفعيل — جرب مرة ثانية');
+    } catch (err) {
+      const detail = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+      setError(`صار خطأ أثناء التفعيل: ${detail}`);
     } finally {
       setLoading(false);
     }
