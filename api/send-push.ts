@@ -99,14 +99,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     responses: result.responses.map(r => ({ success: r.success, code: r.error?.code, message: r.error?.message })),
   });
 
+  const DEAD_TOKEN_CODES = new Set([
+    'messaging/registration-token-not-registered',
+    'messaging/invalid-registration-token',
+    'messaging/invalid-argument',
+  ]);
   const deadTokens: string[] = [];
   result.responses.forEach((r, i) => {
     const code = r.error?.code;
-    if (!r.success && (code === 'messaging/registration-token-not-registered' || code === 'messaging/invalid-registration-token')) {
+    if (!r.success && code && DEAD_TOKEN_CODES.has(code)) {
       deadTokens.push(tokens[i]);
     }
   });
   if (deadTokens.length) {
+    console.log('[send-push] removing dead tokens', deadTokens.length);
     await Promise.all(deadTokens.map(t => db.ref(`fcmTokens/${notif.userId}/${t}`).remove()));
   }
 
