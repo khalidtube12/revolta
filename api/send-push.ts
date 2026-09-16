@@ -91,7 +91,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const result = await getMessaging(app).sendEachForMulticast({
     tokens,
-    notification: { title: notif.title, body: notif.body },
+    data: { title: notif.title, body: notif.body },
   });
 
   console.log('[send-push] fcm result', {
