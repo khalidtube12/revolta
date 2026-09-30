@@ -18,7 +18,8 @@ interface TaskModalProps {
 export function TaskModal({ open, onClose, preMemberId, onSuccess, forceBonus }: TaskModalProps) {
   const { profile, firebaseUser, can } = useAuthStore();
   const canAddOthers = !forceBonus && (!!profile?.isAdmin || can('addTaskOthers'));
-  const canManageTeam = !!profile?.isAdmin || can('addTaskOthers');
+  // مهمة البونص شخصية بطبيعتها — ما تحتاج تنسيق تيم حتى لو صانعها أدمن
+  const canManageTeam = !forceBonus && (!!profile?.isAdmin || can('addTaskOthers'));
   const { addTask } = useTasksStore();
   const { members, loadMembers } = useMembersStore();
   const [memberId, setMemberId] = useState('');
