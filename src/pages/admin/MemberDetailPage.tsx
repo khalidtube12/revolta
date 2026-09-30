@@ -321,7 +321,7 @@ export function MemberDetailPage() {
 
       {isAdmin && <TaskModal open={taskModal} onClose={() => setTaskModal(false)} preMemberId={id} onSuccess={load} />}
       <DriveModal open={!!driveModal} onClose={() => setDriveModal(null)} onSubmit={handleDriveSubmit} taskTitle={driveModal?.taskTitle ?? ''} />
-      <TwitterModal open={!!twitterModal} onClose={() => setTwitterModal(null)} onSubmit={handleTwitterSubmit} />
+      <TwitterModal open={!!twitterModal} onClose={() => setTwitterModal(null)} onSubmit={handleTwitterSubmit} minTweets={tasks.find(t => t.id === twitterModal)?.isBonus ? 1 : 3} />
       <EditTaskModal open={!!editModal} task={editModal} onClose={() => setEditModal(null)} onSuccess={load} />
 
       {bonusModal && (

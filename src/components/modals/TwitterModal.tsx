@@ -5,11 +5,10 @@ interface TwitterModalProps {
   open: boolean;
   onClose: () => void;
   onSubmit: (tweetCount: number, twitterUrl: string) => void;
+  minTweets?: number;
 }
 
-const MIN_TWEETS = 3;
-
-export function TwitterModal({ open, onClose, onSubmit }: TwitterModalProps) {
+export function TwitterModal({ open, onClose, onSubmit, minTweets = 3 }: TwitterModalProps) {
   const [count, setCount] = useState('');
   const [url, setUrl] = useState('');
   const [error, setError] = useState('');
@@ -20,8 +19,8 @@ export function TwitterModal({ open, onClose, onSubmit }: TwitterModalProps) {
 
   const handleSubmit = () => {
     const n = parseInt(count, 10);
-    if (!count.trim() || isNaN(n) || n < MIN_TWEETS) {
-      setError(`لازم تدخل عدد التغريدات (${MIN_TWEETS} على الأقل)`);
+    if (!count.trim() || isNaN(n) || n < minTweets) {
+      setError(minTweets > 1 ? `لازم تدخل عدد التغريدات (${minTweets} على الأقل)` : 'لازم تدخل عدد التغريدات');
       return;
     }
     const trimmedUrl = url.trim();
@@ -38,17 +37,17 @@ export function TwitterModal({ open, onClose, onSubmit }: TwitterModalProps) {
       footer={<button className="btn" onClick={handleSubmit}>حفظ</button>}
     >
       <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16 }}>
-        أدخل عدد التغريدات المنشورة — كل تغريدة تساوي 50 نقطة (بحد أدنى {MIN_TWEETS} تغريدات).
-        النقاط تُحتسب فقط بعد مراجعة الأدمن أو مسؤول صنّاع المحتوى ونشر المهمة.
+        أدخل عدد التغريدات المنشورة — كل تغريدة تساوي 50 نقطة{minTweets > 1 ? ` (بحد أدنى ${minTweets} تغريدات)` : ''}.
+        النقاط تُحتسب فقط بعد مراجعة الأدمن أو مسؤول صنّاع المحتوى.
       </p>
       <div className="form-group">
         <label>عدد التغريدات</label>
         <input
           type="number"
-          min={MIN_TWEETS}
+          min={minTweets}
           value={count}
           onChange={e => setCount(e.target.value)}
-          placeholder={String(MIN_TWEETS)}
+          placeholder={String(minTweets)}
           autoFocus
         />
       </div>

@@ -366,6 +366,7 @@ export function MyTasksPage() {
         open={!!twitterModal}
         onClose={() => setTwitterModal(null)}
         onSubmit={handleTwitterSubmit}
+        minTweets={tasks.find(t => t.id === twitterModal)?.isBonus ? 1 : 3}
       />
       <VideoCompleteModal
         open={!!videoModal}
