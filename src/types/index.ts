@@ -168,6 +168,7 @@ export interface Task {
   bonusPoints?: number;
   bonusNote?: string;
   twitterUrl?: string;
+  tweetCount?: number;
   producerId?: string;
   isBonus?: boolean;
   pointsApproved?: boolean;

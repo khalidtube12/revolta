@@ -3,7 +3,7 @@ import type { Task, User, Meeting, Idea } from '../types';
 import { MEETING_POINTS } from './meetings.service';
 
 export const POINTS_BY_TYPE: Record<string, number> = {
-  x_content:      200,
+  x_content:      150,
   short:          400,
   video:          600,
   writing:        200,

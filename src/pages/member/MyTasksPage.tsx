@@ -82,9 +82,13 @@ export function MyTasksPage() {
     load();
   };
 
-  const handleTwitterSubmit = async (twitterUrl: string) => {
+  const handleTwitterSubmit = async (tweetCount: number, twitterUrl: string) => {
     if (!twitterModal) return;
-    await updateTask(twitterModal, { status: 'published', done: true, ...(twitterUrl ? { twitterUrl } : {}) });
+    await updateTask(twitterModal, {
+      status: 'ready', done: false,
+      tweetCount, points: tweetCount * 50,
+      ...(twitterUrl ? { twitterUrl } : {}),
+    });
     setTwitterModal(null);
     load();
   };
@@ -353,7 +357,6 @@ export function MyTasksPage() {
         open={!!twitterModal}
         onClose={() => setTwitterModal(null)}
         onSubmit={handleTwitterSubmit}
-        onSkip={() => handleTwitterSubmit('')}
       />
       <VideoCompleteModal
         open={!!videoModal}

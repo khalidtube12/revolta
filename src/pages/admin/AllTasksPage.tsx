@@ -195,9 +195,13 @@ export function AllTasksPage() {
     load();
   };
 
-  const handleTwitterSubmit = async (twitterUrl: string) => {
+  const handleTwitterSubmit = async (tweetCount: number, twitterUrl: string) => {
     if (!twitterModal) return;
-    await updateTask(twitterModal, { status: 'published', done: true, ...(twitterUrl ? { twitterUrl } : {}) });
+    await updateTask(twitterModal, {
+      status: 'ready', done: false,
+      tweetCount, points: tweetCount * 50,
+      ...(twitterUrl ? { twitterUrl } : {}),
+    });
     setTwitterModal(null);
     load();
   };
@@ -612,6 +616,9 @@ export function AllTasksPage() {
                           التغريدة
                         </a>
                       )}
+                      {typeof t.tweetCount === 'number' && (
+                        <span className="tk-meta-item">{t.tweetCount} تغريدات</span>
+                      )}
                     </div>
                   </div>
 
@@ -694,7 +701,6 @@ export function AllTasksPage() {
         open={!!twitterModal}
         onClose={() => setTwitterModal(null)}
         onSubmit={handleTwitterSubmit}
-        onSkip={() => handleTwitterSubmit('')}
       />
       <VideoCompleteModal
         open={!!videoModal}

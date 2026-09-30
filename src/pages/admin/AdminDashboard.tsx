@@ -10,6 +10,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { TaskModal } from '../../components/modals/TaskModal';
 import { DriveModal } from '../../components/modals/DriveModal';
 import { EditTaskModal } from '../../components/modals/EditTaskModal';
+import { TwitterModal } from '../../components/modals/TwitterModal';
 import { Spinner } from '../../components/ui/Spinner';
 import { getStatus } from '../../utils/status';
 import { useAuthStore } from '../../stores/authStore';
@@ -29,6 +30,7 @@ export function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [taskModal, setTaskModal] = useState(false);
   const [driveModal, setDriveModal] = useState<{ taskId: string; status: TaskStatus; taskTitle: string } | null>(null);
+  const [twitterModal, setTwitterModal] = useState<string | null>(null);
   const [editModal, setEditModal] = useState<Task | null>(null);
 
   const load = useCallback(async () => {
@@ -67,11 +69,24 @@ export function AdminDashboard() {
 
   const completeTask = (taskId: string) => {
     const t = tasks.find(t => t.id === taskId);
-    if (t?.type === 'writing' || t?.type === 'x_content' || t?.type === 'design') {
+    if (t?.type === 'writing' || t?.type === 'design') {
       updateTask(taskId, { status: 'done', done: true }).then(load);
+    } else if (t?.type === 'x_content') {
+      setTwitterModal(taskId);
     } else {
       setDriveModal({ taskId, status: 'done', taskTitle: t?.title || '' });
     }
+  };
+
+  const handleTwitterSubmit = async (tweetCount: number, twitterUrl: string) => {
+    if (!twitterModal) return;
+    await updateTask(twitterModal, {
+      status: 'ready', done: false,
+      tweetCount, points: tweetCount * 50,
+      ...(twitterUrl ? { twitterUrl } : {}),
+    });
+    setTwitterModal(null);
+    load();
   };
 
   const handleToggle = (taskId: string, wasResolved: boolean) => {
@@ -223,6 +238,7 @@ export function AdminDashboard() {
 
       <TaskModal open={taskModal} onClose={() => setTaskModal(false)} onSuccess={load} />
       <DriveModal open={!!driveModal} onClose={() => setDriveModal(null)} onSubmit={handleDriveSubmit} taskTitle={driveModal?.taskTitle ?? ''} />
+      <TwitterModal open={!!twitterModal} onClose={() => setTwitterModal(null)} onSubmit={handleTwitterSubmit} />
       <EditTaskModal open={!!editModal} task={editModal} onClose={() => setEditModal(null)} onSuccess={load} />
     </>
   );
