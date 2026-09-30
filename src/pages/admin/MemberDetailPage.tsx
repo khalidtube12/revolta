@@ -19,7 +19,7 @@ import { Spinner } from '../../components/ui/Spinner';
 import { getStatus } from '../../utils/status';
 import type { Task, TaskStatus, UserPermissions } from '../../types';
 import { DEFAULT_PERMISSIONS, CONTENT_MANAGER_PERMISSIONS, detectRolePreset } from '../../types';
-import { getDefaultPoints, isXContentTweetFlow } from '../../services/points.service';
+import { getDefaultPoints, isTweetCountFlow } from '../../services/points.service';
 import { getTaskMonth } from '../../utils/date';
 
 export function MemberDetailPage() {
@@ -72,7 +72,7 @@ export function MemberDetailPage() {
     if (t?.type === 'writing' || t?.type === 'design') {
       updateTask(taskId, { status: 'done', done: true }).then(load);
     } else if (t?.type === 'x_content') {
-      if (isXContentTweetFlow(getTaskMonth(t.deadline, t.createdAt))) {
+      if (isTweetCountFlow(getTaskMonth(t.deadline, t.createdAt))) {
         setTwitterModal(taskId);
       } else {
         updateTask(taskId, { status: 'done', done: true }).then(load);
