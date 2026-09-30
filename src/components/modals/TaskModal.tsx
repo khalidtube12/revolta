@@ -91,12 +91,11 @@ export function TaskModal({ open, onClose, preMemberId, onSuccess, forceBonus }:
       const notifyTitle = '📋 مهمة جديدة: ' + (title.trim() || '—');
 
       const taskType = type as 'short' | 'video' | 'writing' | 'x_content' | 'podcast' | 'design' | 'event_coverage';
+      const isBonus = forceBonus || !canAddOthers;
       const taskMonth = getTaskMonth(deadline, Date.now());
       const autoPoints = (taskType === 'x_content' && isXContentTweetFlow(taskMonth))
-        ? 150
+        ? (isBonus ? 50 : 150)
         : getDefaultPoints(taskType);
-
-      const isBonus = forceBonus || !canAddOthers;
 
       if (isTeamType && canManageTeam) {
         if (teamMemberIds.length === 0) { alert('يرجى اختيار عضو واحد على الأقل'); setLoading(false); return; }
