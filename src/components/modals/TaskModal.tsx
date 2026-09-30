@@ -105,7 +105,9 @@ export function TaskModal({ open, onClose, preMemberId, onSuccess, forceBonus }:
         ? (isBonus ? 50 : 150)
         : needsEventCoverageTweetCount
           ? tweetCountNum * 50
-          : getDefaultPoints(taskType);
+          : (taskType === 'design' && isBonus && isTweetCountFlow(taskMonth))
+            ? 100
+            : getDefaultPoints(taskType);
 
       if (isTeamType && canManageTeam) {
         if (teamMemberIds.length === 0) { alert('يرجى اختيار عضو واحد على الأقل'); setLoading(false); return; }
