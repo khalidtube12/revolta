@@ -17,7 +17,7 @@ import { getTaskMonth } from '../../utils/date';
 import { exportTasksXLSX } from '../../utils/csv';
 import { STATUS_MAP, PRIORITY_MAP } from '../../types';
 import type { Task, TaskStatus } from '../../types';
-import { getDefaultPoints } from '../../services/points.service';
+import { getDefaultPoints, isTweetCountFlow } from '../../services/points.service';
 import { TaskGridView } from '../../components/tasks/TaskGridView';
 
 const TYPE_LABEL: Record<string, string> = {
@@ -78,6 +78,8 @@ export function AllTasksPage() {
   const [bonusModal, setBonusModal] = useState<Task | null>(null);
   const [bonusVal, setBonusVal] = useState('');
   const [bonusNote, setBonusNote] = useState('');
+  const [approveDesignModal, setApproveDesignModal] = useState<Task | null>(null);
+  const [approveDesignVal, setApproveDesignVal] = useState('');
   const [twitterModal, setTwitterModal] = useState<string | null>(null);
   const [videoModal, setVideoModal] = useState<{ id: string; type: 'video' | 'podcast' | 'short' | 'event_coverage' } | null>(null);
   const [activeTab, setActiveTab] = useState<'core' | 'bonus' | 'table'>('core');
@@ -176,7 +178,11 @@ export function AllTasksPage() {
     if (t?.type === 'writing') {
       updateTask(taskId, { status: 'done', done: true }).then(load);
     } else if (t?.type === 'x_content') {
-      setTwitterModal(taskId);
+      if (isTweetCountFlow(getTaskMonth(t.deadline, t.createdAt))) {
+        setTwitterModal(taskId);
+      } else {
+        updateTask(taskId, { status: 'done', done: true }).then(load);
+      }
     } else if (t?.type === 'video' || t?.type === 'podcast' || t?.type === 'short' || t?.type === 'event_coverage') {
       setVideoModal({ id: taskId, type: t.type });
     } else {
@@ -195,9 +201,17 @@ export function AllTasksPage() {
     load();
   };
 
-  const handleTwitterSubmit = async (twitterUrl: string) => {
+  const handleTwitterSubmit = async (tweetCount: number, twitterUrl: string) => {
     if (!twitterModal) return;
-    await updateTask(twitterModal, { status: 'published', done: true, ...(twitterUrl ? { twitterUrl } : {}) });
+    const t = tasks.find(t => t.id === twitterModal);
+    // مهام البونص تمر بآلية الموافقة الموجودة أصلاً (isBonus/pointsApproved) —
+    // تكتمل فوراً وتنتظر موافقة الأدمن على النقاط، بدل حالة "جاهز للنشر" الجديدة
+    await updateTask(twitterModal, {
+      status: t?.isBonus ? 'done' : 'ready',
+      done: !!t?.isBonus,
+      tweetCount, points: tweetCount * 50,
+      ...(twitterUrl ? { twitterUrl } : {}),
+    });
     setTwitterModal(null);
     load();
   };
@@ -249,9 +263,23 @@ export function AllTasksPage() {
     load();
   };
 
-  const handleApproveBonus = async (taskId: string) => {
-    await updateTask(taskId, { pointsApproved: true, pointsApprovedBy: firebaseUser?.uid ?? '', pointsApprovedAt: Date.now() });
+  const handleApproveBonus = async (taskId: string, finalPoints?: number) => {
+    await updateTask(taskId, {
+      pointsApproved: true,
+      pointsApprovedBy: firebaseUser?.uid ?? '',
+      pointsApprovedAt: Date.now(),
+      ...(typeof finalPoints === 'number' ? { points: finalPoints } : {}),
+    });
     load();
+  };
+
+  const handleConfirmDesignApproval = async () => {
+    if (!approveDesignModal) return;
+    const amount = parseInt(approveDesignVal, 10);
+    if (isNaN(amount) || amount < 0) { alert('أدخل رقماً صحيحاً'); return; }
+    await handleApproveBonus(approveDesignModal.id, amount);
+    setApproveDesignModal(null);
+    setApproveDesignVal('');
   };
 
   const handleSaveBonus = async () => {
@@ -612,6 +640,9 @@ export function AllTasksPage() {
                           التغريدة
                         </a>
                       )}
+                      {typeof t.tweetCount === 'number' && (
+                        <span className="tk-meta-item">{t.tweetCount} تغريدات</span>
+                      )}
                     </div>
                   </div>
 
@@ -662,7 +693,14 @@ export function AllTasksPage() {
                       <button
                         className="btn btn-xs"
                         style={{ background: 'rgba(45,122,79,0.15)', color: '#4ade80', border: '1px solid rgba(45,122,79,0.4)', boxShadow: 'none' }}
-                        onClick={() => handleApproveBonus(t.id)}
+                        onClick={() => {
+                          if (t.type === 'design') {
+                            setApproveDesignModal(t);
+                            setApproveDesignVal(String(t.points ?? 100));
+                          } else {
+                            handleApproveBonus(t.id);
+                          }
+                        }}
                       >
                         موافقة على النقاط
                       </button>
@@ -694,7 +732,7 @@ export function AllTasksPage() {
         open={!!twitterModal}
         onClose={() => setTwitterModal(null)}
         onSubmit={handleTwitterSubmit}
-        onSkip={() => handleTwitterSubmit('')}
+        minTweets={tasks.find(t => t.id === twitterModal)?.isBonus ? 1 : 3}
       />
       <VideoCompleteModal
         open={!!videoModal}
@@ -735,6 +773,25 @@ export function AllTasksPage() {
             <div className="modal-footer">
               <button className="btn" onClick={handleSaveBonus}>حفظ</button>
               <button className="btn btn-ghost" onClick={() => setBonusModal(null)}>إلغاء</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {approveDesignModal && (
+        <div className="overlay open" onClick={e => { if (e.target === e.currentTarget) setApproveDesignModal(null); }}>
+          <div className="modal" style={{ maxWidth: 380 }}>
+            <div className="modal-title">موافقة على نقاط التصميم</div>
+            <p style={{ fontSize: 13, color: 'var(--muted)', margin: '0 0 16px' }}>
+              {approveDesignModal.title || 'مهمة تصميم'} — عدّل النقاط إذا يستحق التصميم أكثر من القيمة الأساسية
+            </p>
+            <div className="form-group">
+              <label>النقاط</label>
+              <input type="number" min="0" value={approveDesignVal} onChange={e => setApproveDesignVal(e.target.value)} />
+            </div>
+            <div className="modal-footer">
+              <button className="btn" onClick={handleConfirmDesignApproval}>موافقة</button>
+              <button className="btn btn-ghost" onClick={() => setApproveDesignModal(null)}>إلغاء</button>
             </div>
           </div>
         </div>

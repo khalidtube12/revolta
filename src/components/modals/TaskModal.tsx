@@ -3,7 +3,8 @@ import { Modal } from './Modal';
 import { useAuthStore } from '../../stores/authStore';
 import { useTasksStore } from '../../stores/tasksStore';
 import { useMembersStore } from '../../stores/membersStore';
-import { getDefaultPoints } from '../../services/points.service';
+import { getDefaultPoints, isTweetCountFlow } from '../../services/points.service';
+import { getTaskMonth } from '../../utils/date';
 
 
 interface TaskModalProps {
@@ -17,7 +18,8 @@ interface TaskModalProps {
 export function TaskModal({ open, onClose, preMemberId, onSuccess, forceBonus }: TaskModalProps) {
   const { profile, firebaseUser, can } = useAuthStore();
   const canAddOthers = !forceBonus && (!!profile?.isAdmin || can('addTaskOthers'));
-  const canManageTeam = !!profile?.isAdmin || can('addTaskOthers');
+  // مهمة البونص شخصية بطبيعتها — ما تحتاج تنسيق تيم حتى لو صانعها أدمن
+  const canManageTeam = !forceBonus && (!!profile?.isAdmin || can('addTaskOthers'));
   const { addTask } = useTasksStore();
   const { members, loadMembers } = useMembersStore();
   const [memberId, setMemberId] = useState('');
@@ -28,7 +30,10 @@ export function TaskModal({ open, onClose, preMemberId, onSuccess, forceBonus }:
   const [priority, setPriority] = useState('medium');
   const [teamMemberIds, setTeamMemberIds] = useState<string[]>([]);
   const [primaryMemberId, setPrimaryMemberId] = useState<string>('');
+  const [tweetCount, setTweetCount] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const isBonus = forceBonus || !canAddOthers;
 
   useEffect(() => {
     if (open) {
@@ -39,6 +44,7 @@ export function TaskModal({ open, onClose, preMemberId, onSuccess, forceBonus }:
       setType('short');
       setPriority('medium');
       setTeamMemberIds([]);
+      setTweetCount('');
     }
   }, [open, loadMembers]);
 
@@ -80,7 +86,12 @@ export function TaskModal({ open, onClose, preMemberId, onSuccess, forceBonus }:
     { value: 'event_coverage', label: 'تغطية حدث' },
   ];
 
-  const canSubmit = isTeamType && canManageTeam ? teamMemberIds.length > 0 : true;
+  const taskMonth = getTaskMonth(deadline, Date.now());
+  const needsEventCoverageTweetCount = isEventCoverage && isBonus && isTweetCountFlow(taskMonth);
+  const tweetCountNum = parseInt(tweetCount, 10);
+  const tweetCountValid = !needsEventCoverageTweetCount || (!isNaN(tweetCountNum) && tweetCountNum >= 1);
+
+  const canSubmit = (isTeamType && canManageTeam ? teamMemberIds.length > 0 : true) && tweetCountValid;
 
   const handleSave = async () => {
     setLoading(true);
@@ -90,9 +101,17 @@ export function TaskModal({ open, onClose, preMemberId, onSuccess, forceBonus }:
       const notifyTitle = '📋 مهمة جديدة: ' + (title.trim() || '—');
 
       const taskType = type as 'short' | 'video' | 'writing' | 'x_content' | 'podcast' | 'design' | 'event_coverage';
-      const autoPoints = getDefaultPoints(taskType);
-
-      const isBonus = forceBonus || !canAddOthers;
+      const autoPoints = (taskType === 'x_content' && isTweetCountFlow(taskMonth))
+        ? (isBonus ? 50 : 150)
+        : needsEventCoverageTweetCount
+          ? tweetCountNum * 50
+          : (taskType === 'design' && isBonus && isTweetCountFlow(taskMonth))
+            ? 100
+            : (taskType === 'short' && isTweetCountFlow(taskMonth))
+              ? 300
+              : (taskType === 'video' && isTweetCountFlow(taskMonth))
+                ? 500
+                : getDefaultPoints(taskType);
 
       if (isTeamType && canManageTeam) {
         if (teamMemberIds.length === 0) { alert('يرجى اختيار عضو واحد على الأقل'); setLoading(false); return; }
@@ -110,6 +129,7 @@ export function TaskModal({ open, onClose, preMemberId, onSuccess, forceBonus }:
             createdAt: Date.now(),
             points: autoPoints,
             ...(rest.length > 0 ? { teamMemberIds: rest } : {}),
+            ...(needsEventCoverageTweetCount ? { tweetCount: tweetCountNum } : {}),
             ...(isBonus ? { isBonus: true, pointsApproved: false } : { isBonus: false }),
           },
           notifyTitle,
@@ -130,6 +150,7 @@ export function TaskModal({ open, onClose, preMemberId, onSuccess, forceBonus }:
             done: false,
             createdAt: Date.now(),
             points: autoPoints,
+            ...(needsEventCoverageTweetCount ? { tweetCount: tweetCountNum } : {}),
             ...(isBonus ? { isBonus: true, pointsApproved: false } : { isBonus: false }),
           },
           notifyTitle,
@@ -187,6 +208,23 @@ export function TaskModal({ open, onClose, preMemberId, onSuccess, forceBonus }:
           {TASK_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
         </select>
       </div>
+
+      {needsEventCoverageTweetCount && (
+        <div className="form-group">
+          <label>عدد التغريدات</label>
+          <span style={{ display: 'block', color: 'var(--muted)', fontSize: 11, marginBottom: 4 }}>
+            كل تغريدة تساوي 50 نقطة — لازم تدخل العدد قبل حفظ المهمة (بونص بدون حد أدنى، أقل شي 1)
+          </span>
+          <input
+            type="number"
+            min={1}
+            value={tweetCount}
+            onChange={e => setTweetCount(e.target.value)}
+            placeholder="1"
+          />
+        </div>
+      )}
+
       <div className="form-group">
         <label>الأولوية</label>
         <select value={priority} onChange={e => setPriority(e.target.value)}>

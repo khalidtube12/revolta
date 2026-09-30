@@ -12,7 +12,8 @@ import { VideoCompleteModal } from '../../components/modals/VideoCompleteModal';
 import { Spinner } from '../../components/ui/Spinner';
 import { getStatus } from '../../utils/status';
 import type { Task, TaskStatus, Meeting } from '../../types';
-import { getDefaultPoints, calculateMemberMonthlyPoints } from '../../services/points.service';
+import { getDefaultPoints, calculateMemberMonthlyPoints, isTweetCountFlow } from '../../services/points.service';
+import { getTaskMonth } from '../../utils/date';
 import { loadAllMeetings } from '../../services/meetings.service';
 import './MyTasksPage.css';
 
@@ -63,7 +64,11 @@ export function MyTasksPage() {
     if (t?.type === 'writing') {
       updateTask(taskId, { status: 'done', done: true }).then(load);
     } else if (t?.type === 'x_content') {
-      setTwitterModal(taskId);
+      if (isTweetCountFlow(getTaskMonth(t.deadline, t.createdAt))) {
+        setTwitterModal(taskId);
+      } else {
+        updateTask(taskId, { status: 'done', done: true }).then(load);
+      }
     } else if (t?.type === 'video' || t?.type === 'podcast' || t?.type === 'short' || t?.type === 'event_coverage') {
       setVideoModal({ id: taskId, type: t.type });
     } else {
@@ -82,9 +87,17 @@ export function MyTasksPage() {
     load();
   };
 
-  const handleTwitterSubmit = async (twitterUrl: string) => {
+  const handleTwitterSubmit = async (tweetCount: number, twitterUrl: string) => {
     if (!twitterModal) return;
-    await updateTask(twitterModal, { status: 'published', done: true, ...(twitterUrl ? { twitterUrl } : {}) });
+    const t = tasks.find(t => t.id === twitterModal);
+    // مهام البونص تمر بآلية الموافقة الموجودة أصلاً (isBonus/pointsApproved) —
+    // تكتمل فوراً وتنتظر موافقة الأدمن على النقاط، بدل حالة "جاهز للنشر" الجديدة
+    await updateTask(twitterModal, {
+      status: t?.isBonus ? 'done' : 'ready',
+      done: !!t?.isBonus,
+      tweetCount, points: tweetCount * 50,
+      ...(twitterUrl ? { twitterUrl } : {}),
+    });
     setTwitterModal(null);
     load();
   };
@@ -353,7 +366,7 @@ export function MyTasksPage() {
         open={!!twitterModal}
         onClose={() => setTwitterModal(null)}
         onSubmit={handleTwitterSubmit}
-        onSkip={() => handleTwitterSubmit('')}
+        minTweets={tasks.find(t => t.id === twitterModal)?.isBonus ? 1 : 3}
       />
       <VideoCompleteModal
         open={!!videoModal}

@@ -17,6 +17,13 @@ export function getDefaultPoints(type: string | undefined): number {
   return POINTS_BY_TYPE[type] ?? 0;
 }
 
+// عدّاد التغريدات (محتوى X، وتغطية حدث بونص) يسري بدءاً من هذا الشهر فقط — قبله تبقى القيم الثابتة القديمة
+export const TWEET_COUNT_FLOW_START_MONTH = '2026-10';
+
+export function isTweetCountFlow(month: string): boolean {
+  return month >= TWEET_COUNT_FLOW_START_MONTH;
+}
+
 function getTaskYearMonth(task: Task): string {
   if (task.deadline) return task.deadline.substring(0, 7);
   const d = new Date(task.createdAt);

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { Task, Meeting, Idea } from '../../types';
+import { isTweetCountFlow } from '../../services/points.service';
 
 const POINTS_START_MONTH = '2026-09';
 const MEETING_PTS = 100;
@@ -26,7 +27,9 @@ function getProducerBonus(t: Task): number {
   const teamIds = getTeamIds(t);
   const isMulti = teamIds.length > 0 || t.producerId !== t.memberId;
   if (!isMulti) return 0;
-  return t.type === 'short' ? 400 : t.type === 'video' ? 500 : 0;
+  if (t.type === 'short') return isTweetCountFlow(getTaskMonth(t)) ? 300 : 400;
+  if (t.type === 'video') return 500;
+  return 0;
 }
 
 const POINTS_BY_TYPE: Record<string, number> = {

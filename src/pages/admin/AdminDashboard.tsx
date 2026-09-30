@@ -10,6 +10,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { TaskModal } from '../../components/modals/TaskModal';
 import { DriveModal } from '../../components/modals/DriveModal';
 import { EditTaskModal } from '../../components/modals/EditTaskModal';
+import { TwitterModal } from '../../components/modals/TwitterModal';
 import { Spinner } from '../../components/ui/Spinner';
 import { getStatus } from '../../utils/status';
 import { useAuthStore } from '../../stores/authStore';
@@ -17,6 +18,8 @@ import { useIdeasStore } from '../../stores/ideasStore';
 import type { Task, TaskStatus } from '../../types';
 import { IOSInstallBanner } from '../../components/ui/IOSInstallBanner';
 import { TodayContent } from '../../components/ui/TodayContent';
+import { isTweetCountFlow } from '../../services/points.service';
+import { getTaskMonth } from '../../utils/date';
 import './AdminDashboard.css';
 import '../member/MyTasksPage.css';
 
@@ -29,6 +32,7 @@ export function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [taskModal, setTaskModal] = useState(false);
   const [driveModal, setDriveModal] = useState<{ taskId: string; status: TaskStatus; taskTitle: string } | null>(null);
+  const [twitterModal, setTwitterModal] = useState<string | null>(null);
   const [editModal, setEditModal] = useState<Task | null>(null);
 
   const load = useCallback(async () => {
@@ -67,11 +71,32 @@ export function AdminDashboard() {
 
   const completeTask = (taskId: string) => {
     const t = tasks.find(t => t.id === taskId);
-    if (t?.type === 'writing' || t?.type === 'x_content' || t?.type === 'design') {
+    if (t?.type === 'writing' || t?.type === 'design') {
       updateTask(taskId, { status: 'done', done: true }).then(load);
+    } else if (t?.type === 'x_content') {
+      if (isTweetCountFlow(getTaskMonth(t.deadline, t.createdAt))) {
+        setTwitterModal(taskId);
+      } else {
+        updateTask(taskId, { status: 'done', done: true }).then(load);
+      }
     } else {
       setDriveModal({ taskId, status: 'done', taskTitle: t?.title || '' });
     }
+  };
+
+  const handleTwitterSubmit = async (tweetCount: number, twitterUrl: string) => {
+    if (!twitterModal) return;
+    const t = tasks.find(t => t.id === twitterModal);
+    // مهام البونص تمر بآلية الموافقة الموجودة أصلاً (isBonus/pointsApproved) —
+    // تكتمل فوراً وتنتظر موافقة الأدمن على النقاط، بدل حالة "جاهز للنشر" الجديدة
+    await updateTask(twitterModal, {
+      status: t?.isBonus ? 'done' : 'ready',
+      done: !!t?.isBonus,
+      tweetCount, points: tweetCount * 50,
+      ...(twitterUrl ? { twitterUrl } : {}),
+    });
+    setTwitterModal(null);
+    load();
   };
 
   const handleToggle = (taskId: string, wasResolved: boolean) => {
@@ -223,6 +248,7 @@ export function AdminDashboard() {
 
       <TaskModal open={taskModal} onClose={() => setTaskModal(false)} onSuccess={load} />
       <DriveModal open={!!driveModal} onClose={() => setDriveModal(null)} onSubmit={handleDriveSubmit} taskTitle={driveModal?.taskTitle ?? ''} />
+      <TwitterModal open={!!twitterModal} onClose={() => setTwitterModal(null)} onSubmit={handleTwitterSubmit} minTweets={tasks.find(t => t.id === twitterModal)?.isBonus ? 1 : 3} />
       <EditTaskModal open={!!editModal} task={editModal} onClose={() => setEditModal(null)} onSuccess={load} />
     </>
   );

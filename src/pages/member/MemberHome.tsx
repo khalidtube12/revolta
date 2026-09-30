@@ -8,11 +8,14 @@ import { Card } from '../../components/ui/Card';
 import { TaskRowV2 as TaskRow } from '../../components/ui/TaskRowV2';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { DriveModal } from '../../components/modals/DriveModal';
+import { TwitterModal } from '../../components/modals/TwitterModal';
 import { Spinner } from '../../components/ui/Spinner';
 import { getStatus } from '../../utils/status';
 import type { TaskStatus } from '../../types';
 import { IOSInstallBanner } from '../../components/ui/IOSInstallBanner';
 import { TodayContent } from '../../components/ui/TodayContent';
+import { isTweetCountFlow } from '../../services/points.service';
+import { getTaskMonth } from '../../utils/date';
 
 export function MemberHome() {
   const navigate = useNavigate();
@@ -21,6 +24,7 @@ export function MemberHome() {
   const { ideas, loadIdeas } = useIdeasStore();
   const [loading, setLoading] = useState(true);
   const [driveModal, setDriveModal] = useState<{ taskId: string; status: TaskStatus; taskTitle: string } | null>(null);
+  const [twitterModal, setTwitterModal] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!firebaseUser) return;
@@ -43,8 +47,18 @@ export function MemberHome() {
   const handleToggle = (taskId: string, wasResolved: boolean) => {
     if (wasResolved) {
       updateTask(taskId, { done: false, status: 'pending', driveLink: undefined }).then(load);
+      return;
+    }
+    const t = tasks.find(t => t.id === taskId);
+    if (t?.type === 'writing') {
+      updateTask(taskId, { status: 'done', done: true }).then(load);
+    } else if (t?.type === 'x_content') {
+      if (isTweetCountFlow(getTaskMonth(t.deadline, t.createdAt))) {
+        setTwitterModal(taskId);
+      } else {
+        updateTask(taskId, { status: 'done', done: true }).then(load);
+      }
     } else {
-      const t = tasks.find(t => t.id === taskId);
       setDriveModal({ taskId, status: 'done', taskTitle: t?.title || '' });
     }
   };
@@ -53,6 +67,21 @@ export function MemberHome() {
     if (!driveModal) return;
     await updateTask(driveModal.taskId, { status: driveModal.status, done: true, driveLink: link, ...(title ? { title } : {}) });
     setDriveModal(null);
+    load();
+  };
+
+  const handleTwitterSubmit = async (tweetCount: number, twitterUrl: string) => {
+    if (!twitterModal) return;
+    const t = tasks.find(t => t.id === twitterModal);
+    // مهام البونص تمر بآلية الموافقة الموجودة أصلاً (isBonus/pointsApproved) —
+    // تكتمل فوراً وتنتظر موافقة الأدمن على النقاط، بدل حالة "جاهز للنشر" الجديدة
+    await updateTask(twitterModal, {
+      status: t?.isBonus ? 'done' : 'ready',
+      done: !!t?.isBonus,
+      tweetCount, points: tweetCount * 50,
+      ...(twitterUrl ? { twitterUrl } : {}),
+    });
+    setTwitterModal(null);
     load();
   };
 
@@ -87,6 +116,7 @@ export function MemberHome() {
       </Card>
 
       <DriveModal open={!!driveModal} onClose={() => setDriveModal(null)} onSubmit={handleDriveSubmit} taskTitle={driveModal?.taskTitle ?? ''} />
+      <TwitterModal open={!!twitterModal} onClose={() => setTwitterModal(null)} onSubmit={handleTwitterSubmit} minTweets={tasks.find(t => t.id === twitterModal)?.isBonus ? 1 : 3} />
     </>
   );
 }
