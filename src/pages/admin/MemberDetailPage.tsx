@@ -84,8 +84,12 @@ export function MemberDetailPage() {
 
   const handleTwitterSubmit = async (tweetCount: number, twitterUrl: string) => {
     if (!twitterModal) return;
+    const t = tasks.find(t => t.id === twitterModal);
+    // مهام البونص تمر بآلية الموافقة الموجودة أصلاً (isBonus/pointsApproved) —
+    // تكتمل فوراً وتنتظر موافقة الأدمن على النقاط، بدل حالة "جاهز للنشر" الجديدة
     await updateTask(twitterModal, {
-      status: 'ready', done: false,
+      status: t?.isBonus ? 'done' : 'ready',
+      done: !!t?.isBonus,
       tweetCount, points: tweetCount * 50,
       ...(twitterUrl ? { twitterUrl } : {}),
     });
