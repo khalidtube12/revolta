@@ -14,6 +14,8 @@ import { getStatus } from '../../utils/status';
 import type { TaskStatus } from '../../types';
 import { IOSInstallBanner } from '../../components/ui/IOSInstallBanner';
 import { TodayContent } from '../../components/ui/TodayContent';
+import { isXContentTweetFlow } from '../../services/points.service';
+import { getTaskMonth } from '../../utils/date';
 
 export function MemberHome() {
   const navigate = useNavigate();
@@ -51,7 +53,11 @@ export function MemberHome() {
     if (t?.type === 'writing') {
       updateTask(taskId, { status: 'done', done: true }).then(load);
     } else if (t?.type === 'x_content') {
-      setTwitterModal(taskId);
+      if (isXContentTweetFlow(getTaskMonth(t.deadline, t.createdAt))) {
+        setTwitterModal(taskId);
+      } else {
+        updateTask(taskId, { status: 'done', done: true }).then(load);
+      }
     } else {
       setDriveModal({ taskId, status: 'done', taskTitle: t?.title || '' });
     }

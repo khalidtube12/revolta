@@ -3,7 +3,8 @@ import { Modal } from './Modal';
 import { useAuthStore } from '../../stores/authStore';
 import { useTasksStore } from '../../stores/tasksStore';
 import { useMembersStore } from '../../stores/membersStore';
-import { getDefaultPoints } from '../../services/points.service';
+import { getDefaultPoints, isXContentTweetFlow } from '../../services/points.service';
+import { getTaskMonth } from '../../utils/date';
 
 
 interface TaskModalProps {
@@ -90,7 +91,10 @@ export function TaskModal({ open, onClose, preMemberId, onSuccess, forceBonus }:
       const notifyTitle = '📋 مهمة جديدة: ' + (title.trim() || '—');
 
       const taskType = type as 'short' | 'video' | 'writing' | 'x_content' | 'podcast' | 'design' | 'event_coverage';
-      const autoPoints = getDefaultPoints(taskType);
+      const taskMonth = getTaskMonth(deadline, Date.now());
+      const autoPoints = (taskType === 'x_content' && isXContentTweetFlow(taskMonth))
+        ? 150
+        : getDefaultPoints(taskType);
 
       const isBonus = forceBonus || !canAddOthers;
 

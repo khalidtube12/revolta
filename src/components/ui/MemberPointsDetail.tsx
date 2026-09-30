@@ -30,7 +30,7 @@ function getProducerBonus(t: Task): number {
 }
 
 const POINTS_BY_TYPE: Record<string, number> = {
-  x_content: 150, short: 400, video: 600,
+  x_content: 200, short: 400, video: 600,
   writing: 200, design: 200, podcast: 200, event_coverage: 200,
 };
 

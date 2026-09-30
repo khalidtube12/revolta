@@ -3,7 +3,7 @@ import type { Task, User, Meeting, Idea } from '../types';
 import { MEETING_POINTS } from './meetings.service';
 
 export const POINTS_BY_TYPE: Record<string, number> = {
-  x_content:      150,
+  x_content:      200,
   short:          400,
   video:          600,
   writing:        200,
@@ -15,6 +15,13 @@ export const POINTS_BY_TYPE: Record<string, number> = {
 export function getDefaultPoints(type: string | undefined): number {
   if (!type) return 0;
   return POINTS_BY_TYPE[type] ?? 0;
+}
+
+// عدّاد التغريدات لمهام محتوى X يسري بدءاً من هذا الشهر فقط — قبله تبقى القيمة الثابتة القديمة (200)
+export const X_CONTENT_TWEET_FLOW_START_MONTH = '2026-10';
+
+export function isXContentTweetFlow(month: string): boolean {
+  return month >= X_CONTENT_TWEET_FLOW_START_MONTH;
 }
 
 function getTaskYearMonth(task: Task): string {

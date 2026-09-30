@@ -18,6 +18,8 @@ import { useIdeasStore } from '../../stores/ideasStore';
 import type { Task, TaskStatus } from '../../types';
 import { IOSInstallBanner } from '../../components/ui/IOSInstallBanner';
 import { TodayContent } from '../../components/ui/TodayContent';
+import { isXContentTweetFlow } from '../../services/points.service';
+import { getTaskMonth } from '../../utils/date';
 import './AdminDashboard.css';
 import '../member/MyTasksPage.css';
 
@@ -72,7 +74,11 @@ export function AdminDashboard() {
     if (t?.type === 'writing' || t?.type === 'design') {
       updateTask(taskId, { status: 'done', done: true }).then(load);
     } else if (t?.type === 'x_content') {
-      setTwitterModal(taskId);
+      if (isXContentTweetFlow(getTaskMonth(t.deadline, t.createdAt))) {
+        setTwitterModal(taskId);
+      } else {
+        updateTask(taskId, { status: 'done', done: true }).then(load);
+      }
     } else {
       setDriveModal({ taskId, status: 'done', taskTitle: t?.title || '' });
     }

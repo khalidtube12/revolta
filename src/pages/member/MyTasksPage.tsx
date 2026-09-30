@@ -12,7 +12,8 @@ import { VideoCompleteModal } from '../../components/modals/VideoCompleteModal';
 import { Spinner } from '../../components/ui/Spinner';
 import { getStatus } from '../../utils/status';
 import type { Task, TaskStatus, Meeting } from '../../types';
-import { getDefaultPoints, calculateMemberMonthlyPoints } from '../../services/points.service';
+import { getDefaultPoints, calculateMemberMonthlyPoints, isXContentTweetFlow } from '../../services/points.service';
+import { getTaskMonth } from '../../utils/date';
 import { loadAllMeetings } from '../../services/meetings.service';
 import './MyTasksPage.css';
 
@@ -63,7 +64,11 @@ export function MyTasksPage() {
     if (t?.type === 'writing') {
       updateTask(taskId, { status: 'done', done: true }).then(load);
     } else if (t?.type === 'x_content') {
-      setTwitterModal(taskId);
+      if (isXContentTweetFlow(getTaskMonth(t.deadline, t.createdAt))) {
+        setTwitterModal(taskId);
+      } else {
+        updateTask(taskId, { status: 'done', done: true }).then(load);
+      }
     } else if (t?.type === 'video' || t?.type === 'podcast' || t?.type === 'short' || t?.type === 'event_coverage') {
       setVideoModal({ id: taskId, type: t.type });
     } else {

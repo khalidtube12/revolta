@@ -17,7 +17,7 @@ import { getTaskMonth } from '../../utils/date';
 import { exportTasksXLSX } from '../../utils/csv';
 import { STATUS_MAP, PRIORITY_MAP } from '../../types';
 import type { Task, TaskStatus } from '../../types';
-import { getDefaultPoints } from '../../services/points.service';
+import { getDefaultPoints, isXContentTweetFlow } from '../../services/points.service';
 import { TaskGridView } from '../../components/tasks/TaskGridView';
 
 const TYPE_LABEL: Record<string, string> = {
@@ -176,7 +176,11 @@ export function AllTasksPage() {
     if (t?.type === 'writing') {
       updateTask(taskId, { status: 'done', done: true }).then(load);
     } else if (t?.type === 'x_content') {
-      setTwitterModal(taskId);
+      if (isXContentTweetFlow(getTaskMonth(t.deadline, t.createdAt))) {
+        setTwitterModal(taskId);
+      } else {
+        updateTask(taskId, { status: 'done', done: true }).then(load);
+      }
     } else if (t?.type === 'video' || t?.type === 'podcast' || t?.type === 'short' || t?.type === 'event_coverage') {
       setVideoModal({ id: taskId, type: t.type });
     } else {
