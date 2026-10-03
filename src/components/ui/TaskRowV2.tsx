@@ -1,7 +1,8 @@
 import type { Task, User, Idea, TaskStatus } from '../../types';
 import { STATUS_MAP, PRIORITY_MAP, PRIORITY_COLORS } from '../../types';
 import { getStatus } from '../../utils/status';
-import { deadlineLabel } from '../../utils/date';
+import { deadlineLabel, getTaskMonth } from '../../utils/date';
+import { isTweetCountFlow } from '../../services/points.service';
 import './TaskRowV2.css';
 
 interface TaskRowV2Props {
@@ -21,13 +22,18 @@ interface TaskRowV2Props {
   onDelete?: (id: string) => void;
   onEdit?: (task: Task) => void;
   onBonus?: (task: Task) => void;
+  onFixTweetCount?: (id: string) => void;
 }
 
 export function TaskRowV2({
   task, members = [], showMember, isAdmin, canDelete, canEdit, canSetIncomplete, canChangeStatus, canManageBonus, readOnly, ideas = [],
-  onToggle, onChangeStatus, onDelete, onEdit, onBonus,
+  onToggle, onChangeStatus, onDelete, onEdit, onBonus, onFixTweetCount,
 }: TaskRowV2Props) {
   const m = members.find(u => u.id === task.memberId);
+  const needsTweetCountFix = task.type === 'x_content' &&
+    (task.status === 'done' || task.status === 'published') &&
+    isTweetCountFlow(getTaskMonth(task.deadline, task.createdAt)) &&
+    typeof task.tweetCount !== 'number';
   const dl = deadlineLabel(task.deadline, task.done);
   const st = getStatus(task);
   const si = STATUS_MAP[st] || STATUS_MAP.pending;
@@ -121,6 +127,15 @@ export function TaskRowV2({
               <option value="published">تم النشر</option>
               <option value="cancelled">ملغية</option>
             </select>
+            {needsTweetCountFix && onFixTweetCount && (
+              <button
+                className="btn btn-xs btn-ghost"
+                title="هذي المهمة أخذت نقاط ثابتة قديمة قبل تفعيل نظام عدد التغريدات — أدخل العدد الحقيقي لتصحيح النقاط"
+                onClick={() => onFixTweetCount(task.id)}
+              >
+                تصحيح عدد التغريدات
+              </button>
+            )}
             {!task.isBonus && onBonus && <button className="btn btn-xs btn-ghost" onClick={() => onBonus(task)}>مكافأة</button>}
             {onEdit && <button className="btn btn-xs btn-ghost" onClick={() => onEdit(task)}>تعديل</button>}
             {onDelete && <button className="btn btn-xs btn-danger" onClick={() => onDelete(task.id)}>حذف</button>}
@@ -150,6 +165,15 @@ export function TaskRowV2({
               </select>
             ) : (
               <span className={`badge ${si.badge}`}>{si.label}</span>
+            )}
+            {needsTweetCountFix && canChangeStatus && onFixTweetCount && (
+              <button
+                className="btn btn-xs btn-ghost"
+                title="هذي المهمة أخذت نقاط ثابتة قديمة قبل تفعيل نظام عدد التغريدات — أدخل العدد الحقيقي لتصحيح النقاط"
+                onClick={() => onFixTweetCount(task.id)}
+              >
+                تصحيح عدد التغريدات
+              </button>
             )}
             {!task.isBonus && canManageBonus && onBonus && (
               <button className="btn btn-xs btn-ghost" onClick={() => onBonus(task)}>مكافأة</button>

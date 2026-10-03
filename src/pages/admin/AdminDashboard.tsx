@@ -89,9 +89,10 @@ export function AdminDashboard() {
     const t = tasks.find(t => t.id === twitterModal);
     // مهام البونص تمر بآلية الموافقة الموجودة أصلاً (isBonus/pointsApproved) —
     // تكتمل فوراً وتنتظر موافقة الأدمن على النقاط، بدل حالة "جاهز للنشر" الجديدة
+    // لو المهمة أصلاً مكتملة/منشورة (تصحيح عدد تغريدات بأثر رجعي)، ما نلمس حالتها
+    const alreadyFinal = t?.status === 'done' || t?.status === 'published';
     await updateTask(twitterModal, {
-      status: t?.isBonus ? 'done' : 'ready',
-      done: !!t?.isBonus,
+      ...(alreadyFinal ? {} : { status: t?.isBonus ? 'done' : 'ready', done: !!t?.isBonus }),
       tweetCount, points: tweetCount * 50,
       ...(twitterUrl ? { twitterUrl } : {}),
     });
@@ -109,6 +110,12 @@ export function AdminDashboard() {
 
   const handleChangeStatus = (taskId: string, status: TaskStatus) => {
     if (status === 'done') {
+      completeTask(taskId);
+      return;
+    }
+    const t = tasks.find(t => t.id === taskId);
+    // منع تجاوز نافذة "عدد التغريدات" بالقفز المباشر لـ"تم النشر" من القائمة
+    if (status === 'published' && t?.type === 'x_content' && isTweetCountFlow(getTaskMonth(t.deadline, t.createdAt)) && typeof t.tweetCount !== 'number') {
       completeTask(taskId);
       return;
     }

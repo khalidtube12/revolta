@@ -206,9 +206,10 @@ export function AllTasksPage() {
     const t = tasks.find(t => t.id === twitterModal);
     // مهام البونص تمر بآلية الموافقة الموجودة أصلاً (isBonus/pointsApproved) —
     // تكتمل فوراً وتنتظر موافقة الأدمن على النقاط، بدل حالة "جاهز للنشر" الجديدة
+    // لو المهمة أصلاً مكتملة/منشورة (تصحيح عدد تغريدات بأثر رجعي)، ما نلمس حالتها
+    const alreadyFinal = t?.status === 'done' || t?.status === 'published';
     await updateTask(twitterModal, {
-      status: t?.isBonus ? 'done' : 'ready',
-      done: !!t?.isBonus,
+      ...(alreadyFinal ? {} : { status: t?.isBonus ? 'done' : 'ready', done: !!t?.isBonus }),
       tweetCount, points: tweetCount * 50,
       ...(twitterUrl ? { twitterUrl } : {}),
     });
@@ -227,6 +228,12 @@ export function AllTasksPage() {
     }
     if (status === 'done') {
       if (!isAdmin && !can('setTaskComplete') && !can('changeTaskStatus')) return;
+      completeTask(taskId);
+      return;
+    }
+    // منع تجاوز نافذة "عدد التغريدات" بالقفز المباشر لـ"تم النشر" من القائمة —
+    // لازم يمر على نفس مسار الإكمال عشان تنحسب النقاط من العدد الفعلي مو الرقم الثابت القديم
+    if (status === 'published' && t?.type === 'x_content' && isTweetCountFlow(getTaskMonth(t.deadline, t.createdAt)) && typeof t.tweetCount !== 'number') {
       completeTask(taskId);
       return;
     }
@@ -689,6 +696,17 @@ export function AllTasksPage() {
                     </select>
                   )}
                   <div className="tk-foot-actions">
+                    {t.type === 'x_content' && (t.status === 'done' || t.status === 'published') &&
+                      isTweetCountFlow(getTaskMonth(t.deadline, t.createdAt)) && typeof t.tweetCount !== 'number' &&
+                      (isAdmin || can('addTaskOthers') || can('changeTaskStatus')) && (
+                      <button
+                        className="btn btn-xs btn-ghost"
+                        title="هذي المهمة أخذت نقاط ثابتة قديمة قبل تفعيل نظام عدد التغريدات — أدخل العدد الحقيقي لتصحيح النقاط"
+                        onClick={() => setTwitterModal(t.id)}
+                      >
+                        تصحيح عدد التغريدات
+                      </button>
+                    )}
                     {t.isBonus && earned && !t.pointsApproved && (isAdmin || can('addTaskOthers')) && (
                       <button
                         className="btn btn-xs"
