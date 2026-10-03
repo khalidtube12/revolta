@@ -319,6 +319,23 @@ export function AllTasksPage() {
     exportTasksXLSX('Revolta_Tasks_' + new Date().toISOString().slice(0, 10) + '.xlsx', rows).catch(() => {});
   };
 
+  // مهام شورت/مقطع من أكتوبر 2026+ انضافت قبل تقليل النقاط (400/600) — لازم تصحح للقيم الجديدة (300/500)
+  // بأثر رجعي، لأن نقاطها تنحسب وتتجمد وقت الإنشاء فقط وما فيه خطوة إكمال تعيد حسابها لاحقًا
+  const handleFixShortVideoPoints = async () => {
+    const toFix = tasks.filter(t =>
+      (t.type === 'short' || t.type === 'video') &&
+      isTweetCountFlow(getTaskMonth(t.deadline, t.createdAt)) &&
+      ((t.type === 'short' && t.points === 400) || (t.type === 'video' && t.points === 600))
+    );
+    if (!toFix.length) { alert('ما فيه مهام شورت/مقطع من أكتوبر وفوق لسا على النقاط القديمة'); return; }
+    if (!confirm(`فيه ${toFix.length} مهمة شورت/مقطع من أكتوبر وفوق لسا على النقاط القديمة (400/600). تصححها للقيم الجديدة (300/500)؟`)) return;
+    for (const t of toFix) {
+      await updateTask(t.id, { points: t.type === 'short' ? 300 : 500 });
+    }
+    alert(`تم تصحيح ${toFix.length} مهمة.`);
+    load();
+  };
+
   const canEdit = isAdmin || can('editTask');
   const canDelete = isAdmin || can('deleteTask');
   const canChangeStatus = isAdmin || can('changeTaskStatus');
@@ -341,6 +358,7 @@ export function AllTasksPage() {
           <div className="tk-hdr-line" />
         </div>
         <div className="tk-hdr-actions">
+          {isAdmin && <button className="btn btn-ghost btn-sm" onClick={handleFixShortVideoPoints}>تصحيح نقاط الشورت/المقطع</button>}
           {(isAdmin || can('exportTasks')) && <button className="btn btn-ghost btn-sm" onClick={handleExport}>تصدير Excel</button>}
           {(isAdmin || can('importTasks')) && <button className="btn btn-ghost btn-sm" onClick={() => setImportModal(true)}>استيراد Excel</button>}
           {(isAdmin || can('addTaskOthers')) && <button className="btn btn-sm" onClick={() => setTaskModal(true)}>+ مهمة جديدة</button>}
