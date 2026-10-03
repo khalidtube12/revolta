@@ -206,9 +206,10 @@ export function AllTasksPage() {
     const t = tasks.find(t => t.id === twitterModal);
     // مهام البونص تمر بآلية الموافقة الموجودة أصلاً (isBonus/pointsApproved) —
     // تكتمل فوراً وتنتظر موافقة الأدمن على النقاط، بدل حالة "جاهز للنشر" الجديدة
+    // لو المهمة أصلاً مكتملة/منشورة (تصحيح عدد تغريدات بأثر رجعي)، ما نلمس حالتها
+    const alreadyFinal = t?.status === 'done' || t?.status === 'published';
     await updateTask(twitterModal, {
-      status: t?.isBonus ? 'done' : 'ready',
-      done: !!t?.isBonus,
+      ...(alreadyFinal ? {} : { status: t?.isBonus ? 'done' : 'ready', done: !!t?.isBonus }),
       tweetCount, points: tweetCount * 50,
       ...(twitterUrl ? { twitterUrl } : {}),
     });
@@ -227,6 +228,12 @@ export function AllTasksPage() {
     }
     if (status === 'done') {
       if (!isAdmin && !can('setTaskComplete') && !can('changeTaskStatus')) return;
+      completeTask(taskId);
+      return;
+    }
+    // منع تجاوز نافذة "عدد التغريدات" بالقفز المباشر لـ"تم النشر" من القائمة —
+    // لازم يمر على نفس مسار الإكمال عشان تنحسب النقاط من العدد الفعلي مو الرقم الثابت القديم
+    if (status === 'published' && t?.type === 'x_content' && isTweetCountFlow(getTaskMonth(t.deadline, t.createdAt)) && typeof t.tweetCount !== 'number') {
       completeTask(taskId);
       return;
     }
@@ -312,6 +319,23 @@ export function AllTasksPage() {
     exportTasksXLSX('Revolta_Tasks_' + new Date().toISOString().slice(0, 10) + '.xlsx', rows).catch(() => {});
   };
 
+  // مهام شورت/مقطع من أكتوبر 2026+ انضافت قبل تقليل النقاط (400/600) — لازم تصحح للقيم الجديدة (300/500)
+  // بأثر رجعي، لأن نقاطها تنحسب وتتجمد وقت الإنشاء فقط وما فيه خطوة إكمال تعيد حسابها لاحقًا
+  const handleFixShortVideoPoints = async () => {
+    const toFix = tasks.filter(t =>
+      (t.type === 'short' || t.type === 'video') &&
+      isTweetCountFlow(getTaskMonth(t.deadline, t.createdAt)) &&
+      ((t.type === 'short' && t.points === 400) || (t.type === 'video' && t.points === 600))
+    );
+    if (!toFix.length) { alert('ما فيه مهام شورت/مقطع من أكتوبر وفوق لسا على النقاط القديمة'); return; }
+    if (!confirm(`فيه ${toFix.length} مهمة شورت/مقطع من أكتوبر وفوق لسا على النقاط القديمة (400/600). تصححها للقيم الجديدة (300/500)؟`)) return;
+    for (const t of toFix) {
+      await updateTask(t.id, { points: t.type === 'short' ? 300 : 500 });
+    }
+    alert(`تم تصحيح ${toFix.length} مهمة.`);
+    load();
+  };
+
   const canEdit = isAdmin || can('editTask');
   const canDelete = isAdmin || can('deleteTask');
   const canChangeStatus = isAdmin || can('changeTaskStatus');
@@ -334,6 +358,7 @@ export function AllTasksPage() {
           <div className="tk-hdr-line" />
         </div>
         <div className="tk-hdr-actions">
+          {isAdmin && <button className="btn btn-ghost btn-sm" onClick={handleFixShortVideoPoints}>تصحيح نقاط الشورت/المقطع</button>}
           {(isAdmin || can('exportTasks')) && <button className="btn btn-ghost btn-sm" onClick={handleExport}>تصدير Excel</button>}
           {(isAdmin || can('importTasks')) && <button className="btn btn-ghost btn-sm" onClick={() => setImportModal(true)}>استيراد Excel</button>}
           {(isAdmin || can('addTaskOthers')) && <button className="btn btn-sm" onClick={() => setTaskModal(true)}>+ مهمة جديدة</button>}
@@ -689,6 +714,17 @@ export function AllTasksPage() {
                     </select>
                   )}
                   <div className="tk-foot-actions">
+                    {t.type === 'x_content' && (t.status === 'done' || t.status === 'published') &&
+                      isTweetCountFlow(getTaskMonth(t.deadline, t.createdAt)) && typeof t.tweetCount !== 'number' &&
+                      (isAdmin || can('addTaskOthers') || can('changeTaskStatus')) && (
+                      <button
+                        className="btn btn-xs btn-ghost"
+                        title="هذي المهمة أخذت نقاط ثابتة قديمة قبل تفعيل نظام عدد التغريدات — أدخل العدد الحقيقي لتصحيح النقاط"
+                        onClick={() => setTwitterModal(t.id)}
+                      >
+                        تصحيح عدد التغريدات
+                      </button>
+                    )}
                     {t.isBonus && earned && !t.pointsApproved && (isAdmin || can('addTaskOthers')) && (
                       <button
                         className="btn btn-xs"
