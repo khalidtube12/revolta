@@ -319,18 +319,26 @@ export function AllTasksPage() {
     exportTasksXLSX('Revolta_Tasks_' + new Date().toISOString().slice(0, 10) + '.xlsx', rows).catch(() => {});
   };
 
-  // مهام شورت/مقطع من أكتوبر 2026+ انضافت قبل تقليل النقاط (400/600) — لازم تصحح للقيم الجديدة (300/500)
-  // بأثر رجعي، لأن نقاطها تنحسب وتتجمد وقت الإنشاء فقط وما فيه خطوة إكمال تعيد حسابها لاحقًا
-  const handleFixShortVideoPoints = async () => {
-    const toFix = tasks.filter(t =>
-      (t.type === 'short' || t.type === 'video') &&
-      isTweetCountFlow(getTaskMonth(t.deadline, t.createdAt)) &&
-      ((t.type === 'short' && t.points === 400) || (t.type === 'video' && t.points === 600))
-    );
-    if (!toFix.length) { alert('ما فيه مهام شورت/مقطع من أكتوبر وفوق لسا على النقاط القديمة'); return; }
-    if (!confirm(`فيه ${toFix.length} مهمة شورت/مقطع من أكتوبر وفوق لسا على النقاط القديمة (400/600). تصححها للقيم الجديدة (300/500)؟`)) return;
+  // مهام شورت/مقطع/محتوى X من أكتوبر 2026+ انضافت قبل تعديلات النقاط — لازم تصحح
+  // بأثر رجعي، لأن نقاطها تنحسب وتتجمد وقت الإنشاء فقط وما فيه خطوة تعيد حسابها تلقائيًا
+  // (محتوى X: نصحح بس تقدير المهام المعلّقة لـ150 — المكتملة/المنشورة إلها زر "تصحيح عدد التغريدات" المخصص لأنها تحتاج العدد الحقيقي مو تقدير ثابت)
+  const handleFixStalePoints = async () => {
+    const toFix = tasks.filter(t => {
+      if (!isTweetCountFlow(getTaskMonth(t.deadline, t.createdAt))) return false;
+      if (t.type === 'short') return t.points === 400;
+      if (t.type === 'video') return t.points === 600;
+      if (t.type === 'x_content' && !t.isBonus) {
+        const st = getStatus(t);
+        if (st === 'done' || st === 'published') return false;
+        return t.points === 200;
+      }
+      return false;
+    });
+    if (!toFix.length) { alert('ما فيه مهام شورت/مقطع/محتوى X من أكتوبر وفوق لسا على النقاط القديمة'); return; }
+    if (!confirm(`فيه ${toFix.length} مهمة من أكتوبر وفوق لسا على النقاط القديمة. تصححها للقيم الجديدة؟`)) return;
     for (const t of toFix) {
-      await updateTask(t.id, { points: t.type === 'short' ? 300 : 500 });
+      const newPoints = t.type === 'short' ? 300 : t.type === 'video' ? 500 : 150;
+      await updateTask(t.id, { points: newPoints });
     }
     alert(`تم تصحيح ${toFix.length} مهمة.`);
     load();
@@ -358,7 +366,7 @@ export function AllTasksPage() {
           <div className="tk-hdr-line" />
         </div>
         <div className="tk-hdr-actions">
-          {isAdmin && <button className="btn btn-ghost btn-sm" onClick={handleFixShortVideoPoints}>تصحيح نقاط الشورت/المقطع</button>}
+          {isAdmin && <button className="btn btn-ghost btn-sm" onClick={handleFixStalePoints}>تصحيح النقاط القديمة</button>}
           {(isAdmin || can('exportTasks')) && <button className="btn btn-ghost btn-sm" onClick={handleExport}>تصدير Excel</button>}
           {(isAdmin || can('importTasks')) && <button className="btn btn-ghost btn-sm" onClick={() => setImportModal(true)}>استيراد Excel</button>}
           {(isAdmin || can('addTaskOthers')) && <button className="btn btn-sm" onClick={() => setTaskModal(true)}>+ مهمة جديدة</button>}
