@@ -104,21 +104,15 @@ export function MyTasksPage() {
 
   const handleChangeStatus = (taskId: string, status: TaskStatus) => {
     const t = tasks.find(t => t.id === taskId);
-    if (t?.type === 'writing' && t.memberId === firebaseUser?.uid) {
-      if (status === 'published' || status === 'pending') {
-        updateTask(taskId, { status, done: status === 'published' }).then(load).catch(console.error);
-        return;
-      }
-    }
     const isOwnBonus = !!t?.isBonus && t?.memberId === firebaseUser?.uid;
+    // أقصى شي يسويه العضو العادي بنفسه هو "مكتملة" — جاهز للنشر/تم النشر/ملغية
+    // تتطلب صلاحية changeTaskStatus (أدمن أو مدير محتوى)، حتى لمهام الكتابة والبونص الشخصية
     if (status === 'done') {
       if (!isOwnBonus && !can('setTaskComplete') && !can('changeTaskStatus')) return;
       completeTask(taskId);
       return;
     }
-    if (isOwnBonus) {
-      // العضو يتحكم في مهامه البونص بحرية
-    } else if (can('changeTaskStatus')) {
+    if (can('changeTaskStatus')) {
       // allowed
     } else if (status === 'pending' || status === 'cancelled') {
       if (!can('setTaskIncomplete')) return;
@@ -286,23 +280,14 @@ export function MyTasksPage() {
               : showSelect && (
                 <select
                   className="mag-select"
-                  value={st === 'done' && t.type === 'writing' ? 'published' : st}
+                  value={st}
                   onChange={e => handleChangeStatus(t.id, e.target.value as TaskStatus)}
                 >
-                  {t.type === 'writing' ? (
-                    <>
-                      <option value="pending">معلقة</option>
-                      <option value="published">تم النشر</option>
-                    </>
-                  ) : (
-                    <>
-                      <option value="pending">معلقة</option>
-                      {(isOwnBonusTask || canSetComplete) && <option value="done">مكتملة</option>}
-                      {canChangeStatus && <option value="ready">جاهز للنشر</option>}
-                      {canChangeStatus && <option value="published">تم النشر</option>}
-                      {canChangeStatus && <option value="cancelled">ملغية</option>}
-                    </>
-                  )}
+                  <option value="pending">معلقة</option>
+                  {(isOwnBonusTask || canSetComplete) && <option value="done">مكتملة</option>}
+                  {canChangeStatus && <option value="ready">جاهز للنشر</option>}
+                  {canChangeStatus && <option value="published">تم النشر</option>}
+                  {canChangeStatus && <option value="cancelled">ملغية</option>}
                 </select>
               )
             }
